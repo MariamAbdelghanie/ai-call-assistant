@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 860" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad" cx="25%" cy="20%" r="85%">
+      <stop offset="0%" stop-color="#103754"/>
+      <stop offset="50%" stop-color="#071927"/>
+      <stop offset="100%" stop-color="#040d15"/>
+    </radialGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#1a759f"/>
+    </linearGradient>
+    <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#a855f7" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2cb5e8" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#00e5ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#7be3ff" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="greenBtn" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="redBtn" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="860" fill="url(#bgGrad)"/>
+
+  <rect x="0" y="0" width="1440" height="76" fill="#06131f" fill-opacity="0.85"/>
+  <line x1="0" y1="76" x2="1440" y2="76" stroke="#7be3ff" stroke-opacity="0.18" stroke-width="1"/>
+
+  <rect x="36" y="16" width="44" height="44" rx="14" fill="url(#brandGrad)"/>
+  <circle cx="51" cy="36" r="4" fill="#06131f"/>
+  <circle cx="65" cy="36" r="4" fill="#06131f"/>
+  <rect x="49" y="45" width="18" height="3" rx="1.5" fill="#06131f"/>
+
+  <text x="94" y="36" font-family="Segoe UI, Inter, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">AI Call System</text>
+  <text x="94" y="55" font-family="Segoe UI, Inter, sans-serif" font-size="12" fill="#94b8d0">Otonom Türkçe Sesli Asistan &amp; Canlı Google Takvim / SIP Simülasyonu</text>
+
+  <g transform="translate(860, 22)">
+    <rect x="0" y="0" width="128" height="32" rx="16" fill="#0e2638" stroke="#7be3ff" stroke-opacity="0.25"/>
+    <circle cx="18" cy="16" r="4" fill="#10b981"/>
+    <text x="30" y="20" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#e2e8f0">LiveKit WebRTC</text>
+
+    <rect x="138" y="0" width="124" height="32" rx="16" fill="#0e2638" stroke="#7be3ff" stroke-opacity="0.25"/>
+    <circle cx="156" cy="16" r="4" fill="#00e5ff"/>
+    <text x="168" y="20" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#e2e8f0">Groq Whisper</text>
+
+    <rect x="272" y="0" width="124" height="32" rx="16" fill="#0e2638" stroke="#7be3ff" stroke-opacity="0.25"/>
+    <circle cx="290" cy="16" r="4" fill="#a855f7"/>
+    <text x="302" y="20" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#e2e8f0">Piper TTS (TR)</text>
+
+    <rect x="406" y="0" width="136" height="32" rx="16" fill="#0e2638" stroke="#7be3ff" stroke-opacity="0.25"/>
+    <circle cx="424" cy="16" r="4" fill="#10b981"/>
+    <text x="436" y="20" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#e2e8f0">Google Calendar</text>
+  </g>
+
+  <g transform="translate(60, 110)">
+    <rect x="0" y="0" width="380" height="700" rx="44" fill="#081b29" stroke="#7be3ff" stroke-opacity="0.28" stroke-width="2"/>
+    <rect x="125" y="14" width="130" height="24" rx="12" fill="#030911"/>
+    <text x="34" y="31" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#94b8d0">09:41</text>
+    <text x="315" y="31" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#00e5ff">5G • SIP</text>
+
+    <rect x="110" y="62" width="160" height="28" rx="14" fill="#103754" stroke="#00e5ff" stroke-opacity="0.35"/>
+    <text x="190" y="80" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#7be3ff">Personal AI Assistant</text>
+
+    <circle cx="190" cy="215" r="78" fill="#0e2c42" stroke="#00e5ff" stroke-opacity="0.4" stroke-width="2"/>
+    <rect x="142" y="168" width="96" height="72" rx="28" fill="#f8fafc"/>
+    <rect x="154" y="182" width="72" height="34" rx="14" fill="#081b29"/>
+    <ellipse cx="173" cy="199" rx="8" ry="5" fill="#00e5ff" filter="url(#glow)"/>
+    <ellipse cx="207" cy="199" rx="8" ry="5" fill="#00e5ff" filter="url(#glow)"/>
+    <rect x="160" y="246" width="60" height="42" rx="18" fill="#e2e8f0"/>
+    <circle cx="190" cy="267" r="9" fill="#00e5ff"/>
+
+    <text x="190" y="340" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="24" font-weight="800" fill="#ffffff">Mariam Asistanı</text>
+    <text x="190" y="366" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" fill="#94b8d0">Türkçe Yapay Zekâ Sekreter &amp; Takvim Yöneticisi</text>
+
+    <rect x="28" y="395" width="324" height="150" rx="20" fill="#0d2538" stroke="#7be3ff" stroke-opacity="0.18"/>
+    <text x="48" y="423" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#00e5ff">CANLI SES DALGASI • AKTİF GÖRÜŞME (01:24)</text>
+    <path d="M 48 480 Q 85 430, 120 480 T 190 480 T 260 480 T 332 480" fill="none" stroke="url(#waveGrad1)" stroke-width="4"/>
+    <path d="M 48 480 Q 85 525, 120 480 T 190 480 T 260 480 T 332 480" fill="none" stroke="url(#waveGrad2)" stroke-width="3"/>
+    <text x="190" y="528" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">"Sizi dinliyorum, lütfen konuşun..."</text>
+
+    <rect x="34" y="575" width="148" height="54" rx="27" fill="url(#greenBtn)"/>
+    <text x="108" y="607" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="700" fill="#ffffff">📞 Aramayı Başlat</text>
+
+    <rect x="198" y="575" width="148" height="54" rx="27" fill="url(#redBtn)"/>
+    <text x="272" y="607" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="700" fill="#ffffff">✖ Kapat</text>
+
+    <text x="190" y="662" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7be3ff">Linphone / Zoiper SIP: ai@192.168.0.109:5060</text>
+  </g>
+
+  <g transform="translate(475, 110)">
+    <rect x="0" y="0" width="445" height="700" rx="28" fill="#0b2030" fill-opacity="0.9" stroke="#7be3ff" stroke-opacity="0.22" stroke-width="1.5"/>
+    <text x="28" y="42" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800" fill="#f8fafc">💬 Canlı Görüşme Dökümü (Transcript)</text>
+    <text x="28" y="64" font-family="Segoe UI, sans-serif" font-size="12" fill="#94b8d0">Gerçek zamanlı STT (Whisper) ve TTS (Piper) diyalog akışı</text>
+    <line x1="24" y1="80" x2="421" y2="80" stroke="#7be3ff" stroke-opacity="0.15"/>
+
+    <rect x="24" y="100" width="365" height="84" rx="16" fill="#12324a" stroke="#00e5ff" stroke-opacity="0.3"/>
+    <text x="40" y="124" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#00e5ff">🤖 AI CALL SYSTEM</text>
+    <text x="40" y="146" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">Merhaba, ben Mariam'ın yapay zekâ asistanıyım.</text>
+    <text x="40" y="166" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">Mariam şu anda müsait değil. Size nasıl yardımcı olabilirim?</text>
+
+    <rect x="56" y="200" width="365" height="68" rx="16" fill="#1e293b" stroke="#94a3b8" stroke-opacity="0.25"/>
+    <text x="72" y="224" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#cbd5e1">👤 ARAYAN (EMİNE)</text>
+    <text x="72" y="246" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f8fafc">Merhaba, ben Emine. Bugün Mariam hangi saatlerde meşgul?</text>
+
+    <rect x="24" y="284" width="380" height="104" rx="16" fill="#12324a" stroke="#00e5ff" stroke-opacity="0.3"/>
+    <text x="40" y="308" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#00e5ff">🤖 AI CALL SYSTEM</text>
+    <text x="40" y="330" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">Hoş geldin canım Emine! Bugün 09:30-11:30 Siber Güvenlik,</text>
+    <text x="40" y="350" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">13:30-15:30 Makine Öğrenmesi, 15:30-16:30 Staj Toplantısı</text>
+    <text x="40" y="370" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">ve akşam 19:30'da kız kardeşiyle çıkışı var.</text>
+
+    <rect x="56" y="404" width="365" height="68" rx="16" fill="#1e293b" stroke="#94a3b8" stroke-opacity="0.25"/>
+    <text x="72" y="428" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#cbd5e1">👤 ARAYAN (EMİNE)</text>
+    <text x="72" y="450" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f8fafc">O zaman yarın akşam saat 5 buçukta buluşma kaydeder misin?</text>
+
+    <rect x="24" y="488" width="380" height="86" rx="16" fill="#12324a" stroke="#10b981" stroke-opacity="0.45"/>
+    <text x="40" y="512" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#10b981">🤖 AI CALL SYSTEM • 📅 TAKVİME KAYDEDİLDİ</text>
+    <text x="40" y="534" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">Tabii Emine! Yarın saat 17:30 için buluşma randevunu</text>
+    <text x="40" y="554" font-family="Segoe UI, sans-serif" font-size="12.5" fill="#f1f5f9">Mariam'ın Google Takvim'ine kaydettim.</text>
+
+    <rect x="24" y="612" width="397" height="60" rx="14" fill="#071521" stroke="#7be3ff" stroke-opacity="0.2"/>
+    <text x="42" y="647" font-family="Segoe UI, sans-serif" font-size="13" fill="#64748b">Yazılı mesaj gönder (örn: Randevumu iptal et)...</text>
+    <rect x="345" y="622" width="66" height="40" rx="10" fill="url(#brandGrad)"/>
+    <text x="378" y="647" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#ffffff">Gönder</text>
+  </g>
+
+  <g transform="translate(950, 110)">
+    <rect x="0" y="0" width="430" height="700" rx="28" fill="#0b2030" fill-opacity="0.9" stroke="#7be3ff" stroke-opacity="0.22" stroke-width="1.5"/>
+    <text x="28" y="42" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800" fill="#f8fafc">📋 Çağrı Özetleri &amp; Google Takvim</text>
+    <text x="28" y="64" font-family="Segoe UI, sans-serif" font-size="12" fill="#94b8d0">Firebase Firestore + Google Calendar + ntfy.sh Kayıtları</text>
+    <line x1="24" y1="80" x2="406" y2="80" stroke="#7be3ff" stroke-opacity="0.15"/>
+
+    <rect x="24" y="100" width="382" height="175" rx="18" fill="#102a3f" stroke="#00e5ff" stroke-opacity="0.3"/>
+    <text x="42" y="128" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800" fill="#ffffff">👤 Emine</text>
+    <text x="310" y="128" font-family="JetBrains Mono, monospace" font-size="11" fill="#7be3ff">Bugün 12:59</text>
+    <text x="42" y="152" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#10b981">📌 Yarın 17:30 Buluşma • 📅 2026-10-28 17:30</text>
+    <text x="42" y="178" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">Arayan Emine, Mariam'ın bugünkü ders ve akşam</text>
+    <text x="42" y="198" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">programını sordu. Yarın saat 17:30 için buluşma</text>
+    <text x="42" y="218" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">randevusu Google Takvim'e ve Firebase'e kaydedildi.</text>
+    <rect x="42" y="234" width="165" height="26" rx="8" fill="#064e3b"/>
+    <text x="124" y="251" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#34d399">✓ Google Calendar Sync</text>
+
+    <rect x="24" y="292" width="382" height="175" rx="18" fill="#102a3f" stroke="#7be3ff" stroke-opacity="0.22"/>
+    <text x="42" y="320" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800" fill="#ffffff">👤 Kız Kardeşi</text>
+    <text x="310" y="320" font-family="JetBrains Mono, monospace" font-size="11" fill="#7be3ff">Bugün 12:24</text>
+    <text x="42" y="344" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#00e5ff">📌 Akşam Çıkışı Planı • 📅 2026-10-27 19:30</text>
+    <text x="42" y="370" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">Mariam'ın kız kardeşi aradı, bu akşam dışarı çıkmak</text>
+    <text x="42" y="390" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">istediğini ve saat 19:30'da gelip Mariam'ı alacağını</text>
+    <text x="42" y="410" font-family="Segoe UI, sans-serif" font-size="12" fill="#cbd5e1">belirtti. Saat 19:30 Google Takvim'e eklendi.</text>
+    <rect x="42" y="426" width="165" height="26" rx="8" fill="#064e3b"/>
+    <text x="124" y="443" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#34d399">✓ Push Bildirim Gönderildi</text>
+
+    <rect x="24" y="484" width="382" height="185" rx="18" fill="#091926" stroke="#a855f7" stroke-opacity="0.35"/>
+    <text x="42" y="512" font-family="Segoe UI, sans-serif" font-size="13" font-weight="800" fill="#e9d5ff">📅 Mariam'ın Haftalık Google Takvim Programı</text>
+    <text x="42" y="538" font-family="Segoe UI, sans-serif" font-size="11.5" fill="#cbd5e1">• Pazartesi: 10:30-11:30 Staj Toplantısı</text>
+    <text x="42" y="560" font-family="Segoe UI, sans-serif" font-size="11.5" fill="#cbd5e1">• Salı: 09:30 Siber Güv. | 13:30 Makine Öğr. | 15:30 Staj</text>
+    <text x="42" y="582" font-family="Segoe UI, sans-serif" font-size="11.5" fill="#cbd5e1">• Çarşamba: 10:30 Staj Toplantısı | 13:30 Görüntü İşleme</text>
+    <text x="42" y="604" font-family="Segoe UI, sans-serif" font-size="11.5" fill="#cbd5e1">• Perşembe: 09:30-12:30 Robotik | 15:30 Staj Toplantısı</text>
+    <text x="42" y="626" font-family="Segoe UI, sans-serif" font-size="11.5" fill="#cbd5e1">• Cuma: 10:30 Bitirme Projesi (Danışman) | 15:30 Staj</text>
+    <text x="42" y="650" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#38bdf8">+ Canlı Randevu Ekleme &amp; İptal Etme (Silme) Desteği</text>
+  </g>
+</svg>

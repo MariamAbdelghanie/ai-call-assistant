@@ -1,0 +1,26 @@
+# Sanal ortamlar
+.venv/
+.venv_wsl/
+__pycache__/
+*.pyc
+
+# GİZLİ: anahtarlar ve servis hesapları (asla yüklenmez)
+.env
+firebase-credentials.json
+credentials.json
+*firebase-adminsdk*.json
+
+# Büyük model dosyaları
+models/*.onnx
+
+# Kişisel / çalışma sırasında oluşan veriler
+call_logs.json
+agent_run.log
+latency_log.csv
+ivr_signal.json
+
+# Yerel yedekler
+_backup_*/
+
+# README şimdilik depoda tutulmuyor
+README.md

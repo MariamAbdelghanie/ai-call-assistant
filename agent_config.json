@@ -1,0 +1,15 @@
+{
+  "preset": "custom",
+  "stt_model": "whisper-large-v3-turbo",
+  "llm_model": "openai/gpt-oss-120b",
+  "tts_voice": "edge-ahmet",
+  "stt_language": "auto",
+  "assistant_mode": "hybrid",
+  "work_start": "09:00",
+  "work_end": "17:00",
+  "assistant_enabled": true,
+  "greeting_text": "",
+  "architecture": "cascade",
+  "realtime_model": "gemini-3.8-live",
+  "realtime_voice": "Kore"
+}
