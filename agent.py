@@ -163,6 +163,7 @@ def load_active_config() -> dict:
         "tts_voice": "edge-emel",
         "stt_language": "auto",
         "assistant_mode": "hybrid",
+        "owner_language": "tr",
         "work_start": "09:00",
         "work_end": "17:00",
         "assistant_enabled": True,
@@ -189,6 +190,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
     work_start = active_cfg.get("work_start", "09:00")
     work_end = active_cfg.get("work_end", "17:00")
     mode = active_cfg.get("assistant_mode", "hybrid")
+    owner_lang = normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG)
 
     lang_rules = {
         "tr": "Arayanla YALNIZCA doğal ve akıcı TÜRKÇE konuş.",
@@ -220,6 +222,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "Sen telefon sahibinin sesli yapay zekâ asistanısın (Türkçe, Arapça, İngilizce). "
         "Telefon sahibinin adını asla söyleme; 'aradığınız kişi' de. Kısa (1-2 cümle), doğal, samimi ve kibar konuş.\n"
         f"BUGÜN: {today_tr} | YARIN: {tomorrow_tr} | MESAİ: {work_start}-{work_end} | MOD: {mode_instruction}\n"
+        f"SAHİP ÖZETİ DİLİ: {LANG_NAMES_TR[owner_lang]}.\n"
         f"DİL KURALI: {lang_rule}\n"
         f"{first_turn_disclosure}"
         f"TAKVİM ÖZETİ: {live_schedule}\n"
@@ -236,7 +239,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "1. GİZLİLİK: Telefon sahibinin kiminle randevusu olduğunu veya özel program detaylarını asla söyleme; sadece müsait veya meşgul olduğunu belirt.\n"
         "2. RANDEVU VE İPTAL: Randevular yalnız mesai saatleri içinde verilir (`book_calendar_appointment`). İptal için önce arayanın adını ve saatini sorup doğrula (`cancel_calendar_appointment`).\n"
         "3. MESAJ VE NOT: Mesaj bırakmak isteyenden adını, mesajını ve geri aranmak isteyip istemediğini öğren; önemli bilgileri (isim, saat) tekrar edip onaylat, sonra `save_call_note` aracını çağır. "
-        "Not ve özet metnini ARAYANIN KONUŞTUĞU DİLDE yaz. Kayıt izni vermezse `recording_consent=False` gönder.\n"
+        "`summary_tr` alan adı eski uyumluluk içindir: özetin kendisini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; olmayan bilgi ekleme. Kayıt izni vermezse `recording_consent=False` gönder.\n"
         "4. BİLGİLERİ TEKRAR SORMA: Arayan adını, konusunu veya saati bir kez söylediyse bunu hatırla ve tekrar sorma. Ad yalnızca hiç söylenmediyse sorulur.\n"
         "5. TELEFON NUMARASI SORMA: Arayanın numarası arama sırasında sistem tarafından otomatik alınır; numara isteme.\n"
         "6. MESAJ Mİ RANDEVU MU: Arayan mevcut bir toplantının saatini değiştirmek istiyorsa bu bir MESAJDIR (telefon sahibi karar verir). Yalnızca arayan açıkça yeni randevu isterse `book_calendar_appointment` çağır. "
@@ -363,7 +366,7 @@ class TurkishCallAssistant(Agent):
             self.call_state["appointment_info"] = f"İPTAL EDİLDİ ({date_str} {time_hm})"
         return res
 
-    @function_tool(description="Telefon sahibine bırakılan mesajı, arama nedenini, geri aranma isteğini ve acil durum bilgisini kaydeder. caller_purpose ve summary_tr alanlarını ARAYANIN KONUŞTUĞU DİLDE yaz.")
+    @function_tool(description="Telefon sahibine bırakılan mesajı, arama nedenini, geri aranma isteğini ve acil durum bilgisini kaydeder. caller_purpose ve summary_tr alanlarını sahibin yapılandırılmış dilinde yaz; summary_tr eski alan adı olsa da özet metnidir.")
     async def save_call_note(
         self,
         context: RunContext,
@@ -378,12 +381,12 @@ class TurkishCallAssistant(Agent):
             f"[Tool Call] Saving call note for {caller_name} (urgent={is_urgent}, callback={callback_requested}, consent={recording_consent})",
             flush=True,
         )
-        lang = self.current_lang()
+        owner_lang = normalize_lang(self.active_cfg.get("owner_language"), DEFAULT_LANG)
         safe_name = (caller_name or "").strip()
         if not safe_name or safe_name == "İsimsiz Arayan":
-            safe_name = ANONYMOUS[lang]
+            safe_name = ANONYMOUS[owner_lang]
         if not recording_consent:
-            caller_purpose, summary_tr = NO_CONSENT_TEXT[lang]
+            caller_purpose, summary_tr = NO_CONSENT_TEXT[owner_lang]
 
         self.call_state["caller_name"] = safe_name
         self.call_state["caller_purpose"] = caller_purpose
@@ -402,7 +405,7 @@ class TurkishCallAssistant(Agent):
             is_urgent=bool(is_urgent),
             callback_requested=bool(callback_requested),
             caller_number=self.call_state.get("caller_number", "VoIP / Web"),
-            lang=lang,
+            lang=owner_lang,
         )
         return "Mesaj ve görüşme notu başarıyla kaydedildi."
 
@@ -420,13 +423,14 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
     if call_state.get("final_summary_done") or len(transcript_lines) < 2:
         return
     call_state["final_summary_done"] = True
-    lang = normalize_lang(call_state.get("selected_lang"), DEFAULT_LANG)
+    caller_lang = normalize_lang(call_state.get("selected_lang"), DEFAULT_LANG)
+    owner_lang = normalize_lang(call_state.get("owner_language"), DEFAULT_LANG)
 
     if call_state.get("recording_consent") is False:
-        purpose, summary = NO_CONSENT_TEXT[lang]
+        purpose, summary = NO_CONSENT_TEXT[owner_lang]
         await asyncio.to_thread(
             service_manager.save_call_summary,
-            call_state.get("caller_name") or ANONYMOUS[lang],
+            call_state.get("caller_name") or ANONYMOUS[owner_lang],
             purpose,
             summary,
             "",
@@ -435,7 +439,7 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
             is_urgent=call_state.get("is_urgent", False),
             callback_requested=True,
             caller_number=call_state.get("caller_number", "VoIP / Web"),
-            lang=lang,
+            lang=owner_lang,
         )
         return
 
@@ -444,7 +448,7 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
         api_key=GROQ_API_KEY,
     )
     try:
-        print(f"[Auto Summary] Görüşme özeti hazırlanıyor ({LANG_NAMES_TR[lang]})...", flush=True)
+        print(f"[Auto Summary] Görüşme özeti hazırlanıyor ({LANG_NAMES_TR[owner_lang]})...", flush=True)
         today_str = datetime.date.today().isoformat()
         tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
         convo_text = "\n".join(transcript_lines)
@@ -457,13 +461,13 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
                     "role": "system",
                     "content": (
                         f"Bugünün tarihi: {today_str}, yarının tarihi: {tomorrow_str}.\n"
-                        f"Aşağıdaki telefon görüşmesini analiz et. Görüşme {LANG_NAMES_TR[lang]} yapıldı; "
-                        f"caller_name, caller_purpose, summary_tr ve calendar_event_title alanlarını {LANG_NAMES_TR[lang].upper()} yaz. "
+                        f"Aşağıdaki telefon görüşmesini analiz et. Görüşme {LANG_NAMES_TR[caller_lang]} yapıldı; "
+                        f"caller_name alanındaki gerçek adı koru; caller_purpose, summary_tr ve calendar_event_title alanlarını {LANG_NAMES_TR[owner_lang].upper()} yaz. "
                         "Yalnızca JSON döndür:\n"
                         '{\n'
-                        f'  "caller_name": "Arayanın adı (söylemediyse \'{ANONYMOUS[lang]}\')",\n'
+                        f'  "caller_name": "Arayanın adı (söylemediyse \'{ANONYMOUS[owner_lang]}\')",\n'
                         '  "caller_purpose": "Arama nedeni (kısa)",\n'
-                        '  "summary_tr": "Arayanın mesajının ve görüşmenin net özeti (görüşmenin dilinde)",\n'
+                        '  "summary_tr": "Arayanın mesajının ve görüşmenin net özeti (sahibin dilinde)",\n'
                         '  "is_urgent": false,\n'
                         '  "callback_requested": true,\n'
                         '  "recording_consent": true,\n'
@@ -476,7 +480,7 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
             ],
         )
         data = json.loads(resp.choices[0].message.content)
-        caller_name = data.get("caller_name") or call_state.get("caller_name") or ANONYMOUS[lang]
+        caller_name = data.get("caller_name") or call_state.get("caller_name") or ANONYMOUS[owner_lang]
         caller_purpose = data.get("caller_purpose") or call_state.get("caller_purpose") or ""
         summary_tr = data.get("summary_tr") or convo_text
         is_urgent = bool(data.get("is_urgent")) or bool(call_state.get("is_urgent"))
@@ -489,7 +493,7 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
         )
         recording_consent = data.get("recording_consent", True)
         if recording_consent is False:
-            caller_purpose, summary_tr = NO_CONSENT_TEXT[lang]
+            caller_purpose, summary_tr = NO_CONSENT_TEXT[owner_lang]
 
         cal_iso = (data.get("calendar_event_iso") or "").strip()
         cal_title = (data.get("calendar_event_title") or caller_purpose).strip()
@@ -518,7 +522,7 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
             is_urgent=is_urgent,
             callback_requested=callback_requested,
             caller_number=call_state.get("caller_number", "VoIP / Web"),
-            lang=lang,
+            lang=owner_lang,
         )
         print("[Auto Summary] Saved call summary successfully!", flush=True)
     except Exception as e:
@@ -586,6 +590,7 @@ async def entrypoint(ctx: JobContext):
         "is_urgent": False,
         "callback_requested": True,
         "recording_consent": True,
+        "owner_language": normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG),
         "selected_lang": "auto",
         "last_detected_iso": DEFAULT_LANG,
     }

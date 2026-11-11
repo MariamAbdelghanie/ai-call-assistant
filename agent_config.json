@@ -5,6 +5,7 @@
   "tts_voice": "edge-ahmet",
   "stt_language": "auto",
   "assistant_mode": "hybrid",
+  "owner_language": "tr",
   "work_start": "09:00",
   "work_end": "17:00",
   "assistant_enabled": true,
