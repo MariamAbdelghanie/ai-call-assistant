@@ -5,6 +5,11 @@ from pathlib import Path
 from aiohttp import web
 from dotenv import load_dotenv
 from livekit import api
+from backend.access import is_authorized_request
+from backend.config_store import JsonConfigStore
+from backend.records import RecordNotFound, StorageError
+from config_validation import validate_configuration
+from services import CALL_LOG_REPOSITORY
 
 load_dotenv()
 
@@ -18,6 +23,7 @@ DEFAULT_CONFIG = {
     "tts_voice": "edge-emel",
     "stt_language": "auto",
     "assistant_mode": "hybrid",
+    "owner_language": "tr",
     "work_start": "09:00",
     "work_end": "17:00",
     "assistant_enabled": True,
@@ -26,6 +32,8 @@ DEFAULT_CONFIG = {
     "realtime_model": "",
     "realtime_voice": "Puck",
 }
+
+CONFIG_STORE = JsonConfigStore(CONFIG_FILE, DEFAULT_CONFIG)
 
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="tr">
@@ -495,7 +503,7 @@ async function markReturned(id, val){
 }
 async function deleteLog(id){
   if (!confirm('Bu kayıt silinsin mi?')) return;
-  await fetch('/logs/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({call_id:id})});
+  await fetch('/logs/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({call_id:id, confirmed:true})});
   loadLogs();
 }
 
@@ -586,82 +594,66 @@ async def index(request: web.Request):
     return web.Response(text=HTML_PAGE, content_type="text/html")
 
 
+def require_admin(request: web.Request) -> None:
+    configured_token = os.getenv("ADMIN_API_TOKEN", "")
+    authorization = request.headers.get("Authorization", "")
+    presented_token = request.headers.get("X-Admin-Token", "")
+    if authorization.startswith("Bearer "):
+        presented_token = authorization.removeprefix("Bearer ").strip()
+    if not is_authorized_request(request.remote, presented_token, configured_token):
+        raise web.HTTPForbidden(text="Yönetim API'si için yetki gerekli.")
+
+
 async def get_config_endpoint(request: web.Request):
-    cfg = dict(DEFAULT_CONFIG)
-    if CONFIG_FILE.exists():
-        try:
-            data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                cfg.update(data)
-        except Exception:
-            pass
-    return web.json_response(cfg)
+    require_admin(request)
+    return web.json_response(CONFIG_STORE.read())
 
 
 async def save_config_endpoint(request: web.Request):
-    cfg = dict(DEFAULT_CONFIG)
-    if CONFIG_FILE.exists():
-        try:
-            existing = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-            if isinstance(existing, dict):
-                cfg.update(existing)
-        except Exception:
-            pass
+    require_admin(request)
     try:
         body = await request.json()
-        for k in (
-            "preset",
-            "stt_model",
-            "llm_model",
-            "tts_voice",
-            "stt_language",
-            "assistant_mode",
-            "work_start",
-            "work_end",
-            "greeting_text",
-            "architecture",
-            "realtime_model",
-            "realtime_voice",
-        ):
-            if k in body and body[k] is not None:
-                cfg[k] = str(body[k])
-        CONFIG_FILE.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-    except Exception:
-        pass
-    return web.json_response(cfg)
+        cfg = CONFIG_STORE.update(body)
+    except (ValueError, RuntimeError, json.JSONDecodeError) as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=400)
+    return web.json_response({"ok": True, "config": cfg})
 
 
 async def mark_returned_endpoint(request: web.Request):
+    require_admin(request)
     try:
         body = await request.json()
-        call_id = body.get("call_id", "")
+        call_id = str(body.get("call_id") or request.match_info.get("call_id", "")).strip()
+        if not call_id:
+            return web.json_response({"ok": False, "error": "call_id zorunludur."}, status=400)
         called_back = bool(body.get("called_back", True))
-        if CALL_LOGS_FILE.exists():
-            logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            for item in logs:
-                if item.get("call_id") == call_id:
-                    item["called_back"] = called_back
-                    break
-            CALL_LOGS_FILE.write_text(json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8")
-        return web.json_response({"ok": True})
-    except Exception as e:
+        record = CALL_LOG_REPOSITORY.mark_called_back(call_id, called_back)
+        return web.json_response({"ok": True, "record": record.to_dict()})
+    except RecordNotFound:
+        return web.json_response({"ok": False, "error": "Çağrı kaydı bulunamadı."}, status=404)
+    except (StorageError, json.JSONDecodeError) as e:
         return web.json_response({"ok": False, "error": str(e)}, status=400)
 
 
 async def delete_log_endpoint(request: web.Request):
+    require_admin(request)
     try:
         body = await request.json()
-        call_id = body.get("call_id", "")
-        if CALL_LOGS_FILE.exists():
-            logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            logs = [item for item in logs if item.get("call_id") != call_id]
-            CALL_LOGS_FILE.write_text(json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8")
+        call_id = str(body.get("call_id", "")).strip()
+        if not call_id:
+            return web.json_response({"ok": False, "error": "call_id zorunludur."}, status=400)
+        if body.get("confirmed") is not True:
+            return web.json_response({"ok": False, "error": "Silme işlemi için confirmed=true gerekli."}, status=400)
+        CALL_LOG_REPOSITORY.delete(call_id)
         return web.json_response({"ok": True})
-    except Exception as e:
+    except RecordNotFound:
+        return web.json_response({"ok": False, "error": "Çağrı kaydı bulunamadı."}, status=404)
+    except (StorageError, json.JSONDecodeError) as e:
         return web.json_response({"ok": False, "error": str(e)}, status=400)
 
 
 async def token_endpoint(request: web.Request):
+    require_admin(request)
     api_key = os.getenv("LIVEKIT_API_KEY", "devkey")
     api_secret = os.getenv("LIVEKIT_API_SECRET", "secret")
     room_name = f"call-web-{uuid.uuid4().hex[:6]}"
@@ -688,24 +680,43 @@ async def token_endpoint(request: web.Request):
 
 
 async def logs_endpoint(request: web.Request):
-    if CALL_LOGS_FILE.exists():
-        try:
-            data = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            return web.json_response(data)
-        except Exception:
-            pass
-    return web.json_response([])
+    require_admin(request)
+    try:
+        return web.json_response([record.to_dict() for record in CALL_LOG_REPOSITORY.list_records()])
+    except StorageError as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=500)
 
 
-app = web.Application()
-app.router.add_get("/", index)
-app.router.add_get("/ozetler", index)
-app.router.add_get("/token", token_endpoint)
-app.router.add_get("/logs", logs_endpoint)
-app.router.add_post("/logs/returned", mark_returned_endpoint)
-app.router.add_post("/logs/delete", delete_log_endpoint)
-app.router.add_get("/api/config", get_config_endpoint)
-app.router.add_post("/api/config", save_config_endpoint)
+async def health_endpoint(request: web.Request):
+    require_admin(request)
+    issues = validate_configuration(project_dir=Path(__file__).parent, config=CONFIG_STORE.read())
+    return web.json_response({
+        "ok": not any(issue.severity == "error" for issue in issues),
+        "issues": [
+            {"severity": issue.severity, "code": issue.code, "message": issue.message}
+            for issue in issues
+        ],
+    })
+
+
+def create_app() -> web.Application:
+    """Web paneli ve yönetim API'si için yeni uygulama örneği oluşturur."""
+    application = web.Application()
+    application.router.add_get("/", index)
+    application.router.add_get("/ozetler", index)
+    application.router.add_get("/token", token_endpoint)
+    application.router.add_get("/logs", logs_endpoint)
+    application.router.add_post("/logs/returned", mark_returned_endpoint)
+    application.router.add_post("/logs/delete", delete_log_endpoint)
+    application.router.add_get("/api/config", get_config_endpoint)
+    application.router.add_post("/api/config", save_config_endpoint)
+    application.router.add_get("/api/health", health_endpoint)
+    application.router.add_get("/api/calls", logs_endpoint)
+    application.router.add_post("/api/calls/{call_id}/returned", mark_returned_endpoint)
+    return application
+
+
+app = create_app()
 
 if __name__ == "__main__":
-    web.run_app(app, host="0.0.0.0", port=8080)
+    web.run_app(app, host=os.getenv("WEB_HOST", "127.0.0.1"), port=8080)

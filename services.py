@@ -7,6 +7,7 @@ import certifi
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
+from backend.records import CallRecord, JsonCallRepository, RecordNotFound, StorageError
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -21,6 +22,7 @@ load_dotenv()
 
 CALL_LOGS_FILE = Path(__file__).parent / "call_logs.json"
 CONFIG_FILE = Path(__file__).parent / "agent_config.json"
+CALL_LOG_REPOSITORY = JsonCallRepository(CALL_LOGS_FILE)
 
 TURKISH_DAYS = [
     "Pazartesi",
@@ -410,6 +412,7 @@ class CalendarAndNotesService:
         callback_requested: bool = False,
         caller_number: str = "",
         lang: str = "tr",
+        recording_consent: bool = True,
     ) -> dict:
         lang = lang if lang in NOTIFY_LABELS else "tr"
         combined_lower = f"{caller_purpose} {summary_tr}".lower()
@@ -417,39 +420,29 @@ class CalendarAndNotesService:
             is_urgent = True
 
         safe_name = (caller_name or "").strip() or "İsimsiz Arayan"
-        record = {
-            "call_id": call_id or datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
-            "timestamp": datetime.datetime.now().isoformat(),
-            "caller_name": safe_name,
-            "caller_number": caller_number or "VoIP / Web",
-            "caller_purpose": caller_purpose or "Mesaj Bırakma",
-            "summary_tr": summary_tr,
-            "appointment_info": appointment_info,
-            "is_urgent": bool(is_urgent),
-            "callback_requested": bool(callback_requested),
-            "called_back": False,
-            "lang": lang,
-        }
-
-        logs = []
-        if CALL_LOGS_FILE.exists():
-            try:
-                logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            except Exception:
-                logs = []
-
-        updated = False
-        if call_id:
-            for i, item in enumerate(logs):
-                if item.get("call_id") == call_id:
-                    record["called_back"] = item.get("called_back", False)
-                    logs[i] = record
-                    updated = True
+        record_id = call_id or datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        called_back = False
+        try:
+            for existing in CALL_LOG_REPOSITORY.list_records():
+                if existing.call_id == record_id:
+                    called_back = existing.called_back
                     break
-        if not updated:
-            logs.append(record)
-
-        CALL_LOGS_FILE.write_text(json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8")
+            stored_record = CALL_LOG_REPOSITORY.upsert(CallRecord.create(
+                call_id=record_id,
+                caller_name=safe_name,
+                caller_number=caller_number or "VoIP / Web",
+                caller_purpose=caller_purpose or "Mesaj Bırakma",
+                summary_tr=summary_tr,
+                appointment_info=appointment_info,
+                is_urgent=bool(is_urgent),
+                callback_requested=bool(callback_requested),
+                called_back=called_back,
+                lang=lang,
+                recording_consent=bool(recording_consent),
+            ))
+        except (StorageError, ValueError) as e:
+            raise RuntimeError(f"Çağrı özeti güvenli biçimde kaydedilemedi: {e}") from e
+        record = stored_record.to_dict()
 
         if self.firestore_db:
             try:
@@ -475,45 +468,29 @@ class CalendarAndNotesService:
         return record
 
     def mark_call_returned(self, call_id: str, called_back: bool = True) -> bool:
-        if not CALL_LOGS_FILE.exists():
-            return False
         try:
-            logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            found = False
-            for item in logs:
-                if item.get("call_id") == call_id:
-                    item["called_back"] = bool(called_back)
-                    found = True
-                    break
-            if found:
-                CALL_LOGS_FILE.write_text(json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8")
-                if self.firestore_db:
-                    try:
-                        self.firestore_db.collection("call_summaries").document(call_id).update(
-                            {"called_back": bool(called_back)}
-                        )
-                    except Exception:
-                        pass
-            return found
-        except Exception:
+            CALL_LOG_REPOSITORY.mark_called_back(call_id, bool(called_back))
+            if self.firestore_db:
+                try:
+                    self.firestore_db.collection("call_summaries").document(call_id).update(
+                        {"called_back": bool(called_back)}
+                    )
+                except Exception:
+                    pass
+            return True
+        except (RecordNotFound, StorageError):
             return False
 
     def delete_call_log(self, call_id: str) -> bool:
-        if not CALL_LOGS_FILE.exists():
-            return False
         try:
-            logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            new_logs = [item for item in logs if item.get("call_id") != call_id]
-            if len(new_logs) == len(logs):
-                return False
-            CALL_LOGS_FILE.write_text(json.dumps(new_logs, ensure_ascii=False, indent=2), encoding="utf-8")
+            CALL_LOG_REPOSITORY.delete(call_id)
             if self.firestore_db:
                 try:
                     self.firestore_db.collection("call_summaries").document(call_id).delete()
                 except Exception:
                     pass
             return True
-        except Exception:
+        except (RecordNotFound, StorageError):
             return False
 
     def send_notification(
