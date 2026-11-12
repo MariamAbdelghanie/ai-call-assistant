@@ -53,6 +53,7 @@ from piper_tts_plugin import (
 )
 from services import CalendarAndNotesService, TURKISH_DAYS, URGENT_KEYWORDS
 from latency_logger import LatencyLogger
+from config_validation import format_report, load_agent_config, validate_configuration
 
 load_dotenv()
 
@@ -140,6 +141,17 @@ def is_valid_caller_speech(text: str) -> bool:
 
 
 MODEL_PATH = Path(__file__).parent / "models" / "tr_TR-dfki-medium.onnx"
+STARTUP_CONFIG_ISSUES = validate_configuration(
+    project_dir=Path(__file__).parent,
+    config=load_agent_config(Path(__file__).parent / "agent_config.json"),
+)
+if STARTUP_CONFIG_ISSUES:
+    print(format_report(STARTUP_CONFIG_ISSUES), flush=True)
+if any(issue.severity == "error" for issue in STARTUP_CONFIG_ISSUES):
+    raise RuntimeError(
+        "Ayar denetimi başarısız. Yukarıdaki HATA satırlarını düzeltip yeniden başlatın."
+    )
+
 service_manager = CalendarAndNotesService()
 GLOBAL_TTS = PiperTTS(model_path=MODEL_PATH)
 GLOBAL_TTS.prewarm([
@@ -534,6 +546,19 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
 
 async def entrypoint(ctx: JobContext):
     active_cfg = load_active_config()
+    config_issues = validate_configuration(
+        project_dir=Path(__file__).parent,
+        config=active_cfg,
+    )
+    if config_issues:
+        print(format_report(config_issues), flush=True)
+    config_errors = [issue for issue in config_issues if issue.severity == "error"]
+    if config_errors:
+        raise RuntimeError(
+            "Zorunlu ayarlar eksik. Ayrıntılar yukarıda listelendi; "
+            "anahtar değerlerini değil yalnızca .env alanlarını kontrol edin."
+        )
+
     architecture = str(active_cfg.get("architecture", "cascade")).strip().lower()
     if architecture not in ("cascade", "realtime"):
         architecture = "cascade"
