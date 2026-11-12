@@ -35,6 +35,7 @@ def simulate_normal_message() -> dict:
     session.begin()
     session.merge_details(
         caller_name="Ayşe Demir",
+        caller_purpose="Toplantı bilgisi",
         message="Yarınki toplantının saatini öğrenmek istiyorum.",
         callback_requested=True,
         callback_number="0555 111 22 33",
@@ -61,7 +62,7 @@ def simulate_message_correction() -> dict:
     call = CallMessage("demo_correction_001", Language.ENGLISH, Language.TURKISH)
     session = CallSession(call)
     session.begin()
-    session.merge_details(message="Toplantı saat 10'da.", callback_requested=True)
+    session.merge_details(caller_purpose="Toplantı bilgisi", message="Toplantı saat 10'da.", callback_requested=True)
     session.confirm(True)
     session.merge_details(message="Düzeltme: toplantı saat 11'de.")
 

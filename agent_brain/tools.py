@@ -36,15 +36,27 @@ class InMemoryNotificationGateway:
 
 def save_message(call: CallMessage, repository: CallRepository) -> ToolResult:
     """Yalnızca teyitli ve tam çağrı bilgisini kaydeder."""
-    missing = call.missing_required_fields()
-    if missing:
-        return ToolResult(False, "Message was not saved because required details are missing.", call.call_id,
-                          "missing_required_fields:" + ",".join(missing))
+    validation = validate_call_for_storage(call)
+    if not validation.success:
+        return validation
     try:
         repository.save(call)
     except Exception:
         return ToolResult(False, "Message could not be saved at this time.", call.call_id, "repository_unavailable")
     return ToolResult(True, "Message saved successfully.", call.call_id)
+
+
+def validate_call_for_storage(call: CallMessage) -> ToolResult:
+    """Kalıcı kayıt öncesi rapordaki zorunlu alan ve teyit kurallarını uygular."""
+    missing = call.missing_required_fields()
+    if missing:
+        return ToolResult(
+            False,
+            "Message was not saved because required details are missing.",
+            call.call_id,
+            "missing_required_fields:" + ",".join(missing),
+        )
+    return ToolResult(True, "Call details are ready to save.", call.call_id)
 
 
 def flag_urgent_call(flag: UrgentCallFlag, gateway: NotificationGateway) -> ToolResult:

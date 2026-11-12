@@ -54,6 +54,11 @@ from piper_tts_plugin import (
 from services import CalendarAndNotesService, TURKISH_DAYS, URGENT_KEYWORDS
 from latency_logger import LatencyLogger
 from config_validation import format_report, load_agent_config, validate_configuration
+from agent_brain.language import normalize_language
+from agent_brain.models import CallMessage, Urgency
+from agent_brain.recovery import ClarificationTracker, emergency_guidance, is_life_threatening
+from agent_brain.personality import personality_rule
+from agent_brain.tools import validate_call_for_storage
 
 load_dotenv()
 
@@ -140,6 +145,12 @@ def is_valid_caller_speech(text: str) -> bool:
     return True
 
 
+def has_usable_callback_number(value: str) -> bool:
+    """SIP'ten gelen veya arayanın verdiği geri dönüş numarasını ayırt eder."""
+    cleaned = re.sub(r"\D", "", value or "")
+    return 7 <= len(cleaned) <= 16
+
+
 MODEL_PATH = Path(__file__).parent / "models" / "tr_TR-dfki-medium.onnx"
 STARTUP_CONFIG_ISSUES = validate_configuration(
     project_dir=Path(__file__).parent,
@@ -204,16 +215,8 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
     mode = active_cfg.get("assistant_mode", "hybrid")
     owner_lang = normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG)
 
-    lang_rules = {
-        "tr": "Arayanla YALNIZCA doğal ve akıcı TÜRKÇE konuş.",
-        "ar": "تحدث مع المتصل بالعربية فقط، بأسلوب طبيعي وودود، ويمكنك مجاراة لهجة المتصل. لا تستخدم رموزاً أو نقاطاً (-) في ردك.",
-        "en": "Speak with the caller ONLY in natural, friendly ENGLISH.",
-    }
-    lang_rule = lang_rules.get(
-        lang,
-        "Arayan Türkçe, Arapça veya İngilizce konuşursa O DİLDE yanıt ver ve görüşme boyunca o dilde devam et. "
-        "Arayan başka bir dilde konuşursa Türkçe konuş.",
-    )
+    language_for_personality = normalize_language(lang, normalize_language(DEFAULT_LANG))
+    lang_rule = personality_rule(language_for_personality)
 
     first_turn_disclosure = (
         ""
@@ -235,7 +238,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "Telefon sahibinin adını asla söyleme; 'aradığınız kişi' de. Kısa (1-2 cümle), doğal, samimi ve kibar konuş.\n"
         f"BUGÜN: {today_tr} | YARIN: {tomorrow_tr} | MESAİ: {work_start}-{work_end} | MOD: {mode_instruction}\n"
         f"SAHİP ÖZETİ DİLİ: {LANG_NAMES_TR[owner_lang]}.\n"
-        f"DİL KURALI: {lang_rule}\n"
+        f"DİL VE KİŞİLİK KURALI: {lang_rule}\n"
         f"{first_turn_disclosure}"
         f"TAKVİM ÖZETİ: {live_schedule}\n"
         "SAAT VE TARİH OKUMA KURALI (ÇOK ÖNEMLİ):\n"
@@ -250,10 +253,12 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "Aracı çağırmadan 'iptal ettim', 'iptal ediyorum', 'oluşturdum' gibi cümleler KURMA.\n"
         "1. GİZLİLİK: Telefon sahibinin kiminle randevusu olduğunu veya özel program detaylarını asla söyleme; sadece müsait veya meşgul olduğunu belirt.\n"
         "2. RANDEVU VE İPTAL: Randevular yalnız mesai saatleri içinde verilir (`book_calendar_appointment`). İptal için önce arayanın adını ve saatini sorup doğrula (`cancel_calendar_appointment`).\n"
-        "3. MESAJ VE NOT: Mesaj bırakmak isteyenden adını, mesajını ve geri aranmak isteyip istemediğini öğren; önemli bilgileri (isim, saat) tekrar edip onaylat, sonra `save_call_note` aracını çağır. "
-        "`summary_tr` alan adı eski uyumluluk içindir: özetin kendisini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; olmayan bilgi ekleme. Kayıt izni vermezse `recording_consent=False` gönder.\n"
-        "4. BİLGİLERİ TEKRAR SORMA: Arayan adını, konusunu veya saati bir kez söylediyse bunu hatırla ve tekrar sorma. Ad yalnızca hiç söylenmediyse sorulur.\n"
-        "5. TELEFON NUMARASI SORMA: Arayanın numarası arama sırasında sistem tarafından otomatik alınır; numara isteme.\n"
+        "3. MESAJ VE NOT: Mesaj bırakmak isteyenden sırasıyla adını (vermek istemezse anonim devam et), ARAMA NEDENİNİ, MESAJINI ve geri aranmak isteyip istemediğini öğren. "
+        "Mesajı, nedeni ve geri dönüş isteğini görüşme sonunda aynen tekrar edip açık onay al. Ancak bundan sonra `save_call_note(details_confirmed=True)` aracını çağır. "
+        "`summary_tr` alan adı eski uyumluluk içindir: özetin kendisini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; olmayan bilgi ekleme.\n"
+        "4. KAYIT İZNİ: Arayan kayda izin vermediğini söylerse `recording_consent=False` kullan. Bu durumda mesajın veya arama nedeninin içeriğini kaydetme; yalnızca arayan isterse teyit edilmiş geri arama talebini al.\n"
+        "5. ANLAŞILMAYAN BİLGİ: Bir bilgi anlaşılmazsa yavaşça tekrar iste. İkinci başarısız denemede nedeni ve mesajı kısa cümlelerle ayrı ayrı iste. Üçüncü başarısız denemede doğrulanamayan bilgiyi kaydetme; yalnız geri arama talebi teklif et.\n"
+        "6. TELEFON NUMARASI: Geri arama isteniyorsa önce sistemde numara olup olmadığını kontrol et. Sistem numarası yoksa arayandan geri dönüş numarasını iste ve `callback_number` alanına yaz. Geri arama istenmiyorsa numara sorma.\n"
         "6. MESAJ Mİ RANDEVU MU: Arayan mevcut bir toplantının saatini değiştirmek istiyorsa bu bir MESAJDIR (telefon sahibi karar verir). Yalnızca arayan açıkça yeni randevu isterse `book_calendar_appointment` çağır. "
         "Randevu oluşturduğunu SÖYLEMEDEN ÖNCE aracı mutlaka çağır ve sonucun 'BAŞARILI' olduğunu gör.\n"
         "7. RANDEVU İPTALİ: İptal için arayanın ADINI ve randevunun TARİHİNİ ve SAATİNİ sor; üçü olmadan `cancel_calendar_appointment` çağırma. "
@@ -261,7 +266,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "7b. RANDEVU DEĞİŞTİRME: Arayan KENDİ randevusunun saatini değiştirmek isterse önce adı-soyadı, eski tarih ve saati doğrula; yeni saatin müsaitliğini `check_calendar_availability` ile kontrol et; "
         "sonra eski randevuyu `cancel_calendar_appointment` ile iptal et ve yenisini `book_calendar_appointment` ile oluştur. İki işlem de BAŞARILI olmadan değişti deme.\n"
         "'yarın', 'öbür gün', 'gelecek pazartesi' gibi ifadeleri BUGÜN tarihine göre YYYY-MM-DD'ye çevir.\n"
-        "8. ACİL DURUM: Acil/hastane/kaza durumunda hemen `save_call_note(is_urgent=True)` çağır. Hayati tehlike varsa 112'yi aramasını söyle."
+        "8. ACİL DURUM: Acil/hastane/kaza durumunda hemen `save_call_note(is_urgent=True)` çağır. Hayati tehlike varsa, mesaj almaya devam etmeden önce arayanın dilinde 112'yi aramasını söyle."
     )
 
 
@@ -297,8 +302,23 @@ class TurkishCallAssistant(Agent):
     ) -> None:
         text = (new_message.text_content or "").strip()
         if not is_valid_caller_speech(text):
+            tracker = ClarificationTracker(attempts=int(self.call_state.get("clarification_attempts", 0)))
+            prompt, stop_capture = tracker.next_prompt(normalize_language(self.current_lang()))
+            self.call_state["clarification_attempts"] = tracker.attempts
+            self.call_state["clarification_prompt"] = prompt
+            self.call_state["stop_message_capture"] = stop_capture
             print(f"[Filtered Noise] Ignored: {text}", flush=True)
             raise StopResponse()
+
+        self.call_state["clarification_attempts"] = 0
+        self.call_state["stop_message_capture"] = False
+        if is_life_threatening(text):
+            self.call_state["life_threatening"] = True
+            guidance = emergency_guidance(normalize_language(self.current_lang()))
+            await self.update_instructions(
+                build_agent_instructions(self.current_lang(), self.live_schedule, self.active_cfg, greeted_already=True)
+                + f"\nACİL YÖNERGE: Arayanın son ifadesi hayatî risk gösterebilir. İlk yanıtın şu olmalı: {guidance}"
+            )
 
         # Dil: Whisper'ın algıladığı dil (yalnızca tr/ar/en; diğerleri -> Türkçe)
         previous = self.call_state.get("selected_lang")
@@ -378,14 +398,16 @@ class TurkishCallAssistant(Agent):
             self.call_state["appointment_info"] = f"İPTAL EDİLDİ ({date_str} {time_hm})"
         return res
 
-    @function_tool(description="Telefon sahibine bırakılan mesajı, arama nedenini, geri aranma isteğini ve acil durum bilgisini kaydeder. caller_purpose ve summary_tr alanlarını sahibin yapılandırılmış dilinde yaz; summary_tr eski alan adı olsa da özet metnidir.")
+    @function_tool(description="Telefon sahibine bırakılan mesajı yalnızca arayanın açık teyidinden sonra kaydeder. Arama nedeni, mesaj, geri arama tercihi ve details_confirmed zorunludur. Geri arama istenip sistem numarası yoksa callback_number zorunludur. Kayıt izni yoksa yalnızca teyit edilmiş geri arama talebi saklanabilir.")
     async def save_call_note(
         self,
         context: RunContext,
         caller_name: str = "İsimsiz Arayan",
-        caller_purpose: str = "Mesaj Bırakma",
+        caller_purpose: str = "",
         summary_tr: str = "",
-        callback_requested: bool = True,
+        callback_requested: bool | None = None,
+        callback_number: str = "",
+        details_confirmed: bool = False,
         is_urgent: bool = False,
         recording_consent: bool = True,
     ) -> str:
@@ -397,6 +419,28 @@ class TurkishCallAssistant(Agent):
         safe_name = (caller_name or "").strip()
         if not safe_name or safe_name == "İsimsiz Arayan":
             safe_name = ANONYMOUS[owner_lang]
+        system_number = self.call_state.get("caller_number", "")
+        effective_callback_number = (callback_number or system_number).strip()
+        callback_number_required = bool(callback_requested) and not has_usable_callback_number(effective_callback_number)
+        brain_call = CallMessage(
+            call_id=self.call_state["call_id"],
+            caller_language=normalize_language(self.current_lang()),
+            owner_language=normalize_language(owner_lang),
+            caller_name=None if safe_name == ANONYMOUS[owner_lang] else safe_name,
+            caller_purpose=caller_purpose,
+            message=summary_tr,
+            callback_requested=callback_requested,
+            callback_number=effective_callback_number if has_usable_callback_number(effective_callback_number) else None,
+            callback_number_required=callback_number_required,
+            recording_consent=bool(recording_consent),
+            confirmed=bool(details_confirmed),
+            urgency=Urgency.HIGH if is_urgent else Urgency.NORMAL,
+        )
+        if not recording_consent and not callback_requested:
+            return "KAYDEDİLMEDİ: Kayıt izni yok ve geri arama talebi de bulunmuyor."
+        validation = validate_call_for_storage(brain_call)
+        if not validation.success:
+            return f"KAYDEDİLMEDİ: Önce eksik bilgileri tamamla ve arayandan teyit al. ({validation.error_code})"
         if not recording_consent:
             caller_purpose, summary_tr = NO_CONSENT_TEXT[owner_lang]
 
@@ -405,6 +449,7 @@ class TurkishCallAssistant(Agent):
         self.call_state["is_urgent"] = bool(is_urgent)
         self.call_state["callback_requested"] = bool(callback_requested)
         self.call_state["recording_consent"] = bool(recording_consent)
+        self.call_state["callback_number"] = effective_callback_number
 
         await asyncio.to_thread(
             service_manager.save_call_summary,
@@ -416,9 +461,12 @@ class TurkishCallAssistant(Agent):
             False,
             is_urgent=bool(is_urgent),
             callback_requested=bool(callback_requested),
-            caller_number=self.call_state.get("caller_number", "VoIP / Web"),
+            caller_number=effective_callback_number or self.call_state.get("caller_number", "VoIP / Web"),
             lang=owner_lang,
+            recording_consent=bool(recording_consent),
         )
+        self.call_state["note_confirmed"] = True
+        self.call_state["final_summary_done"] = True
         return "Mesaj ve görüşme notu başarıyla kaydedildi."
 
 
@@ -433,6 +481,9 @@ class RealtimeCallAssistant(TurkishCallAssistant):
 
 async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict):
     if call_state.get("final_summary_done") or len(transcript_lines) < 2:
+        return
+    if not call_state.get("note_confirmed"):
+        print("[Auto Summary] Teyit edilmiş mesaj olmadığı için özet kaydedilmedi.", flush=True)
         return
     call_state["final_summary_done"] = True
     caller_lang = normalize_lang(call_state.get("selected_lang"), DEFAULT_LANG)
@@ -615,6 +666,10 @@ async def entrypoint(ctx: JobContext):
         "is_urgent": False,
         "callback_requested": True,
         "recording_consent": True,
+        "note_confirmed": False,
+        "clarification_attempts": 0,
+        "stop_message_capture": False,
+        "life_threatening": False,
         "owner_language": normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG),
         "selected_lang": "auto",
         "last_detected_iso": DEFAULT_LANG,
