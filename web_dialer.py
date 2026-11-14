@@ -652,6 +652,18 @@ async def delete_log_endpoint(request: web.Request):
         return web.json_response({"ok": False, "error": str(e)}, status=400)
 
 
+async def delete_all_logs_endpoint(request: web.Request):
+    require_admin(request)
+    try:
+        body = await request.json()
+        if body.get("confirmed") is not True:
+            return web.json_response({"ok": False, "error": "Tüm verileri silmek için confirmed=true gerekli."}, status=400)
+        deleted_count = CALL_LOG_REPOSITORY.delete_all()
+        return web.json_response({"ok": True, "deleted_count": deleted_count})
+    except (StorageError, json.JSONDecodeError) as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=400)
+
+
 async def token_endpoint(request: web.Request):
     require_admin(request)
     api_key = os.getenv("LIVEKIT_API_KEY", "devkey")
@@ -708,6 +720,7 @@ def create_app() -> web.Application:
     application.router.add_get("/logs", logs_endpoint)
     application.router.add_post("/logs/returned", mark_returned_endpoint)
     application.router.add_post("/logs/delete", delete_log_endpoint)
+    application.router.add_post("/api/calls/delete-all", delete_all_logs_endpoint)
     application.router.add_get("/api/config", get_config_endpoint)
     application.router.add_post("/api/config", save_config_endpoint)
     application.router.add_get("/api/health", health_endpoint)

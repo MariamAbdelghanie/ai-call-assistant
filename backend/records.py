@@ -169,3 +169,10 @@ class JsonCallRepository:
             if len(remaining) == len(records):
                 raise RecordNotFound(call_id)
             self._write_unlocked(remaining)
+
+    def delete_all(self) -> int:
+        """Tüm çağrı kayıtlarını açık kullanıcı onayıyla silmek için kullanılır."""
+        with self._lock:
+            records = self._read_unlocked()
+            self._write_unlocked([])
+            return len(records)

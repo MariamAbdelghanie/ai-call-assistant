@@ -45,6 +45,17 @@ class WebApiTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(response.status, 200)
 
+    async def test_all_calls_need_explicit_confirmation_before_deletion(self):
+        web_dialer.CALL_LOG_REPOSITORY.upsert(CallRecord.create(
+            call_id="web-test-delete-all", caller_name="Ali", caller_number="555",
+            caller_purpose="Silme testi", summary_tr="Test kaydı.",
+        ))
+        response = await self.client.post("/api/calls/delete-all", json={})
+        self.assertEqual(response.status, 400)
+        response = await self.client.post("/api/calls/delete-all", json={"confirmed": True})
+        self.assertEqual(response.status, 200)
+        self.assertEqual((await response.json())["deleted_count"], 1)
+
     async def test_config_rejects_invalid_values_and_health_reports_status(self):
         response = await self.client.post("/api/config", json={"architecture": "unknown"})
         self.assertEqual(response.status, 400)
