@@ -22,13 +22,18 @@ ivr_signal.json
 # Yerel yedekler
 _backup_*/
 
-# README şimdilik depoda tutulmuyor
-README.md
-
-# Gecici test betigi
+# Gecici test betikleri
 check_eleven.py
 eleven_test.mp3
 list_eleven_voices.py
 eleven_premade.mp3
 sample_voices.py
 ses_ornekleri/
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/android/
+mobile/ios/
+mobile/.idea/

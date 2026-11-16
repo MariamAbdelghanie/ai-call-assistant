@@ -1,0 +1,281 @@
+import 'package:flutter/widgets.dart';
+
+/// Uc dil icin metinler. Kod uretimi (gen-l10n) gerektirmez.
+class AppStrings {
+  AppStrings(this.locale);
+
+  final Locale locale;
+
+  static const List<Locale> supported = <Locale>[
+    Locale('tr'),
+    Locale('ar'),
+    Locale('en'),
+  ];
+
+  static AppStrings of(BuildContext context) =>
+      Localizations.of<AppStrings>(context, AppStrings) ??
+      AppStrings(const Locale('tr'));
+
+  static const Map<String, Map<String, String>> _values = {
+    'tr': {
+      'appTitle': 'Çağrı Asistanı',
+      'tabCalls': 'Çağrılar',
+      'tabUrgent': 'Acil',
+      'tabAppointments': 'Randevular',
+      'tabSettings': 'Ayarlar',
+      'callsTitle': 'Çağrı özetleri',
+      'urgentTitle': 'Acil çağrılar',
+      'appointmentsTitle': 'Randevular',
+      'settingsTitle': 'Ayarlar',
+      'statTotal': 'Toplam',
+      'statUrgent': 'Acil',
+      'statWaiting': 'Geri dönüş bekliyor',
+      'search': 'İsim veya mesajda ara',
+      'filterAll': 'Tümü',
+      'filterUrgent': 'Acil',
+      'filterCallback': 'Geri dönüş',
+      'filterToday': 'Bugün',
+      'emptyCalls': 'Henüz çağrı özeti yok',
+      'emptyCallsHint': 'Asistan bir çağrı yanıtladığında özet burada görünür.',
+      'emptyUrgent': 'Acil çağrı yok',
+      'emptyUrgentHint': 'Acil olarak işaretlenen çağrılar burada toplanır.',
+      'emptyAppointments': 'Randevu kaydı yok',
+      'emptyAppointmentsHint': 'Asistanın oluşturduğu randevular burada listelenir.',
+      'urgentBadge': 'ACİL',
+      'callbackBadge': 'Geri dönüş istedi',
+      'calledBack': 'Arandı',
+      'markCalledBack': 'Arandı olarak işaretle',
+      'markNotCalledBack': 'Arandı işaretini kaldır',
+      'callerNumber': 'Numara',
+      'callerPurpose': 'Arama nedeni',
+      'summary': 'Özet',
+      'appointment': 'Randevu',
+      'language': 'Görüşme dili',
+      'time': 'Zaman',
+      'detailTitle': 'Çağrı detayı',
+      'copyNumber': 'Numarayı kopyala',
+      'copied': 'Kopyalandı',
+      'delete': 'Sil',
+      'deleteConfirmTitle': 'Çağrı kaydı silinsin mi?',
+      'deleteConfirmBody': 'Bu kayıt kalıcı olarak silinir ve geri alınamaz.',
+      'cancel': 'Vazgeç',
+      'deleted': 'Kayıt silindi',
+      'serverSection': 'Bağlantı',
+      'serverUrl': 'Sunucu adresi',
+      'serverHint': 'Örnek: http://192.168.0.109:8080',
+      'serverSave': 'Kaydet ve bağlan',
+      'connected': 'Bağlandı',
+      'offlineDemo': 'Örnek veriler gösteriliyor',
+      'offlineDemoHint':
+          'Sunucuya ulaşılamadı. Aşağıdaki kayıtlar örnektir.',
+      'appearance': 'Görünüm',
+      'themeSystem': 'Sistem',
+      'themeLight': 'Açık',
+      'themeDark': 'Koyu',
+      'appLanguage': 'Uygulama dili',
+      'assistantSection': 'Asistan',
+      'assistantEnabled': 'Asistan açık',
+      'workHours': 'Mesai saatleri',
+      'architecture': 'Mimari',
+      'voice': 'Ses',
+      'refresh': 'Yenile',
+      'retry': 'Tekrar dene',
+      'loadError': 'Veriler alınamadı',
+      'today': 'Bugün',
+      'yesterday': 'Dün',
+      'save': 'Kaydet',
+      'saved': 'Kaydedildi',
+      'unnamed': 'İsimsiz arayan',
+      'privacy': 'Gizlilik',
+      'deleteAll': 'Tüm kayıtları sil',
+      'deleteAllBody':
+          'Tüm çağrı özetleri kalıcı olarak silinecek. Bu işlem geri alınamaz.',
+      'allDeleted': 'Tüm kayıtlar silindi',
+    },
+    'ar': {
+      'appTitle': 'مساعد المكالمات',
+      'tabCalls': 'المكالمات',
+      'tabUrgent': 'عاجل',
+      'tabAppointments': 'المواعيد',
+      'tabSettings': 'الإعدادات',
+      'callsTitle': 'ملخصات المكالمات',
+      'urgentTitle': 'المكالمات العاجلة',
+      'appointmentsTitle': 'المواعيد',
+      'settingsTitle': 'الإعدادات',
+      'statTotal': 'الإجمالي',
+      'statUrgent': 'عاجل',
+      'statWaiting': 'بانتظار الرد',
+      'search': 'ابحث في الاسم أو الرسالة',
+      'filterAll': 'الكل',
+      'filterUrgent': 'عاجل',
+      'filterCallback': 'معاودة اتصال',
+      'filterToday': 'اليوم',
+      'emptyCalls': 'لا توجد ملخصات بعد',
+      'emptyCallsHint': 'عندما يرد المساعد على مكالمة سيظهر الملخص هنا.',
+      'emptyUrgent': 'لا توجد مكالمات عاجلة',
+      'emptyUrgentHint': 'المكالمات المعلَّمة كعاجلة تظهر هنا.',
+      'emptyAppointments': 'لا توجد مواعيد',
+      'emptyAppointmentsHint': 'المواعيد التي يحجزها المساعد تظهر هنا.',
+      'urgentBadge': 'عاجل',
+      'callbackBadge': 'طلب معاودة الاتصال',
+      'calledBack': 'تم الاتصال',
+      'markCalledBack': 'تعليم كتم الاتصال',
+      'markNotCalledBack': 'إلغاء تعليم الاتصال',
+      'callerNumber': 'الرقم',
+      'callerPurpose': 'سبب الاتصال',
+      'summary': 'الملخص',
+      'appointment': 'الموعد',
+      'language': 'لغة المكالمة',
+      'time': 'الوقت',
+      'detailTitle': 'تفاصيل المكالمة',
+      'copyNumber': 'نسخ الرقم',
+      'copied': 'تم النسخ',
+      'delete': 'حذف',
+      'deleteConfirmTitle': 'حذف سجل المكالمة؟',
+      'deleteConfirmBody': 'سيُحذف هذا السجل نهائيًا ولا يمكن التراجع.',
+      'cancel': 'إلغاء',
+      'deleted': 'تم حذف السجل',
+      'serverSection': 'الاتصال',
+      'serverUrl': 'عنوان الخادم',
+      'serverHint': 'مثال: http://192.168.0.109:8080',
+      'serverSave': 'حفظ واتصال',
+      'connected': 'متصل',
+      'offlineDemo': 'يتم عرض بيانات تجريبية',
+      'offlineDemoHint': 'تعذر الوصول إلى الخادم. السجلات أدناه أمثلة.',
+      'appearance': 'المظهر',
+      'themeSystem': 'النظام',
+      'themeLight': 'فاتح',
+      'themeDark': 'داكن',
+      'appLanguage': 'لغة التطبيق',
+      'assistantSection': 'المساعد',
+      'assistantEnabled': 'المساعد مُفعّل',
+      'workHours': 'ساعات العمل',
+      'architecture': 'المعمارية',
+      'voice': 'الصوت',
+      'refresh': 'تحديث',
+      'retry': 'إعادة المحاولة',
+      'loadError': 'تعذر جلب البيانات',
+      'today': 'اليوم',
+      'yesterday': 'أمس',
+      'save': 'حفظ',
+      'saved': 'تم الحفظ',
+      'unnamed': 'متصل لم يذكر اسمه',
+      'privacy': 'الخصوصية',
+      'deleteAll': 'حذف كل السجلات',
+      'deleteAllBody':
+          'سيتم حذف جميع ملخصات المكالمات نهائيًا ولا يمكن التراجع.',
+      'allDeleted': 'تم حذف كل السجلات',
+    },
+    'en': {
+      'appTitle': 'Call Assistant',
+      'tabCalls': 'Calls',
+      'tabUrgent': 'Urgent',
+      'tabAppointments': 'Appointments',
+      'tabSettings': 'Settings',
+      'callsTitle': 'Call summaries',
+      'urgentTitle': 'Urgent calls',
+      'appointmentsTitle': 'Appointments',
+      'settingsTitle': 'Settings',
+      'statTotal': 'Total',
+      'statUrgent': 'Urgent',
+      'statWaiting': 'Awaiting callback',
+      'search': 'Search name or message',
+      'filterAll': 'All',
+      'filterUrgent': 'Urgent',
+      'filterCallback': 'Callback',
+      'filterToday': 'Today',
+      'emptyCalls': 'No call summaries yet',
+      'emptyCallsHint': 'When the assistant answers a call, its summary appears here.',
+      'emptyUrgent': 'No urgent calls',
+      'emptyUrgentHint': 'Calls marked urgent are collected here.',
+      'emptyAppointments': 'No appointments',
+      'emptyAppointmentsHint': 'Appointments booked by the assistant appear here.',
+      'urgentBadge': 'URGENT',
+      'callbackBadge': 'Callback requested',
+      'calledBack': 'Called back',
+      'markCalledBack': 'Mark as called back',
+      'markNotCalledBack': 'Remove called-back mark',
+      'callerNumber': 'Number',
+      'callerPurpose': 'Reason for calling',
+      'summary': 'Summary',
+      'appointment': 'Appointment',
+      'language': 'Call language',
+      'time': 'Time',
+      'detailTitle': 'Call detail',
+      'copyNumber': 'Copy number',
+      'copied': 'Copied',
+      'delete': 'Delete',
+      'deleteConfirmTitle': 'Delete this call record?',
+      'deleteConfirmBody': 'This record will be permanently deleted and cannot be undone.',
+      'cancel': 'Cancel',
+      'deleted': 'Record deleted',
+      'serverSection': 'Connection',
+      'serverUrl': 'Server address',
+      'serverHint': 'Example: http://192.168.0.109:8080',
+      'serverSave': 'Save and connect',
+      'connected': 'Connected',
+      'offlineDemo': 'Showing sample data',
+      'offlineDemoHint': 'The server could not be reached. Records below are samples.',
+      'appearance': 'Appearance',
+      'themeSystem': 'System',
+      'themeLight': 'Light',
+      'themeDark': 'Dark',
+      'appLanguage': 'App language',
+      'assistantSection': 'Assistant',
+      'assistantEnabled': 'Assistant enabled',
+      'workHours': 'Working hours',
+      'architecture': 'Architecture',
+      'voice': 'Voice',
+      'refresh': 'Refresh',
+      'retry': 'Try again',
+      'loadError': 'Could not load data',
+      'today': 'Today',
+      'yesterday': 'Yesterday',
+      'save': 'Save',
+      'saved': 'Saved',
+      'unnamed': 'Unnamed caller',
+      'privacy': 'Privacy',
+      'deleteAll': 'Delete all records',
+      'deleteAllBody':
+          'All call summaries will be permanently deleted. This cannot be undone.',
+      'allDeleted': 'All records deleted',
+    },
+  };
+
+  String t(String key) {
+    final table = _values[locale.languageCode] ?? _values['tr']!;
+    return table[key] ?? _values['tr']![key] ?? key;
+  }
+
+  /// Dil kodunu okunabilir isme cevirir (ozet dili rozetleri icin).
+  String languageName(String code) {
+    switch (code) {
+      case 'ar':
+        return locale.languageCode == 'ar'
+            ? 'العربية'
+            : (locale.languageCode == 'tr' ? 'Arapça' : 'Arabic');
+      case 'en':
+        return locale.languageCode == 'ar'
+            ? 'الإنجليزية'
+            : (locale.languageCode == 'tr' ? 'İngilizce' : 'English');
+      default:
+        return locale.languageCode == 'ar'
+            ? 'التركية'
+            : (locale.languageCode == 'tr' ? 'Türkçe' : 'Turkish');
+    }
+  }
+}
+
+class AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
+  const AppStringsDelegate();
+
+  @override
+  bool isSupported(Locale locale) =>
+      AppStrings.supported.any((l) => l.languageCode == locale.languageCode);
+
+  @override
+  Future<AppStrings> load(Locale locale) async => AppStrings(locale);
+
+  @override
+  bool shouldReload(AppStringsDelegate old) => false;
+}
