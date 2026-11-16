@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/strings.dart';
 import 'screens/home_shell.dart';
+import 'screens/welcome_screen.dart';
 import 'services/api_client.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
@@ -14,17 +15,24 @@ void main() {
   runApp(CallAssistantApp(state: state));
 }
 
-class CallAssistantApp extends StatelessWidget {
+class CallAssistantApp extends StatefulWidget {
   const CallAssistantApp({super.key, required this.state});
 
   final AppState state;
 
   @override
+  State<CallAssistantApp> createState() => _CallAssistantAppState();
+}
+
+class _CallAssistantAppState extends State<CallAssistantApp> {
+  bool _welcomed = false;
+
+  @override
   Widget build(BuildContext context) {
     return AppScope(
-      state: state,
+      state: widget.state,
       child: ListenableBuilder(
-        listenable: state,
+        listenable: widget.state,
         builder: (context, _) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -32,8 +40,8 @@ class CallAssistantApp extends StatelessWidget {
             title: 'Cagri Asistani',
             theme: AppTheme.light(),
             darkTheme: AppTheme.dark(),
-            themeMode: state.themeMode,
-            locale: state.locale,
+            themeMode: widget.state.themeMode,
+            locale: widget.state.locale,
             supportedLocales: AppStrings.supported,
             localizationsDelegates: const [
               AppStringsDelegate(),
@@ -41,7 +49,11 @@ class CallAssistantApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: const HomeShell(),
+            home: _welcomed
+                ? const HomeShell()
+                : WelcomeScreen(
+                    onStart: () => setState(() => _welcomed = true),
+                  ),
           );
         },
       ),

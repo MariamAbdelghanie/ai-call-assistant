@@ -19,6 +19,10 @@ class AppStrings {
   static const Map<String, Map<String, String>> _values = {
     'tr': {
       'appTitle': 'Çağrı Asistanı',
+      'welcomeTitle': "Akıllı çağrı asistanınızla tanışın",
+      'welcomeSubtitle': "Siz meşgulken çağrıları karşılar, mesajı alır ve özetini size gönderir.",
+      'welcomeCta': "Başlayalım",
+      'welcomeHint': "Devam etmek için dokunun",
       'greetingTitle': 'Merhaba!',
       'greetingSubtitle': 'Asistanınız çağrıları sizin için karşılıyor',
       'recentCallers': 'Son arayanlar',
@@ -120,6 +124,10 @@ class AppStrings {
     },
     'ar': {
       'appTitle': 'مساعد المكالمات',
+      'welcomeTitle': "تعرّف على مساعد مكالماتك الذكي",
+      'welcomeSubtitle': "يرد على مكالماتك وأنت مشغول، ويأخذ الرسالة ويرسل لك ملخصها.",
+      'welcomeCta': "لنبدأ",
+      'welcomeHint': "اضغط للمتابعة",
       'greetingTitle': 'أهلاً بك!',
       'greetingSubtitle': 'مساعدك يرد على مكالماتك نيابةً عنك',
       'recentCallers': 'آخر المتصلين',
@@ -220,6 +228,10 @@ class AppStrings {
     },
     'en': {
       'appTitle': 'Call Assistant',
+      'welcomeTitle': "Meet your smart call assistant",
+      'welcomeSubtitle': "It answers while you are busy, takes the message and sends you a summary.",
+      'welcomeCta': "Let's start",
+      'welcomeHint': "Tap to continue",
       'greetingTitle': 'Hello!',
       'greetingSubtitle': 'Your assistant is answering calls for you',
       'recentCallers': 'Recent callers',
