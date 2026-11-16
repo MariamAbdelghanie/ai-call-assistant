@@ -7,9 +7,9 @@ import '../theme/app_theme.dart';
 import '../widgets/assistant_robot.dart';
 import '../widgets/glass.dart';
 
-/// Opening screen: the robot greets, then flies away when tapped.
-/// Mindora-inspired with floating particles, staggered animations,
-/// and a soft breathing glow.
+/// Mindora-inspired Welcome & Onboarding Screen:
+/// Features floating ethereal particles, interactive breathing agent core,
+/// frosted glass container, and staggered spring animations.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key, required this.onStart});
 
@@ -21,27 +21,28 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen>
     with TickerProviderStateMixin {
-  // Staggered entrance controllers
+  // Staggered entrance animation
   late final AnimationController _enter = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 900),
+    duration: const Duration(milliseconds: 1100),
   )..forward();
 
+  // Exit animation when user taps Start
   late final AnimationController _exit = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 620),
+    duration: const Duration(milliseconds: 650),
   );
 
-  // Continuous breathing / glow loop
+  // Breathing pulse for ambient glows
   late final AnimationController _breathe = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 3200),
   )..repeat(reverse: true);
 
-  // Floating particles loop
+  // Floating misty particles
   late final AnimationController _particles = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 12),
+    duration: const Duration(seconds: 14),
   )..repeat();
 
   bool _leaving = false;
@@ -77,65 +78,71 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         body: SafeArea(
           child: Stack(
             children: [
-              // Floating nature particles
+              // Floating ambient mist particles
               if (!reduceMotion)
                 AnimatedBuilder(
                   animation: _particles,
-                  builder: (context, _) => CustomPaint(
-                    size: MediaQuery.of(context).size,
-                    painter: _ParticlePainter(
-                      t: _particles.value,
-                      isDark: tokens.isDark,
+                  builder: (context, _) => Positioned.fill(
+                    child: CustomPaint(
+                      painter: _MindoraParticlePainter(
+                        t: _particles.value,
+                        isDark: tokens.isDark,
+                      ),
                     ),
                   ),
                 ),
 
-              // Main content
+              // Main Onboarding Layout
               AnimatedBuilder(
                 animation: Listenable.merge([_enter, _exit, _breathe]),
                 builder: (context, _) {
                   final lift = reduceMotion ? 0.0 : exit.value;
-                  final breatheVal =
-                      reduceMotion ? 0.0 : _breathe.value;
+                  final breatheVal = reduceMotion ? 0.5 : _breathe.value;
 
                   return Opacity(
-                    opacity: 1 - lift * 0.9,
+                    opacity: (1 - lift * 0.95).clamp(0.0, 1.0),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 34),
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
                       child: Column(
                         children: [
                           const Spacer(flex: 2),
 
-                          // Robot with breathing glow
+                          // Central Mindora Zen Agent with breathing aura
                           Transform.translate(
-                            offset: Offset(0, -lift * 320),
+                            offset: Offset(0, -lift * 340),
                             child: Transform.scale(
-                              scale: (reduceMotion ? 1.0 : enter.value)
-                                      .clamp(0.0, 1.0) *
-                                  (1 - lift * 0.25),
+                              scale: (reduceMotion ? 1.0 : enter.value).clamp(0.0, 1.0) *
+                                  (1 - lift * 0.20),
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  // Breathing glow ring
+                                  // Breathing multi-ring aura
                                   Container(
-                                    width: 280 + breatheVal * 20,
-                                    height: 280 + breatheVal * 20,
+                                    width: 280 + breatheVal * 28,
+                                    height: 280 + breatheVal * 28,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppPalette.brand.withValues(
-                                            alpha: 0.08 + breatheVal * 0.08,
+                                          color: AppPalette.sage.withValues(
+                                            alpha: 0.12 + breatheVal * 0.12,
                                           ),
-                                          blurRadius: 60 + breatheVal * 20,
-                                          spreadRadius: 10 + breatheVal * 10,
+                                          blurRadius: 70 + breatheVal * 24,
+                                          spreadRadius: 12 + breatheVal * 12,
+                                        ),
+                                        BoxShadow(
+                                          color: AppPalette.mistBlue.withValues(
+                                            alpha: 0.10 + breatheVal * 0.10,
+                                          ),
+                                          blurRadius: 50 + breatheVal * 18,
                                         ),
                                       ],
                                     ),
                                   ),
+                                  // The newly styled Mindora AI Agent
                                   const AssistantRobot(
                                     mood: RobotMood.idle,
-                                    size: 250,
+                                    size: 260,
                                   ),
                                 ],
                               ),
@@ -144,73 +151,116 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                           const Spacer(),
 
-                          // Title with staggered entrance
+                          // Frosted Glass Content Panel
                           Transform.translate(
-                            offset: Offset(0, lift * 140),
-                            child: Column(
-                              children: [
-                                // Title slides in from bottom with delay
-                                _StaggeredFade(
-                                  animation: enter,
-                                  delay: 0.2,
-                                  slideOffset: 0.15,
-                                  child: Text(
-                                    strings.t('welcomeTitle'),
-                                    textAlign: TextAlign.center,
-                                    style:
-                                        context.text.headlineMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.12,
+                            offset: Offset(0, lift * 180),
+                            child: GlassCard(
+                              blur: true,
+                              strong: true,
+                              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
+                              radius: AppTheme.radius,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Top Mindora Pill Badge
+                                  _StaggeredItem(
+                                    animation: enter,
+                                    delay: 0.15,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: AppPalette.sage.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(999),
+                                        border: Border.all(
+                                          color: AppPalette.sage.withValues(alpha: 0.28),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 7,
+                                            height: 7,
+                                            decoration: const BoxDecoration(
+                                              color: AppPalette.sage,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'MINDORA • AI ASSISTANT',
+                                            style: context.text.labelSmall?.copyWith(
+                                              color: AppPalette.sage,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 12),
-                                // Subtitle slides in later
-                                _StaggeredFade(
-                                  animation: enter,
-                                  delay: 0.35,
-                                  slideOffset: 0.12,
-                                  child: Text(
-                                    strings.t('welcomeSubtitle'),
-                                    textAlign: TextAlign.center,
-                                    style: context.text.bodyLarge?.copyWith(
-                                      color: tokens.muted,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 34),
+                                  const SizedBox(height: 16),
 
-                          // CTA button with staggered entrance
-                          Transform.translate(
-                            offset: Offset(0, lift * 200),
-                            child: _StaggeredFade(
-                              animation: enter,
-                              delay: 0.50,
-                              slideOffset: 0.10,
-                              child: GradientButton(
-                                label: strings.t('welcomeCta'),
-                                icon: Icons.arrow_forward_rounded,
-                                height: 58,
-                                onTap: _takeOff,
+                                  // Headline
+                                  _StaggeredItem(
+                                    animation: enter,
+                                    delay: 0.30,
+                                    child: Text(
+                                      strings.t('welcomeTitle'),
+                                      textAlign: TextAlign.center,
+                                      style: context.text.headlineMedium?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.15,
+                                        letterSpacing: -0.6,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+
+                                  // Subtitle
+                                  _StaggeredItem(
+                                    animation: enter,
+                                    delay: 0.45,
+                                    child: Text(
+                                      strings.t('welcomeSubtitle'),
+                                      textAlign: TextAlign.center,
+                                      style: context.text.bodyMedium?.copyWith(
+                                        color: tokens.muted,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // Shimmering Start Button (Blended 4-color gradient)
+                                  _StaggeredItem(
+                                    animation: enter,
+                                    delay: 0.60,
+                                    child: GradientButton(
+                                      label: strings.t('welcomeCta'),
+                                      icon: Icons.arrow_forward_rounded,
+                                      height: 56,
+                                      useFourColors: true,
+                                      onTap: _takeOff,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  // Bottom Hint
+                                  _StaggeredItem(
+                                    animation: enter,
+                                    delay: 0.70,
+                                    child: Text(
+                                      strings.t('welcomeHint'),
+                                      textAlign: TextAlign.center,
+                                      style: context.text.labelSmall?.copyWith(
+                                        color: tokens.muted,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-
-                          // Hint text
-                          _StaggeredFade(
-                            animation: enter,
-                            delay: 0.60,
-                            slideOffset: 0.08,
-                            child: Text(
-                              strings.t('welcomeHint'),
-                              textAlign: TextAlign.center,
-                              style: context.text.labelSmall
-                                  ?.copyWith(color: tokens.muted),
                             ),
                           ),
                         ],
@@ -227,97 +277,93 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 }
 
-/// Staggered fade+slide widget for entrance animations.
-class _StaggeredFade extends StatelessWidget {
-  const _StaggeredFade({
+/// Helper for staggered animated entrance.
+class _StaggeredItem extends StatelessWidget {
+  const _StaggeredItem({
     required this.animation,
     required this.delay,
-    required this.slideOffset,
     required this.child,
   });
 
   final Animation<double> animation;
   final double delay;
-  final double slideOffset;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    // Map the animation value with a delay so each element starts later
-    final t = ((animation.value - delay) / (1 - delay)).clamp(0.0, 1.0);
+    final t = ((animation.value - delay) / (1.0 - delay)).clamp(0.0, 1.0);
     final curved = Curves.easeOutCubic.transform(t);
 
     return Opacity(
       opacity: curved,
       child: Transform.translate(
-        offset: Offset(0, (1 - curved) * 30 * slideOffset / 0.15),
+        offset: Offset(0, (1 - curved) * 24),
         child: child,
       ),
     );
   }
 }
 
-/// Paints floating soft particles/orbs reminiscent of fireflies in mist.
-class _ParticlePainter extends CustomPainter {
-  _ParticlePainter({required this.t, required this.isDark});
+/// Floating particles resembling fireflies / mist orbs in the serene landscape.
+class _MindoraParticlePainter extends CustomPainter {
+  _MindoraParticlePainter({required this.t, required this.isDark});
 
   final double t;
   final bool isDark;
 
-  static final List<_Particle> _orbs = List.generate(14, (i) {
-    final rng = math.Random(i * 42 + 7);
-    return _Particle(
+  static final List<_MistParticle> _particles = List.generate(16, (i) {
+    final rng = math.Random(i * 37 + 11);
+    return _MistParticle(
       x: rng.nextDouble(),
       y: rng.nextDouble(),
-      radius: 2.0 + rng.nextDouble() * 4.0,
-      speed: 0.3 + rng.nextDouble() * 0.7,
+      radius: 2.2 + rng.nextDouble() * 3.8,
+      speed: 0.4 + rng.nextDouble() * 0.8,
       phase: rng.nextDouble() * math.pi * 2,
-      colorIndex: rng.nextInt(4),
+      colorType: i % 4,
     );
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final orb in _orbs) {
-      final angle = t * math.pi * 2 * orb.speed + orb.phase;
-      final dx = orb.x * size.width + math.sin(angle) * 18;
-      final dy = orb.y * size.height + math.cos(angle * 0.7) * 12;
-      final pulse = (math.sin(angle * 1.5) * 0.5 + 0.5);
+    for (final p in _particles) {
+      final angle = t * math.pi * 2 * p.speed + p.phase;
+      final dx = p.x * size.width + math.sin(angle) * 16;
+      final dy = p.y * size.height + math.cos(angle * 0.8) * 12;
+      final pulse = (math.sin(angle * 1.6) * 0.5 + 0.5);
 
-      final color = switch (orb.colorIndex) {
-        0 => AppPalette.brand,
-        1 => AppPalette.cyan,
+      final color = switch (p.colorType) {
+        0 => AppPalette.sage,
+        1 => AppPalette.mistBlue,
         2 => AppPalette.blush,
-        _ => AppPalette.lilac,
+        _ => AppPalette.mistWhite,
       };
 
-      final alpha = (isDark ? 0.12 : 0.18) + pulse * 0.1;
+      final alpha = (isDark ? 0.14 : 0.22) + pulse * 0.12;
 
       canvas.drawCircle(
         Offset(dx, dy),
-        orb.radius + pulse * 2,
+        p.radius + pulse * 1.8,
         Paint()
           ..color = color.withValues(alpha: alpha)
-          ..maskFilter = MaskFilter.blur(
-              BlurStyle.normal, orb.radius * 1.5 + pulse * 3),
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.radius * 1.6 + pulse * 2.5),
       );
     }
   }
 
   @override
-  bool shouldRepaint(_ParticlePainter old) => old.t != t;
+  bool shouldRepaint(_MindoraParticlePainter old) => old.t != t;
 }
 
-class _Particle {
-  const _Particle({
+class _MistParticle {
+  const _MistParticle({
     required this.x,
     required this.y,
     required this.radius,
     required this.speed,
     required this.phase,
-    required this.colorIndex,
+    required this.colorType,
   });
 
   final double x, y, radius, speed, phase;
-  final int colorIndex;
+  final int colorType;
 }

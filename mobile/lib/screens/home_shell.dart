@@ -131,11 +131,11 @@ class _CallTabIcon extends StatelessWidget {
       width: 46,
       height: 32,
       decoration: BoxDecoration(
-        gradient: tokens.brandGradient,
+        gradient: tokens.fourColorGradient,
         borderRadius: BorderRadius.circular(999),
         boxShadow: [
           BoxShadow(
-            color: AppPalette.brand.withValues(alpha: active ? 0.45 : 0.22),
+            color: AppPalette.sage.withValues(alpha: active ? 0.45 : 0.22),
             blurRadius: active ? 18 : 10,
             offset: const Offset(0, 5),
           ),

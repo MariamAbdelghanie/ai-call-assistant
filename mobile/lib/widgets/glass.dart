@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Misty mountain-cloud background. All screens are built on top of this.
+/// Serene misty mountain and cloud background, matching the Mindora UI design.
+/// All screens are rendered on top of this atmospheric surface.
 class GlassBackground extends StatelessWidget {
   const GlassBackground({super.key, required this.child});
 
@@ -15,42 +16,53 @@ class GlassBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final mesh = context.tokens.mesh;
     final isDark = context.tokens.isDark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: mesh,
-          stops: const [0.0, 0.38, 0.72, 1.0],
+          stops: const [0.0, 0.35, 0.70, 1.0],
         ),
       ),
       child: Stack(
         children: [
-          // Misty mountain / cloud scene painted in the background.
+          // Background misty mountain landscape with clouds & lake reflection
           Positioned.fill(
             child: CustomPaint(
-              painter: _MistPainter(isDark: isDark),
+              painter: _MindoraNaturePainter(isDark: isDark),
             ),
           ),
-          // Soft ambient glow blobs for depth.
+          // Ambient depth glow spots in Mindora palette tones
           Positioned(
-            top: -80,
-            right: -60,
-            child: _Blob(
+            top: -60,
+            right: -40,
+            child: _GlowBlob(
+              color: AppPalette.mistBlue.withValues(
+                alpha: isDark ? 0.16 : 0.28,
+              ),
+              size: 260,
+            ),
+          ),
+          Positioned(
+            bottom: -80,
+            left: -50,
+            child: _GlowBlob(
+              color: AppPalette.sage.withValues(
+                alpha: isDark ? 0.14 : 0.24,
+              ),
+              size: 290,
+            ),
+          ),
+          Positioned(
+            top: 220,
+            left: -80,
+            child: _GlowBlob(
               color: AppPalette.blush.withValues(
-                alpha: isDark ? 0.15 : 0.30,
+                alpha: isDark ? 0.10 : 0.18,
               ),
-              size: 240,
-            ),
-          ),
-          Positioned(
-            bottom: -100,
-            left: -70,
-            child: _Blob(
-              color: AppPalette.cyan.withValues(
-                alpha: isDark ? 0.12 : 0.28,
-              ),
-              size: 280,
+              size: 220,
             ),
           ),
           child,
@@ -60,9 +72,9 @@ class GlassBackground extends StatelessWidget {
   }
 }
 
-/// Paints subtle misty clouds and distant mountain silhouettes.
-class _MistPainter extends CustomPainter {
-  _MistPainter({required this.isDark});
+/// Custom painter for the Mindora misty lake, pine ridge mountains, and rolling clouds.
+class _MindoraNaturePainter extends CustomPainter {
+  _MindoraNaturePainter({required this.isDark});
 
   final bool isDark;
 
@@ -71,89 +83,139 @@ class _MistPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // --- Distant mountain range (very faint) ---
-    final mountainPaint = Paint()
-      ..color = (isDark
-              ? const Color(0xFF2A5A50)
-              : const Color(0xFFC8D8D0))
-          .withValues(alpha: isDark ? 0.25 : 0.35);
+    // --- Far Distant Mountain Range ---
+    final farMountainColor = (isDark
+            ? const Color(0xFF243B36)
+            : const Color(0xFFBACDC8))
+        .withValues(alpha: isDark ? 0.35 : 0.45);
 
-    final mountains = Path()
-      ..moveTo(0, h * 0.42)
-      ..lineTo(w * 0.12, h * 0.33)
-      ..quadraticBezierTo(w * 0.18, h * 0.28, w * 0.25, h * 0.32)
-      ..lineTo(w * 0.35, h * 0.24)
-      ..quadraticBezierTo(w * 0.42, h * 0.19, w * 0.50, h * 0.26)
-      ..lineTo(w * 0.58, h * 0.22)
-      ..quadraticBezierTo(w * 0.65, h * 0.16, w * 0.72, h * 0.25)
-      ..lineTo(w * 0.82, h * 0.20)
-      ..quadraticBezierTo(w * 0.90, h * 0.15, w, h * 0.28)
-      ..lineTo(w, h * 0.50)
-      ..lineTo(0, h * 0.50)
+    final farMountainPath = Path()
+      ..moveTo(0, h * 0.44)
+      ..lineTo(w * 0.10, h * 0.36)
+      ..quadraticBezierTo(w * 0.16, h * 0.31, w * 0.24, h * 0.35)
+      ..lineTo(w * 0.36, h * 0.26)
+      ..quadraticBezierTo(w * 0.44, h * 0.21, w * 0.52, h * 0.28)
+      ..lineTo(w * 0.62, h * 0.23)
+      ..quadraticBezierTo(w * 0.70, h * 0.17, w * 0.78, h * 0.26)
+      ..lineTo(w * 0.88, h * 0.21)
+      ..quadraticBezierTo(w * 0.94, h * 0.17, w, h * 0.29)
+      ..lineTo(w, h * 0.55)
+      ..lineTo(0, h * 0.55)
       ..close();
 
-    canvas.drawPath(mountains, mountainPaint);
+    canvas.drawPath(farMountainPath, Paint()..color = farMountainColor);
 
-    // --- Fog/mist layers ---
+    // --- Mid-range Pine Ridge Mountains ---
+    final midMountainColor = (isDark
+            ? const Color(0xFF1E322D)
+            : const Color(0xFFA1B8B2))
+        .withValues(alpha: isDark ? 0.45 : 0.55);
+
+    final midMountainPath = Path()
+      ..moveTo(0, h * 0.47)
+      ..lineTo(w * 0.15, h * 0.40)
+      ..quadraticBezierTo(w * 0.25, h * 0.34, w * 0.33, h * 0.39)
+      ..lineTo(w * 0.48, h * 0.32)
+      ..quadraticBezierTo(w * 0.58, h * 0.27, w * 0.68, h * 0.35)
+      ..lineTo(w * 0.82, h * 0.30)
+      ..quadraticBezierTo(w * 0.92, h * 0.25, w, h * 0.37)
+      ..lineTo(w, h * 0.58)
+      ..lineTo(0, h * 0.58)
+      ..close();
+
+    canvas.drawPath(midMountainPath, Paint()..color = midMountainColor);
+
+    // --- Atmospheric Lake Horizon & Reflection ---
+    final waterColor = (isDark
+            ? const Color(0xFF172825)
+            : const Color(0xFFC7D7D3))
+        .withValues(alpha: isDark ? 0.30 : 0.40);
+
+    final waterRect = Rect.fromLTRB(0, h * 0.48, w, h * 0.75);
+    final waterPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          waterColor,
+          waterColor.withValues(alpha: 0.05),
+        ],
+      ).createShader(waterRect);
+    canvas.drawRect(waterRect, waterPaint);
+
+    // --- Layered Fog and Mist Banks ---
     for (var i = 0; i < 4; i++) {
-      final yOffset = h * (0.28 + i * 0.05);
-      final alpha = (isDark ? 0.06 : 0.12) - i * 0.02;
+      final yPos = h * (0.33 + i * 0.07);
+      final alpha = (isDark ? 0.08 : 0.14) - i * 0.02;
       if (alpha <= 0) continue;
 
       final fogPaint = Paint()
-        ..color = (isDark ? Colors.white : const Color(0xFFF0EDE6))
+        ..color = (isDark ? Colors.white : const Color(0xFFF1F5F4))
             .withValues(alpha: alpha.clamp(0.01, 1.0))
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 30.0 + i * 12);
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 28.0 + i * 10);
 
-      final fog = Path()
-        ..moveTo(-w * 0.1, yOffset + h * 0.04)
+      final fogPath = Path()
+        ..moveTo(-w * 0.1, yPos + h * 0.03)
         ..quadraticBezierTo(
-            w * 0.2, yOffset - h * 0.02, w * 0.4, yOffset + h * 0.03)
+            w * 0.25, yPos - h * 0.02, w * 0.45, yPos + h * 0.02)
         ..quadraticBezierTo(
-            w * 0.6, yOffset + h * 0.06, w * 0.8, yOffset - h * 0.01)
+            w * 0.65, yPos + h * 0.05, w * 0.85, yPos - h * 0.01)
         ..quadraticBezierTo(
-            w * 0.95, yOffset + h * 0.02, w * 1.1, yOffset + h * 0.05)
-        ..lineTo(w * 1.1, yOffset + h * 0.12)
-        ..lineTo(-w * 0.1, yOffset + h * 0.12)
+            w * 0.98, yPos + h * 0.03, w * 1.15, yPos + h * 0.04)
+        ..lineTo(w * 1.15, yPos + h * 0.10)
+        ..lineTo(-w * 0.1, yPos + h * 0.10)
         ..close();
 
-      canvas.drawPath(fog, fogPaint);
+      canvas.drawPath(fogPath, fogPaint);
     }
 
-    // --- Soft cloud shapes floating at top ---
-    _drawCloud(canvas, Offset(w * 0.18, h * 0.10), w * 0.22,
-        isDark ? 0.06 : 0.14);
-    _drawCloud(canvas, Offset(w * 0.70, h * 0.08), w * 0.18,
-        isDark ? 0.05 : 0.12);
-    _drawCloud(canvas, Offset(w * 0.45, h * 0.15), w * 0.25,
-        isDark ? 0.04 : 0.10);
+    // --- Soft Billowing Clouds in the Upper Sky ---
+    _paintCloud(
+      canvas,
+      Offset(w * 0.20, h * 0.09),
+      w * 0.24,
+      isDark ? 0.08 : 0.18,
+    );
+    _paintCloud(
+      canvas,
+      Offset(w * 0.75, h * 0.07),
+      w * 0.22,
+      isDark ? 0.07 : 0.16,
+    );
+    _paintCloud(
+      canvas,
+      Offset(w * 0.50, h * 0.14),
+      w * 0.28,
+      isDark ? 0.06 : 0.14,
+    );
   }
 
-  void _drawCloud(Canvas canvas, Offset center, double radius, double alpha) {
-    final cloudColor = (isDark ? Colors.white : const Color(0xFFE8E4DD))
+  void _paintCloud(Canvas canvas, Offset center, double radius, double alpha) {
+    final cloudColor = (isDark ? Colors.white : const Color(0xFFEDF3F1))
         .withValues(alpha: alpha);
     final paint = Paint()
       ..color = cloudColor
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.6);
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.55);
 
-    // Three overlapping circles to form a cloud shape
-    canvas.drawCircle(center, radius * 0.5, paint);
+    canvas.drawCircle(center, radius * 0.52, paint);
     canvas.drawCircle(
-        Offset(center.dx - radius * 0.35, center.dy + radius * 0.08),
-        radius * 0.38,
-        paint);
+      Offset(center.dx - radius * 0.36, center.dy + radius * 0.08),
+      radius * 0.40,
+      paint,
+    );
     canvas.drawCircle(
-        Offset(center.dx + radius * 0.35, center.dy + radius * 0.05),
-        radius * 0.42,
-        paint);
+      Offset(center.dx + radius * 0.36, center.dy + radius * 0.06),
+      radius * 0.44,
+      paint,
+    );
   }
 
   @override
-  bool shouldRepaint(_MistPainter old) => old.isDark != isDark;
+  bool shouldRepaint(_MindoraNaturePainter old) => old.isDark != isDark;
 }
 
-class _Blob extends StatelessWidget {
-  const _Blob({required this.color, required this.size});
+class _GlowBlob extends StatelessWidget {
+  const _GlowBlob({required this.color, required this.size});
 
   final Color color;
   final double size;
@@ -168,7 +230,7 @@ class _Blob extends StatelessWidget {
           shape: BoxShape.circle,
           color: color,
           boxShadow: [
-            BoxShadow(color: color, blurRadius: 110, spreadRadius: 40),
+            BoxShadow(color: color, blurRadius: 100, spreadRadius: 36),
           ],
         ),
       ),
@@ -215,10 +277,7 @@ class GlassScaffold extends StatelessWidget {
   }
 }
 
-/// Frosted glass surface.
-///
-/// `blur` is enabled only for a few prominent cards; regular list items
-/// skip the blur to keep scrolling performance smooth.
+/// Frosted glass surface matching Mindora component cards.
 class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
@@ -253,7 +312,10 @@ class GlassCard extends StatelessWidget {
             : null,
         gradient: gradient,
         borderRadius: shape,
-        border: Border.all(color: borderColor ?? tokens.glassBorder),
+        border: Border.all(
+          color: borderColor ?? tokens.glassBorder,
+          width: 1.2,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -278,8 +340,8 @@ class GlassCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: tokens.shadow,
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -288,7 +350,7 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Gradient pill button for primary actions.
+/// Gradient pill button blending the Mindora colors with glowing shadow.
 class GradientButton extends StatelessWidget {
   const GradientButton({
     super.key,
@@ -298,6 +360,7 @@ class GradientButton extends StatelessWidget {
     this.busy = false,
     this.height = 54,
     this.expand = true,
+    this.useFourColors = true,
   });
 
   final String label;
@@ -306,11 +369,14 @@ class GradientButton extends StatelessWidget {
   final bool busy;
   final double height;
   final bool expand;
+  final bool useFourColors;
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final enabled = onTap != null && !busy;
+
+    final gradient = useFourColors ? tokens.fourColorGradient : tokens.brandGradient;
 
     return Opacity(
       opacity: enabled ? 1 : 0.65,
@@ -319,13 +385,13 @@ class GradientButton extends StatelessWidget {
         height: height,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            gradient: tokens.brandGradient,
+            gradient: gradient,
             borderRadius: BorderRadius.circular(height / 2),
             boxShadow: [
               BoxShadow(
-                color: AppPalette.brand.withValues(alpha: 0.34),
-                blurRadius: 22,
-                offset: const Offset(0, 8),
+                color: AppPalette.sage.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 7),
               ),
             ],
           ),
@@ -359,6 +425,7 @@ class GradientButton extends StatelessWidget {
                               style: context.text.titleMedium?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ),
@@ -373,7 +440,7 @@ class GradientButton extends StatelessWidget {
   }
 }
 
-/// Section title: small, spaced and calm.
+/// Section title: clean and spaced.
 class SectionTitle extends StatelessWidget {
   const SectionTitle(this.text, {super.key, this.trailing});
 
@@ -400,37 +467,41 @@ class SectionTitle extends StatelessWidget {
   }
 }
 
-/// The app's own assistant icon: a glass bubble with a simple face.
+/// Mindora Zen AI Agent Avatar: an elegant crystal energy orb blending the 4 colors.
 class AssistantAvatar extends StatelessWidget {
-  const AssistantAvatar({super.key, this.size = 64});
+  const AssistantAvatar({super.key, this.size = 56});
 
   final double size;
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: tokens.softGradient,
-        border: Border.all(color: tokens.glassBorder, width: 1.4),
+        gradient: tokens.fourColorGradient,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.8),
+          width: 1.6,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppPalette.brand.withValues(alpha: 0.26),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: AppPalette.sage.withValues(alpha: 0.32),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Center(
         child: SizedBox(
-          width: size * 0.5,
-          height: size * 0.3,
+          width: size * 0.65,
+          height: size * 0.65,
           child: CustomPaint(
-            painter: _FacePainter(
-              color: tokens.isDark ? Colors.white : AppPalette.brandDeep,
+            painter: _MindoraCorePainter(
+              isDark: tokens.isDark,
             ),
           ),
         ),
@@ -439,45 +510,46 @@ class AssistantAvatar extends StatelessWidget {
   }
 }
 
-class _FacePainter extends CustomPainter {
-  _FacePainter({required this.color});
+/// Painter for the compact Mindora Zen energy core in the avatar.
+class _MindoraCorePainter extends CustomPainter {
+  _MindoraCorePainter({required this.isDark});
 
-  final Color color;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final eyeRadius = size.height * 0.17;
-    final eyeY = size.height * 0.3;
-    canvas.drawCircle(Offset(size.width * 0.22, eyeY), eyeRadius, paint);
-    canvas.drawCircle(Offset(size.width * 0.78, eyeY), eyeRadius, paint);
+    final w = size.width;
+    final h = size.height;
+    final center = Offset(w / 2, h / 2);
 
-    final smile = Path()
-      ..moveTo(size.width * 0.3, size.height * 0.72)
-      ..quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 1.0,
-        size.width * 0.7,
-        size.height * 0.72,
-      );
-    canvas.drawPath(
-      smile,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = size.height * 0.12
-        ..strokeCap = StrokeCap.round,
+    // Outer subtle orbital ring
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.3
+      ..color = Colors.white.withValues(alpha: 0.75);
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: w * 0.95, height: h * 0.52),
+      ringPaint,
     );
+
+    // Inner glowing core
+    final corePaint = Paint()
+      ..color = Colors.white
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+    canvas.drawCircle(center, w * 0.18, corePaint);
+
+    // Radiant energy dots
+    final dotPaint = Paint()..color = Colors.white.withValues(alpha: 0.9);
+    canvas.drawCircle(Offset(center.dx - w * 0.34, center.dy), w * 0.05, dotPaint);
+    canvas.drawCircle(Offset(center.dx + w * 0.34, center.dy), w * 0.05, dotPaint);
+    canvas.drawCircle(Offset(center.dx, center.dy - h * 0.32), w * 0.05, dotPaint);
   }
 
   @override
-  bool shouldRepaint(_FacePainter old) => old.color != color;
+  bool shouldRepaint(_MindoraCorePainter old) => false;
 }
 
 /// Staggered entrance animation for list items.
-///
-/// Items appear with increasing delay as `index` grows, giving a flowing
-/// cascade effect. Respects the reduced-motion accessibility setting.
 class AnimatedEntrance extends StatefulWidget {
   const AnimatedEntrance({
     super.key,
@@ -504,7 +576,7 @@ class _AnimatedEntranceState extends State<AnimatedEntrance>
   @override
   void initState() {
     super.initState();
-    final delay = Duration(milliseconds: 60 * widget.index.clamp(0, 8));
+    final delay = Duration(milliseconds: 55 * widget.index.clamp(0, 8));
     Future<void>.delayed(delay, () {
       if (mounted) _controller.forward();
     });

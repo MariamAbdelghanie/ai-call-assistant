@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// The assistant's state. The robot changes color and moves according to mood.
+/// The assistant's mood state. The agent changes its aura and movement according to this.
 enum RobotMood { idle, connecting, listening, speaking, ended }
 
-/// The app's own robot character.
-///
-/// When speaking its mouth ripples, when listening it breathes, and it
-/// blinks every few seconds. Animations respect the "reduced motion" setting.
+/// Mindora Zen AI Agent:
+/// An ethereal, multi-layered energy sphere with rotating orbital rings,
+/// breathing core, and dynamic soundwave harmonics blending the 4 Mindora colors:
+/// #5E887E (Sage), #A7C7E7 (Mist Blue), #2F3E46 (Deep Slate), #F1F5F4 (Mist White).
 class AssistantRobot extends StatefulWidget {
   const AssistantRobot({super.key, required this.mood, this.size = 200});
 
@@ -25,68 +25,52 @@ class _AssistantRobotState extends State<AssistantRobot>
     with TickerProviderStateMixin {
   late final AnimationController _loop = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 4),
+    duration: const Duration(seconds: 6),
   )..repeat();
 
-  late final AnimationController _blink = AnimationController(
+  late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 180),
-  );
-
-  double _blinkTimer = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loop.addListener(_maybeBlink);
-  }
-
-  void _maybeBlink() {
-    // Blinks approximately every four seconds.
-    _blinkTimer += 0.016;
-    if (_blinkTimer > 3.6) {
-      _blinkTimer = 0;
-      if (mounted && !_blink.isAnimating) {
-        _blink.forward().then((_) => _blink.reverse());
-      }
-    }
-  }
+    duration: const Duration(milliseconds: 2400),
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
-    _loop.removeListener(_maybeBlink);
     _loop.dispose();
-    _blink.dispose();
+    _pulse.dispose();
     super.dispose();
   }
 
-  ({Color body, Color glow, Color face}) _colors(BuildContext context) {
-    final tokens = context.tokens;
+  ({Color core, Color aura, Color ring, Color accent}) _colors() {
     return switch (widget.mood) {
       RobotMood.idle => (
-          body: AppPalette.brandLight,
-          glow: AppPalette.brand,
-          face: AppPalette.lightText,
+          core: AppPalette.sage,
+          aura: AppPalette.mistBlue,
+          ring: AppPalette.mistWhite,
+          accent: AppPalette.blush,
         ),
       RobotMood.connecting => (
-          body: AppPalette.lilac,
-          glow: AppPalette.lilac,
-          face: AppPalette.lightText,
+          core: AppPalette.mistBlue,
+          aura: AppPalette.sage,
+          ring: AppPalette.mistWhite,
+          accent: AppPalette.blush,
         ),
       RobotMood.listening => (
-          body: AppPalette.cyan,
-          glow: AppPalette.cyan,
-          face: AppPalette.lightText,
+          core: const Color(0xFF4EA89B),
+          aura: AppPalette.mistBlue,
+          ring: Colors.white,
+          accent: AppPalette.sage,
         ),
       RobotMood.speaking => (
-          body: AppPalette.blush,
-          glow: AppPalette.blush,
-          face: AppPalette.lightText,
+          core: AppPalette.blush,
+          aura: AppPalette.mistBlue,
+          ring: AppPalette.mistWhite,
+          accent: AppPalette.sage,
         ),
       RobotMood.ended => (
-          body: tokens.muted,
-          glow: tokens.muted,
-          face: Colors.white,
+          core: AppPalette.lightMuted,
+          aura: const Color(0xFFBACDC8),
+          ring: Colors.white70,
+          accent: AppPalette.lightMuted,
         ),
     };
   }
@@ -94,23 +78,25 @@ class _AssistantRobotState extends State<AssistantRobot>
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final colors = _colors(context);
+    final colors = _colors();
 
     return SizedBox(
       width: widget.size,
       height: widget.size,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_loop, _blink]),
+        animation: Listenable.merge([_loop, _pulse]),
         builder: (context, _) {
           final t = reduceMotion ? 0.0 : _loop.value;
+          final p = reduceMotion ? 0.5 : _pulse.value;
           return CustomPaint(
-            painter: _RobotPainter(
+            painter: _MindoraAgentPainter(
               t: t,
+              pulse: p,
               mood: widget.mood,
-              body: colors.body,
-              glow: colors.glow,
-              face: colors.face,
-              blink: _blink.value,
+              coreColor: colors.core,
+              auraColor: colors.aura,
+              ringColor: colors.ring,
+              accentColor: colors.accent,
               isDark: context.tokens.isDark,
             ),
           );
@@ -120,245 +106,210 @@ class _AssistantRobotState extends State<AssistantRobot>
   }
 }
 
-class _RobotPainter extends CustomPainter {
-  _RobotPainter({
+class _MindoraAgentPainter extends CustomPainter {
+  _MindoraAgentPainter({
     required this.t,
+    required this.pulse,
     required this.mood,
-    required this.body,
-    required this.glow,
-    required this.face,
-    required this.blink,
+    required this.coreColor,
+    required this.auraColor,
+    required this.ringColor,
+    required this.accentColor,
     required this.isDark,
   });
 
   final double t;
+  final double pulse;
   final RobotMood mood;
-  final Color body;
-  final Color glow;
-  final Color face;
-  final double blink;
+  final Color coreColor;
+  final Color auraColor;
+  final Color ringColor;
+  final Color accentColor;
   final bool isDark;
-
-  bool get _active =>
-      mood == RobotMood.listening ||
-      mood == RobotMood.speaking ||
-      mood == RobotMood.connecting;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final bob = math.sin(t * 2 * math.pi) * (_active ? h * 0.018 : h * 0.008);
-    final center = Offset(w / 2, h / 2 + bob);
+    final center = Offset(w / 2, h / 2 + math.sin(t * 2 * math.pi) * (h * 0.015));
 
-    // Soft glow behind the robot
-    canvas.drawCircle(
-      center,
-      w * 0.42,
-      Paint()
-        ..color = glow.withValues(alpha: isDark ? 0.34 : 0.42)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 34),
-    );
+    // 1. Soft atmospheric background aura (breathing glow)
+    final auraRadius = w * (0.38 + pulse * 0.07);
+    final auraPaint = Paint()
+      ..color = auraColor.withValues(alpha: isDark ? 0.28 : 0.35)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, w * 0.20);
+    canvas.drawCircle(center, auraRadius, auraPaint);
 
-    // Expanding rings when speaking or connecting
-    if (mood == RobotMood.speaking || mood == RobotMood.connecting) {
-      for (var i = 0; i < 3; i++) {
-        final phase = (t * 1.8 + i / 3) % 1.0;
-        canvas.drawCircle(
-          center,
-          w * (0.34 + phase * 0.16),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.6
-            ..color = glow.withValues(alpha: (1 - phase) * 0.35),
-        );
+    // 2. Ripple rings during active states (speaking, connecting, listening)
+    if (mood == RobotMood.speaking ||
+        mood == RobotMood.connecting ||
+        mood == RobotMood.listening) {
+      final rippleCount = mood == RobotMood.speaking ? 4 : 3;
+      for (var i = 0; i < rippleCount; i++) {
+        final phase = (t * (mood == RobotMood.speaking ? 2.2 : 1.5) + i / rippleCount) % 1.0;
+        final radius = w * (0.28 + phase * 0.22);
+        final opacity = (1.0 - phase) * (isDark ? 0.40 : 0.45);
+
+        final ripplePaint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6
+          ..color = (i.isEven ? coreColor : auraColor).withValues(alpha: opacity);
+        canvas.drawCircle(center, radius, ripplePaint);
       }
     }
 
-    final headW = w * 0.58;
-    final headH = h * 0.50;
-    final headRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: center, width: headW, height: headH),
-      Radius.circular(headH * 0.38),
+    // 3. Gyroscopic 3D Orbital Rings (rotating around the core)
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..color = ringColor.withValues(alpha: isDark ? 0.60 : 0.85);
+
+    // First orbital ring (tilted)
+    final angle1 = t * 2 * math.pi;
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(0.38 + math.sin(angle1 * 0.5) * 0.08);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset.zero,
+        width: w * (0.64 + pulse * 0.04),
+        height: h * (0.26 + math.cos(angle1) * 0.06),
+      ),
+      ringPaint,
     );
 
-    // Antenna
-    final antennaBase = Offset(center.dx, center.dy - headH / 2);
-    final antennaTop = Offset(
-      center.dx + math.sin(t * 2 * math.pi) * (_active ? w * 0.016 : 0),
-      antennaBase.dy - h * 0.12,
-    );
-    canvas.drawLine(
-      antennaBase,
-      antennaTop,
-      Paint()
-        ..color = body.withValues(alpha: 0.9)
-        ..strokeWidth = w * 0.018
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawCircle(
-      antennaTop,
-      w * 0.038,
-      Paint()..color = glow,
-    );
-    canvas.drawCircle(
-      antennaTop,
-      w * 0.038,
-      Paint()
-        ..color = glow.withValues(alpha: 0.55)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
-    );
-
-    // Ears
-    for (final side in [-1, 1]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(center.dx + side * (headW / 2 + w * 0.03),
-                center.dy + h * 0.02),
-            width: w * 0.06,
-            height: h * 0.14,
-          ),
-          Radius.circular(w * 0.03),
-        ),
-        Paint()..color = body.withValues(alpha: 0.85),
-      );
-    }
-
-    // Body (head)
-    canvas.drawRRect(
-      headRect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(body, Colors.white, 0.35)!,
-            body,
-          ],
-        ).createShader(headRect.outerRect),
-    );
-    canvas.drawRRect(
-      headRect,
+    // Second orbital ring (opposing tilt)
+    final angle2 = -t * 2 * math.pi * 0.8;
+    canvas.rotate(-0.76);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset.zero,
+        width: w * (0.68 + pulse * 0.03),
+        height: h * (0.24 + math.sin(angle2) * 0.05),
+      ),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.4
-        ..color = Colors.white.withValues(alpha: 0.6),
+        ..color = accentColor.withValues(alpha: isDark ? 0.50 : 0.70),
     );
 
-    // Face screen
-    final faceRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(center.dx, center.dy + h * 0.005),
-        width: headW * 0.74,
-        height: headH * 0.56,
-      ),
-      Radius.circular(headH * 0.22),
-    );
-    canvas.drawRRect(
-      faceRect,
-      Paint()..color = isDark
-          ? const Color(0xFF0E2420)
-          : const Color(0xFF1A3B34),
+    // Satellite orbital node on the first ring
+    final nodeX = math.cos(angle1) * (w * 0.32);
+    final nodeY = math.sin(angle1) * (h * 0.13);
+    final nodePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(Offset(nodeX, nodeY), w * 0.024, nodePaint);
+    canvas.drawCircle(
+      Offset(nodeX, nodeY),
+      w * 0.035,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
 
-    final eyeY = faceRect.center.dy - faceRect.height * 0.12;
-    final eyeDx = faceRect.width * 0.22;
-    final eyeOpen = (1 - blink).clamp(0.12, 1.0);
-    final eyePaint = Paint()..color = Colors.white;
+    canvas.restore();
 
-    for (final side in [-1, 1]) {
-      final eyeCenter = Offset(faceRect.center.dx + side * eyeDx, eyeY);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
+    // 4. Glassmorphic Central Sphere (Blending the 4 Mindora colors)
+    final coreRadius = w * 0.22;
+    final coreRect = Rect.fromCircle(center: center, radius: coreRadius);
+
+    final coreGradient = RadialGradient(
+      center: const Alignment(-0.35, -0.35),
+      radius: 0.85,
+      colors: [
+        Colors.white,
+        Color.lerp(coreColor, AppPalette.mistBlue, 0.45)!,
+        coreColor,
+        AppPalette.deepSlate,
+      ],
+      stops: const [0.0, 0.35, 0.75, 1.0],
+    );
+
+    final spherePaint = Paint()..shader = coreGradient.createShader(coreRect);
+    canvas.drawCircle(center, coreRadius, spherePaint);
+
+    // Specular highlight (crystalline sheen on top-left of sphere)
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: isDark ? 0.45 : 0.65)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, coreRadius * 0.3);
+    canvas.drawCircle(
+      Offset(center.dx - coreRadius * 0.32, center.dy - coreRadius * 0.32),
+      coreRadius * 0.35,
+      highlightPaint,
+    );
+
+    // Outer rim glow for the sphere
+    final rimPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..color = Colors.white.withValues(alpha: 0.85);
+    canvas.drawCircle(center, coreRadius, rimPaint);
+
+    // 5. Reactive Center Feature (Harmonic Voice Wave or Serene Zen Core)
+    if (mood == RobotMood.speaking) {
+      // Dynamic fluid sound bars
+      const barCount = 5;
+      final barWidth = coreRadius * 0.14;
+      for (var i = 0; i < barCount; i++) {
+        final phase = t * 2 * math.pi * 2.5 + i * 0.85;
+        final wave = (math.sin(phase) * 0.5 + 0.5);
+        final barHeight = coreRadius * (0.30 + wave * 0.75);
+
+        final x = center.dx + (i - (barCount - 1) / 2) * barWidth * 1.9;
+        final barRect = RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: eyeCenter,
-            width: faceRect.width * 0.14,
-            height: faceRect.height * 0.30 * eyeOpen,
+            center: Offset(x, center.dy),
+            width: barWidth,
+            height: barHeight,
           ),
-          Radius.circular(faceRect.width * 0.07),
-        ),
-        eyePaint,
-      );
-    }
-
-    // Mouth: changes based on mood
-    final mouthY = faceRect.center.dy + faceRect.height * 0.24;
-    switch (mood) {
-      case RobotMood.speaking:
-        // Speech wave
-        const bars = 5;
-        final barW = faceRect.width * 0.045;
-        for (var i = 0; i < bars; i++) {
-          final phase = t * 2 * math.pi * 2 + i * 0.9;
-          final amp = (math.sin(phase) * 0.5 + 0.5);
-          final barH = faceRect.height * (0.08 + amp * 0.22);
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromCenter(
-                center: Offset(
-                  faceRect.center.dx + (i - (bars - 1) / 2) * barW * 2.0,
-                  mouthY,
-                ),
-                width: barW,
-                height: barH,
-              ),
-              Radius.circular(barW),
-            ),
-            Paint()..color = Colors.white,
-          );
-        }
-      case RobotMood.listening:
-        final pulse = 0.5 + math.sin(t * 2 * math.pi * 1.4) * 0.5;
-        canvas.drawCircle(
-          Offset(faceRect.center.dx, mouthY),
-          faceRect.width * (0.055 + pulse * 0.02),
-          Paint()..color = Colors.white.withValues(alpha: 0.9),
+          Radius.circular(barWidth / 2),
         );
-      case RobotMood.ended:
-        canvas.drawLine(
-          Offset(faceRect.center.dx - faceRect.width * 0.12, mouthY),
-          Offset(faceRect.center.dx + faceRect.width * 0.12, mouthY),
-          Paint()
-            ..color = Colors.white.withValues(alpha: 0.85)
-            ..strokeWidth = faceRect.height * 0.07
-            ..strokeCap = StrokeCap.round,
-        );
-      case RobotMood.idle:
-      case RobotMood.connecting:
-        final smile = Path()
-          ..moveTo(faceRect.center.dx - faceRect.width * 0.14, mouthY)
-          ..quadraticBezierTo(
-            faceRect.center.dx,
-            mouthY + faceRect.height * 0.18,
-            faceRect.center.dx + faceRect.width * 0.14,
-            mouthY,
-          );
-        canvas.drawPath(
-          smile,
-          Paint()
-            ..color = Colors.white
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = faceRect.height * 0.07
-            ..strokeCap = StrokeCap.round,
-        );
-    }
-
-    // Cheeks
-    for (final side in [-1, 1]) {
+        canvas.drawRRect(barRect, Paint()..color = Colors.white);
+      }
+    } else if (mood == RobotMood.listening) {
+      // Concentric listening wave rings
+      final pulseRadius = coreRadius * (0.35 + pulse * 0.30);
       canvas.drawCircle(
-        Offset(center.dx + side * headW * 0.40, center.dy + headH * 0.12),
-        w * 0.026,
-        Paint()..color = AppPalette.blush.withValues(alpha: 0.65),
+        center,
+        pulseRadius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0
+          ..color = Colors.white.withValues(alpha: 0.9),
+      );
+      canvas.drawCircle(
+        center,
+        coreRadius * 0.20,
+        Paint()..color = Colors.white,
+      );
+    } else {
+      // Idle / Connecting / Ended: Mindful breathing lotus or zen light core
+      final zenRadius = coreRadius * (0.24 + pulse * 0.06);
+      canvas.drawCircle(
+        center,
+        zenRadius,
+        Paint()
+          ..color = Colors.white
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+
+      // Subtle horizontal light flare
+      canvas.drawLine(
+        Offset(center.dx - coreRadius * 0.55, center.dy),
+        Offset(center.dx + coreRadius * 0.55, center.dy),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.75)
+          ..strokeWidth = 1.5
+          ..strokeCap = StrokeCap.round,
       );
     }
   }
 
   @override
-  bool shouldRepaint(_RobotPainter old) =>
+  bool shouldRepaint(_MindoraAgentPainter old) =>
       old.t != t ||
+      old.pulse != pulse ||
       old.mood != mood ||
-      old.blink != blink ||
-      old.body != body ||
+      old.coreColor != coreColor ||
+      old.auraColor != auraColor ||
       old.isDark != isDark;
 }

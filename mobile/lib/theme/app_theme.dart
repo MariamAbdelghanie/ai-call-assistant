@@ -1,44 +1,55 @@
 import 'package:flutter/material.dart';
 
-/// Mindora-inspired visual identity: misty teal, sage and warm cream tones.
-/// Surfaces are frosted glass, backgrounds are soft nature-inspired gradients.
+/// Mindora-inspired visual identity:
+/// Exact palette from the design specification:
+/// 1. #5E887E - Sage Green (Eucalyptus)
+/// 2. #A7C7E7 - Mist Blue (Airy Sky)
+/// 3. #2F3E46 - Deep Slate (Forest Charcoal)
+/// 4. #F1F5F4 - Mist White (Clean Atmosphere)
+/// 5. #EBAEB7 - Soft Blush (Dusty Rose Accent)
 class AppPalette {
-  // Brand: nature teal-sage (Mindora palette)
-  static const Color brand = Color(0xFF2D7168);
-  static const Color brandLight = Color(0xFF8FB3A8);
-  static const Color brandDeep = Color(0xFF1A5148);
-  static const Color blush = Color(0xFFE0A895); // warm peach
-  static const Color cyan = Color(0xFFB5D4A5); // sage green / olive
-  static const Color lilac = Color(0xFFC5D8D2); // misty sage
+  // 4 Main Colors + 1 Accent from the Mindora UI Kit:
+  static const Color sage = Color(0xFF5E887E);
+  static const Color mistBlue = Color(0xFFA7C7E7);
+  static const Color deepSlate = Color(0xFF2F3E46);
+  static const Color mistWhite = Color(0xFFF1F5F4);
+  static const Color blush = Color(0xFFEBAEB7);
 
-  // Status
+  // Semantic mappings
+  static const Color brand = Color(0xFF5E887E);
+  static const Color brandLight = Color(0xFFA7C7E7);
+  static const Color brandDeep = Color(0xFF2F3E46);
+  static const Color cyan = Color(0xFFA7C7E7);
+  static const Color lilac = Color(0xFFBACEC7);
+
+  // Status colors that harmonise with the serene palette
   static const Color urgent = Color(0xFFD9536B);
   static const Color pending = Color(0xFFCDA04A);
   static const Color success = Color(0xFF34B88A);
 
-  // Light theme background gradient stops (misty mountain palette)
+  // Light theme background stops (serene misty landscape)
   static const List<Color> lightMesh = [
-    Color(0xFFF5F2ED),
-    Color(0xFFE8EDE9),
-    Color(0xFFE0E9E4),
-    Color(0xFFF0EDE6),
+    Color(0xFFF1F5F4),
+    Color(0xFFE4EDE9),
+    Color(0xFFDBE7E4),
+    Color(0xFFEDF3F1),
   ];
 
-  // Dark theme background gradient stops (deep forest night)
+  // Dark theme background stops (deep pine forest twilight)
   static const List<Color> darkMesh = [
-    Color(0xFF0E2420),
-    Color(0xFF14332D),
-    Color(0xFF183B34),
-    Color(0xFF0B201C),
+    Color(0xFF14201E),
+    Color(0xFF1C2C29),
+    Color(0xFF243632),
+    Color(0xFF121B19),
   ];
 
-  static const Color lightText = Color(0xFF1A3B34);
-  static const Color lightMuted = Color(0xFF5E8478);
-  static const Color darkText = Color(0xFFE4EDE8);
-  static const Color darkMuted = Color(0xFF8BADA0);
+  static const Color lightText = Color(0xFF2F3E46);
+  static const Color lightMuted = Color(0xFF6B867F);
+  static const Color darkText = Color(0xFFF1F5F4);
+  static const Color darkMuted = Color(0xFF9AB2AB);
 }
 
-/// Theme extension for glass surfaces and status colors.
+/// Theme extension for glass surfaces, gradients, and status tokens.
 class AppTokens extends ThemeExtension<AppTokens> {
   const AppTokens({
     required this.mesh,
@@ -74,7 +85,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     mesh: AppPalette.lightMesh,
     glass: Color(0x99FFFFFF),
     glassStrong: Color(0xD6FFFFFF),
-    glassBorder: Color(0xA6DDEAE3),
+    glassBorder: Color(0x80D5E4DE),
     muted: AppPalette.lightMuted,
     urgent: AppPalette.urgent,
     urgentSoft: Color(0x20D9536B),
@@ -82,15 +93,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
     pendingSoft: Color(0x20CDA04A),
     success: AppPalette.success,
     successSoft: Color(0x2034B88A),
-    shadow: Color(0x141A5148),
+    shadow: Color(0x142F3E46),
     isDark: false,
   );
 
   static const AppTokens dark = AppTokens(
     mesh: AppPalette.darkMesh,
-    glass: Color(0x14FFFFFF),
-    glassStrong: Color(0x26FFFFFF),
-    glassBorder: Color(0x303A6B5F),
+    glass: Color(0x18FFFFFF),
+    glassStrong: Color(0x2BFFFFFF),
+    glassBorder: Color(0x335E887E),
     muted: AppPalette.darkMuted,
     urgent: Color(0xFFE87A8E),
     urgentSoft: Color(0x33E87A8E),
@@ -102,20 +113,39 @@ class AppTokens extends ThemeExtension<AppTokens> {
     isDark: true,
   );
 
-  /// Brand gradient for buttons and highlights.
-  LinearGradient get brandGradient => const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [AppPalette.brandLight, AppPalette.brand],
+  /// 4-Color blended gradient combining the top 4 palette colors:
+  /// #5E887E (Sage), #A7C7E7 (Mist Blue), #2F3E46 (Deep Slate), #F1F5F4 (Mist White)
+  LinearGradient get fourColorGradient => const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppPalette.sage,
+          AppPalette.mistBlue,
+          AppPalette.deepSlate,
+          AppPalette.mistWhite,
+        ],
+        stops: [0.0, 0.35, 0.75, 1.0],
       );
 
+  /// Brand gradient for buttons and active states.
+  LinearGradient get brandGradient => LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: isDark
+            ? const [Color(0xFF4C736A), Color(0xFF385750)]
+            : const [AppPalette.sage, Color(0xFF486E65)],
+      );
+
+  /// Soft ethereal multi-color gradient for cards and hero panels.
   LinearGradient get softGradient => LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppPalette.brandLight.withValues(alpha: isDark ? 0.26 : 0.38),
-          AppPalette.blush.withValues(alpha: isDark ? 0.22 : 0.34),
+          AppPalette.sage.withValues(alpha: isDark ? 0.22 : 0.30),
+          AppPalette.mistBlue.withValues(alpha: isDark ? 0.18 : 0.25),
+          AppPalette.blush.withValues(alpha: isDark ? 0.14 : 0.20),
         ],
+        stops: const [0.0, 0.55, 1.0],
       );
 
   @override
@@ -134,8 +164,8 @@ extension AppTokensX on BuildContext {
 }
 
 class AppTheme {
-  static const double radius = 26;
-  static const double radiusSm = 18;
+  static const double radius = 24;
+  static const double radiusSm = 16;
   static const Duration fast = Duration(milliseconds: 180);
   static const Duration normal = Duration(milliseconds: 280);
 
@@ -157,12 +187,12 @@ class AppTheme {
     required AppTokens tokens,
   }) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppPalette.brand,
+      seedColor: AppPalette.sage,
       brightness: brightness,
     ).copyWith(
       primary: brightness == Brightness.dark
-          ? AppPalette.brandLight
-          : AppPalette.brandDeep,
+          ? AppPalette.mistBlue
+          : AppPalette.sage,
       onPrimary: Colors.white,
       secondary: AppPalette.blush,
       surface: Colors.transparent,
@@ -183,22 +213,23 @@ class AppTheme {
     final textTheme = base.textTheme.apply(
       bodyColor: onSurface,
       displayColor: onSurface,
+      fontFamily: 'Inter',
     );
 
     return base.copyWith(
       textTheme: textTheme.copyWith(
         headlineMedium: textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.w800,
-          letterSpacing: -1.0,
+          letterSpacing: -0.8,
           height: 1.15,
         ),
         headlineSmall: textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.7,
+          letterSpacing: -0.5,
         ),
         titleLarge: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
-          letterSpacing: -0.4,
+          letterSpacing: -0.3,
         ),
         titleMedium: textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w700,
@@ -215,7 +246,7 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.7,
+          letterSpacing: -0.5,
           color: onSurface,
         ),
       ),
@@ -235,7 +266,7 @@ class AppTheme {
         backgroundColor: tokens.glass,
         selectedColor: scheme.primary,
         labelStyle: textTheme.labelLarge,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         showCheckmark: false,
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -243,7 +274,7 @@ class AppTheme {
         fillColor: tokens.glass,
         hintStyle: textTheme.bodyMedium?.copyWith(color: tokens.muted),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSm),
           borderSide: BorderSide(color: tokens.glassBorder),
@@ -276,7 +307,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: tokens.glassStrong,
         elevation: 0,
-        height: 70,
+        height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         labelTextStyle: WidgetStatePropertyAll(
           textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -289,8 +320,8 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: tokens.isDark
-            ? const Color(0xFF142E28)
-            : Colors.white.withValues(alpha: 0.97),
+            ? const Color(0xFF1B2B28)
+            : Colors.white.withValues(alpha: 0.98),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),

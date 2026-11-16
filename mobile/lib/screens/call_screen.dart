@@ -280,11 +280,11 @@ class _CallButton extends StatelessWidget {
       height: 62,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: tokens.brandGradient,
+          gradient: tokens.fourColorGradient,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: tokens.shadow,
+              color: AppPalette.sage.withValues(alpha: 0.35),
               blurRadius: 28,
               offset: const Offset(0, 10),
             ),
