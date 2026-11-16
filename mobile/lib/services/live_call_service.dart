@@ -100,6 +100,16 @@ class LiveCallService extends ChangeNotifier {
       await room.localParticipant?.setMicrophoneEnabled(true);
       micEnabled = true;
 
+      // Android'de ses varsayilan olarak kulaklik hoparlorune gidebilir;
+      // gorusme hoparloru acik baslasin ki asistan duyulsun.
+      if (!kIsWeb) {
+        try {
+          await lk.Hardware.instance.setSpeakerphoneOn(true);
+        } catch (_) {
+          // Bazi cihazlarda desteklenmeyebilir; cagri yine de devam eder.
+        }
+      }
+
       _startedAt = DateTime.now();
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
         final started = _startedAt;

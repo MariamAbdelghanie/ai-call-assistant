@@ -38,7 +38,8 @@ class _CallScreenState extends State<CallScreen> {
         CallPhase.idle => OrbState.idle,
         CallPhase.connecting => OrbState.connecting,
         CallPhase.ending => OrbState.ended,
-        CallPhase.failed => OrbState.ended,
+        // Hata sonrasi kure yeniden aranabilir gorunsun.
+        CallPhase.failed => OrbState.idle,
         CallPhase.connected =>
           call.assistantSpeaking ? OrbState.speaking : OrbState.listening,
       };
