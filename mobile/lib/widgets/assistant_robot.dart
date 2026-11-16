@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Asistanin durumu. Robot bu duruma gore renk degistirir ve hareket eder.
+/// The assistant's state. The robot changes color and moves according to mood.
 enum RobotMood { idle, connecting, listening, speaking, ended }
 
-/// Uygulamanin kendi robot karakteri.
+/// The app's own robot character.
 ///
-/// Konusurken agzi dalgalanir, dinlerken nefes alir, arada goz kirpar.
-/// Hareketler "azaltilmis hareket" ayarina saygi duyar.
+/// When speaking its mouth ripples, when listening it breathes, and it
+/// blinks every few seconds. Animations respect the "reduced motion" setting.
 class AssistantRobot extends StatefulWidget {
   const AssistantRobot({super.key, required this.mood, this.size = 200});
 
@@ -42,7 +42,7 @@ class _AssistantRobotState extends State<AssistantRobot>
   }
 
   void _maybeBlink() {
-    // Yaklasik dort saniyede bir goz kirpar.
+    // Blinks approximately every four seconds.
     _blinkTimer += 0.016;
     if (_blinkTimer > 3.6) {
       _blinkTimer = 0;
@@ -151,7 +151,7 @@ class _RobotPainter extends CustomPainter {
     final bob = math.sin(t * 2 * math.pi) * (_active ? h * 0.018 : h * 0.008);
     final center = Offset(w / 2, h / 2 + bob);
 
-    // Arkadaki yumusak isik
+    // Soft glow behind the robot
     canvas.drawCircle(
       center,
       w * 0.42,
@@ -160,7 +160,7 @@ class _RobotPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 34),
     );
 
-    // Konusurken disa acilan halkalar
+    // Expanding rings when speaking or connecting
     if (mood == RobotMood.speaking || mood == RobotMood.connecting) {
       for (var i = 0; i < 3; i++) {
         final phase = (t * 1.8 + i / 3) % 1.0;
@@ -182,7 +182,7 @@ class _RobotPainter extends CustomPainter {
       Radius.circular(headH * 0.38),
     );
 
-    // Anten
+    // Antenna
     final antennaBase = Offset(center.dx, center.dy - headH / 2);
     final antennaTop = Offset(
       center.dx + math.sin(t * 2 * math.pi) * (_active ? w * 0.016 : 0),
@@ -209,7 +209,7 @@ class _RobotPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
 
-    // Kulaklar
+    // Ears
     for (final side in [-1, 1]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -225,7 +225,7 @@ class _RobotPainter extends CustomPainter {
       );
     }
 
-    // Govde (kafa)
+    // Body (head)
     canvas.drawRRect(
       headRect,
       Paint()
@@ -246,7 +246,7 @@ class _RobotPainter extends CustomPainter {
         ..color = Colors.white.withValues(alpha: 0.6),
     );
 
-    // Yuz ekrani
+    // Face screen
     final faceRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: Offset(center.dx, center.dy + h * 0.005),
@@ -258,8 +258,8 @@ class _RobotPainter extends CustomPainter {
     canvas.drawRRect(
       faceRect,
       Paint()..color = isDark
-          ? const Color(0xFF170E2B)
-          : const Color(0xFF2A1B4A),
+          ? const Color(0xFF0E2420)
+          : const Color(0xFF1A3B34),
     );
 
     final eyeY = faceRect.center.dy - faceRect.height * 0.12;
@@ -282,11 +282,11 @@ class _RobotPainter extends CustomPainter {
       );
     }
 
-    // Agiz: duruma gore degisir
+    // Mouth: changes based on mood
     final mouthY = faceRect.center.dy + faceRect.height * 0.24;
     switch (mood) {
       case RobotMood.speaking:
-        // Konusma dalgasi
+        // Speech wave
         const bars = 5;
         final barW = faceRect.width * 0.045;
         for (var i = 0; i < bars; i++) {
@@ -344,7 +344,7 @@ class _RobotPainter extends CustomPainter {
         );
     }
 
-    // Yanaklar
+    // Cheeks
     for (final side in [-1, 1]) {
       canvas.drawCircle(
         Offset(center.dx + side * headW * 0.40, center.dy + headH * 0.12),

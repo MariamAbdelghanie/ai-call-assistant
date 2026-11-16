@@ -1,7 +1,7 @@
 {
   "preset": "custom",
-  "stt_model": "whisper-large-v3",
-  "llm_model": "openai/gpt-oss-120b",
+  "stt_model": "whisper-large-v3-turbo",
+  "llm_model": "openai/gpt-oss-20b",
   "tts_voice": "elevenlabs-ar-ahmet",
   "stt_language": "auto",
   "assistant_mode": "hybrid",

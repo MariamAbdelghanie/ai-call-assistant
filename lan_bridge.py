@@ -243,7 +243,9 @@ async def main():
     print(f"[Bridge] Linphone Domain / Server IP to use on phone: {lan_ip}:5060", flush=True)
     loop = asyncio.get_running_loop()
 
-    udp_ports = [5060] + list(range(10000, 10021))
+    # 7882: LiveKit WebRTC medya (UDP). Telefondaki uygulama bu port olmadan
+    # sese baglanamaz.
+    udp_ports = [5060, 7882] + list(range(10000, 10021))
     for port in udp_ports:
         try:
             await loop.create_datagram_endpoint(
@@ -253,7 +255,8 @@ async def main():
         except Exception as e:
             print(f"[Bridge] Warning binding UDP {port}: {e}", flush=True)
 
-    tcp_ports = [5060]
+    # 7880: LiveKit sinyal (WebSocket), 7881: ICE/TCP yedegi.
+    tcp_ports = [5060, 7880, 7881]
     servers = []
     for port in tcp_ports:
         try:
@@ -271,7 +274,7 @@ async def main():
     except Exception as e:
         print(f"[Bridge] SIP setup note: {e}", flush=True)
 
-    print(f"[Bridge] High-speed SIP (5060) and RTP (10000-10020) bridge active on {lan_ip}!", flush=True)
+    print(f"[Bridge] SIP (5060), RTP (10000-10020) ve LiveKit (7880/7881/7882) bridge active on {lan_ip}!", flush=True)
     await asyncio.Event().wait()
 
 

@@ -1,44 +1,44 @@
 import 'package:flutter/material.dart';
 
-/// Gorsel kimlik: nane yesili, krem ve pudra tonlarinda nese veren bir palet.
-/// Yuzeyler buzlu cam, zemin yumusak degradelerden olusur.
+/// Mindora-inspired visual identity: misty teal, sage and warm cream tones.
+/// Surfaces are frosted glass, backgrounds are soft nature-inspired gradients.
 class AppPalette {
-  // Marka: derin mor-lila
-  static const Color brand = Color(0xFF8B5CF6);
-  static const Color brandLight = Color(0xFFB794F6);
-  static const Color brandDeep = Color(0xFF6D28D9);
-  static const Color blush = Color(0xFFF0A6D8);
-  static const Color cyan = Color(0xFF5EE7D6);
-  static const Color lilac = Color(0xFFC4B5FD);
+  // Brand: nature teal-sage (Mindora palette)
+  static const Color brand = Color(0xFF2D7168);
+  static const Color brandLight = Color(0xFF8FB3A8);
+  static const Color brandDeep = Color(0xFF1A5148);
+  static const Color blush = Color(0xFFE0A895); // warm peach
+  static const Color cyan = Color(0xFFB5D4A5); // sage green / olive
+  static const Color lilac = Color(0xFFC5D8D2); // misty sage
 
-  // Durum
-  static const Color urgent = Color(0xFFFF5D8F);
-  static const Color pending = Color(0xFFF0A741);
-  static const Color success = Color(0xFF34D399);
+  // Status
+  static const Color urgent = Color(0xFFD9536B);
+  static const Color pending = Color(0xFFCDA04A);
+  static const Color success = Color(0xFF34B88A);
 
-  // Acik tema zemin duraklari
+  // Light theme background gradient stops (misty mountain palette)
   static const List<Color> lightMesh = [
-    Color(0xFFF3EEFF),
-    Color(0xFFEDE4FF),
-    Color(0xFFFBE9F7),
-    Color(0xFFEAF3FF),
+    Color(0xFFF5F2ED),
+    Color(0xFFE8EDE9),
+    Color(0xFFE0E9E4),
+    Color(0xFFF0EDE6),
   ];
 
-  // Koyu tema zemin duraklari (referans tasarimdaki gece moru)
+  // Dark theme background gradient stops (deep forest night)
   static const List<Color> darkMesh = [
-    Color(0xFF170E2B),
-    Color(0xFF241145),
-    Color(0xFF2E1150),
-    Color(0xFF140B22),
+    Color(0xFF0E2420),
+    Color(0xFF14332D),
+    Color(0xFF183B34),
+    Color(0xFF0B201C),
   ];
 
-  static const Color lightText = Color(0xFF2A1B4A);
-  static const Color lightMuted = Color(0xFF6E5E90);
-  static const Color darkText = Color(0xFFF2EBFF);
-  static const Color darkMuted = Color(0xFFA796C8);
+  static const Color lightText = Color(0xFF1A3B34);
+  static const Color lightMuted = Color(0xFF5E8478);
+  static const Color darkText = Color(0xFFE4EDE8);
+  static const Color darkMuted = Color(0xFF8BADA0);
 }
 
-/// Cam yuzeyler ve durum renkleri icin tema uzantisi.
+/// Theme extension for glass surfaces and status colors.
 class AppTokens extends ThemeExtension<AppTokens> {
   const AppTokens({
     required this.mesh,
@@ -74,15 +74,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
     mesh: AppPalette.lightMesh,
     glass: Color(0x99FFFFFF),
     glassStrong: Color(0xD6FFFFFF),
-    glassBorder: Color(0xA6FFFFFF),
+    glassBorder: Color(0xA6DDEAE3),
     muted: AppPalette.lightMuted,
     urgent: AppPalette.urgent,
-    urgentSoft: Color(0x24FF5D8F),
+    urgentSoft: Color(0x20D9536B),
     pending: AppPalette.pending,
-    pendingSoft: Color(0x24F0A741),
+    pendingSoft: Color(0x20CDA04A),
     success: AppPalette.success,
-    successSoft: Color(0x2434D399),
-    shadow: Color(0x1A6D28D9),
+    successSoft: Color(0x2034B88A),
+    shadow: Color(0x141A5148),
     isDark: false,
   );
 
@@ -90,19 +90,19 @@ class AppTokens extends ThemeExtension<AppTokens> {
     mesh: AppPalette.darkMesh,
     glass: Color(0x14FFFFFF),
     glassStrong: Color(0x26FFFFFF),
-    glassBorder: Color(0x30FFFFFF),
+    glassBorder: Color(0x303A6B5F),
     muted: AppPalette.darkMuted,
-    urgent: Color(0xFFFF7FAE),
-    urgentSoft: Color(0x33FF7FAE),
-    pending: Color(0xFFF7C579),
-    pendingSoft: Color(0x33F7C579),
-    success: Color(0xFF5EE7D6),
-    successSoft: Color(0x335EE7D6),
+    urgent: Color(0xFFE87A8E),
+    urgentSoft: Color(0x33E87A8E),
+    pending: Color(0xFFDDB86A),
+    pendingSoft: Color(0x33DDB86A),
+    success: Color(0xFF5EE7C0),
+    successSoft: Color(0x335EE7C0),
     shadow: Color(0x66000000),
     isDark: true,
   );
 
-  /// Dugme ve vurgular icin marka degradesi.
+  /// Brand gradient for buttons and highlights.
   LinearGradient get brandGradient => const LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
@@ -283,13 +283,13 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: tokens.glassBorder, thickness: 1),
-      snackBarTheme: SnackBarThemeData(
+      snackBarTheme: const SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: const StadiumBorder(),
+        shape: StadiumBorder(),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: tokens.isDark
-            ? const Color(0xFF261548)
+            ? const Color(0xFF142E28)
             : Colors.white.withValues(alpha: 0.97),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(

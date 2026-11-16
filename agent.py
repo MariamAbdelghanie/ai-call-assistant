@@ -54,6 +54,7 @@ from piper_tts_plugin import (
 from services import CalendarAndNotesService, TURKISH_DAYS, URGENT_KEYWORDS
 from latency_logger import LatencyLogger
 from config_validation import format_report, load_agent_config, validate_configuration
+from agent_brain import CallMessage, Language
 
 load_dotenv()
 
@@ -138,6 +139,22 @@ def is_valid_caller_speech(text: str) -> bool:
     if re.search(r"[\u0590-\u05FF]", cleaned):
         return False
     return True
+
+
+def to_brain_language(code: str) -> Language:
+    """agent_brain dil tipine cevirir (varsayilan Turkce)."""
+    return {
+        "tr": Language.TURKISH,
+        "ar": Language.ARABIC,
+        "en": Language.ENGLISH,
+    }.get(normalize_lang(code, DEFAULT_LANG), Language.TURKISH)
+
+
+MISSING_FIELD_HINTS = {
+    "message": "arayanin mesajini",
+    "callback_requested": "geri aranmak isteyip istemedigini",
+    "confirmed": "bilgileri tekrar edip onayini",
+}
 
 
 MODEL_PATH = Path(__file__).parent / "models" / "tr_TR-dfki-medium.onnx"
@@ -252,12 +269,15 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         f"2. RANDEVU VE MESAİ: Randevular YALNIZCA mesai saatleri ({work_start}-{work_end}) içinde verilir (`book_calendar_appointment`). "
         "Arayan mesai dışında bir saat isterse (gece, sabah erken veya mesai sonrası) randevu OLUŞTURMA; kibarca mesai saatlerini söyle, "
         "mesai içinde en yakın uygun saati öner veya mesaj bırakmasını teklif et.\n"
-        "3. MESAJ VE NOT: Mesaj bırakmak isteyenden adını, mesajını ve geri aranmak isteyip istemediğini öğren; önemli bilgileri (isim, saat) tekrar edip onaylat, sonra `save_call_note` aracını çağır. "
-        "`summary_tr` alan adı eski uyumluluk içindir: özetin kendisini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; olmayan bilgi ekleme. Kayıt izni vermezse `recording_consent=False` gönder.\n"
+        "3. MESAJ VE NOT: Mesaj bırakmak isteyenden adını, mesajını ve geri aranmak isteyip istemediğini öğren. "
+        "Sonra mesajı KISACA tekrar edip 'doğru mu, kaydedeyim mi?' diye sor. Net bir evet aldıktan sonra "
+        "`save_call_note` aracını caller_confirmed=True ile çağır. Araç HATA dönerse eksiği sor ve tekrar dene. "
+        "Özet metnini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; "
+        "olmayan bilgi ekleme. Kayıt izni vermezse `recording_consent=False` gönder.\n"
         "4. BİLGİLERİ TEKRAR SORMA: Arayan adını, konusunu veya saati bir kez söylediyse bunu hatırla ve tekrar sorma. Ad yalnızca hiç söylenmediyse sorulur.\n"
         "5. TELEFON NUMARASI SORMA: Arayanın numarası arama sırasında sistem tarafından otomatik alınır; numara isteme.\n"
-        "6. MESAJ Mİ RANDEVU MU: Arayan mevcut bir toplantının saatini değiştirmek istiyorsa bu bir MESAJDIR (telefon sahibi karar verir). Yalnızca arayan açıkça yeni randevu isterse `book_calendar_appointment` çağır. "
-        "Randevu oluşturduğunu SÖYLEMEDEN ÖNCE aracı mutlaka çağır ve sonucun 'BAŞARILI' olduğunu gör.\n"
+        "6. RANDEVUYU SEN BAŞLATMA: Randevuyu YALNIZCA arayan açıkça isterse aç. Arayan randevu istemediyse randevu önerme ve oluşturma; mesaj al. Mevcut bir toplantının saatini değiştirme talebi de bir MESAJDIR (telefon sahibi karar verir).\n"
+        "6b. RANDEVU ÜÇ ADIMDIR: (1) ad ve SOYADI öğren, (2) tarihi ve saati netleştir, (3) '<Ad Soyad>, <gün> <saat> için randevu oluşturuyorum, onaylıyor musunuz?' diye SOR ve net bir evet al. Ancak bundan sonra `book_calendar_appointment` aracını caller_confirmed=True ile çağır. Araç HATA dönerse eksik bilgiyi sor ve tekrar dene; 'BAŞARILI' görmeden randevu oluştu deme.\n"
         "7. RANDEVU İPTALİ: Önce KİM olduğunu öğren: ADINI VE SOYADINI sor. Sonra randevunun TARİHİNİ ve SAATİNİ sor. "
         "Bu üçü tam olmadan `cancel_calendar_appointment` çağırma; tek isimle veya eksik bilgiyle iptal etme. "
         "Araç 'BAŞARILI' dönmezse randevuyu iptal edilmiş gibi gösterme ve başka kişilerin randevu bilgilerini asla söyleme.\n"
@@ -338,15 +358,34 @@ class TurkishCallAssistant(Agent):
         print(f"[Tool Call] Checking calendar availability for: {date_str}", flush=True)
         return await asyncio.to_thread(service_manager.get_available_slots, date_str)
 
-    @function_tool(description="Çalışma saatleri (09:00-17:00) içinde talep edilen randevuyu Google Takvim'e kaydeder. start_iso formatı: YYYY-MM-DDTHH:MM:00.")
+    @function_tool(description="Arayanın AÇIKÇA istediği ve SÖZLÜ OLARAK onayladığı randevuyu mesai saatleri içinde Google Takvim'e kaydeder. caller_name ad ve soyad olmalı; caller_confirmed yalnızca arayan 'evet' dedikten sonra True gönderilir. start_iso formatı: YYYY-MM-DDTHH:MM:00.")
     async def book_calendar_appointment(
         self,
         context: RunContext,
         caller_name: str,
         reason: str,
         start_iso: str,
+        caller_confirmed: bool = False,
     ) -> str:
-        print(f"[Tool Call] Booking calendar event for {caller_name} at {start_iso}", flush=True)
+        print(
+            f"[Tool Call] Booking calendar event for {caller_name} at {start_iso} "
+            f"(confirmed={caller_confirmed})",
+            flush=True,
+        )
+        # Guvenlik kapisi: asistan kendi basina randevu olusturamaz.
+        if not caller_confirmed:
+            return (
+                "HATA: Arayan randevuyu henuz onaylamadi. Tarihi, saati ve adini "
+                "tekrar edip onay iste; ancak net bir evet aldiktan sonra bu araci "
+                "caller_confirmed=True ile cagir."
+            )
+        if len(str(caller_name or "").strip().split()) < 2:
+            return (
+                "HATA: Randevu icin ad ve soyad gerekli. Arayandan adini ve soyadini "
+                "iste, sonra tekrar dene."
+            )
+        if not str(start_iso or "").strip():
+            return "HATA: Randevu tarihi ve saati eksik."
         res = await asyncio.to_thread(
             service_manager.book_appointment, caller_name, reason, start_iso
         )
@@ -388,7 +427,7 @@ class TurkishCallAssistant(Agent):
             self.call_state["appointment_info"] = f"İPTAL EDİLDİ ({date_str} {time_hm})"
         return res
 
-    @function_tool(description="Telefon sahibine bırakılan mesajı, arama nedenini, geri aranma isteğini ve acil durum bilgisini kaydeder. caller_purpose ve summary_tr alanlarını sahibin yapılandırılmış dilinde yaz; summary_tr eski alan adı olsa da özet metnidir.")
+    @function_tool(description="Arayanın SÖZLÜ ONAYINDAN sonra mesajı, arama nedenini, geri aranma isteğini ve acil durumu kaydeder. caller_purpose ve summary_tr sahibin dilinde yazılır. caller_confirmed yalnızca arayan bilgileri onayladıktan sonra True gönderilir.")
     async def save_call_note(
         self,
         context: RunContext,
@@ -398,12 +437,33 @@ class TurkishCallAssistant(Agent):
         callback_requested: bool = True,
         is_urgent: bool = False,
         recording_consent: bool = True,
+        caller_confirmed: bool = False,
     ) -> str:
         print(
             f"[Tool Call] Saving call note for {caller_name} (urgent={is_urgent}, callback={callback_requested}, consent={recording_consent})",
             flush=True,
         )
         owner_lang = normalize_lang(self.active_cfg.get("owner_language"), DEFAULT_LANG)
+
+        # agent_brain sozlesmesi: eksik veya teyitsiz kayit kabul edilmez.
+        draft = CallMessage(
+            call_id=str(self.call_state.get("call_id") or "cagri"),
+            caller_language=to_brain_language(self.current_lang()),
+            owner_language=to_brain_language(owner_lang),
+            message=(summary_tr or "").strip() or None,
+            caller_name=(caller_name or "").strip() or None,
+            callback_requested=bool(callback_requested),
+            confirmed=bool(caller_confirmed),
+        )
+        missing = draft.missing_required_fields()
+        if missing:
+            eksik = ", ".join(MISSING_FIELD_HINTS.get(f, f) for f in missing)
+            print(f"[Brain] Kayit reddedildi, eksik: {missing}", flush=True)
+            return (
+                f"HATA: Kayit yapilamadi. Once {eksik} ogren, mesaji tekrar edip "
+                "onayini al, sonra bu araci caller_confirmed=True ile tekrar cagir."
+            )
+
         safe_name = (caller_name or "").strip()
         if not safe_name or safe_name == "İsimsiz Arayan":
             safe_name = ANONYMOUS[owner_lang]
@@ -704,11 +764,15 @@ async def entrypoint(ctx: JobContext):
                 on_language_detected=on_whisper_lang_detected,
             )
 
-        primary_llm = openai.LLM(
-            base_url="https://api.groq.com/openai/v1",
-            api_key=GROQ_API_KEY,
-            model=llm_model,
-            temperature=0.2,
+        # Istemci olusturmak SSL baglami kurdugu icin senkron calisirsa
+        # olay dongusunu saniyelerce tikiyor ve ses gecikiyordu.
+        primary_llm = await asyncio.to_thread(
+            lambda: openai.LLM(
+                base_url="https://api.groq.com/openai/v1",
+                api_key=GROQ_API_KEY,
+                model=llm_model,
+                temperature=0.2,
+            )
         )
         fallback_fast_llm = openai.LLM(
             base_url="https://api.groq.com/openai/v1",

@@ -1,10 +1,11 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Pastel degradeli zemin. Tum ekranlar bunun uzerine kurulur.
+/// Misty mountain-cloud background. All screens are built on top of this.
 class GlassBackground extends StatelessWidget {
   const GlassBackground({super.key, required this.child});
 
@@ -13,36 +14,43 @@ class GlassBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mesh = context.tokens.mesh;
+    final isDark = context.tokens.isDark;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: mesh,
           stops: const [0.0, 0.38, 0.72, 1.0],
         ),
       ),
       child: Stack(
         children: [
-          // Kosedeki yumusak isik lekeleri derinlik hissi verir.
+          // Misty mountain / cloud scene painted in the background.
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _MistPainter(isDark: isDark),
+            ),
+          ),
+          // Soft ambient glow blobs for depth.
           Positioned(
-            top: -90,
-            right: -70,
+            top: -80,
+            right: -60,
             child: _Blob(
               color: AppPalette.blush.withValues(
-                alpha: context.tokens.isDark ? 0.22 : 0.45,
+                alpha: isDark ? 0.15 : 0.30,
               ),
-              size: 260,
+              size: 240,
             ),
           ),
           Positioned(
-            bottom: -110,
-            left: -80,
+            bottom: -100,
+            left: -70,
             child: _Blob(
-              color: AppPalette.brandLight.withValues(
-                alpha: context.tokens.isDark ? 0.18 : 0.40,
+              color: AppPalette.cyan.withValues(
+                alpha: isDark ? 0.12 : 0.28,
               ),
-              size: 300,
+              size: 280,
             ),
           ),
           child,
@@ -50,6 +58,98 @@ class GlassBackground extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Paints subtle misty clouds and distant mountain silhouettes.
+class _MistPainter extends CustomPainter {
+  _MistPainter({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // --- Distant mountain range (very faint) ---
+    final mountainPaint = Paint()
+      ..color = (isDark
+              ? const Color(0xFF2A5A50)
+              : const Color(0xFFC8D8D0))
+          .withValues(alpha: isDark ? 0.25 : 0.35);
+
+    final mountains = Path()
+      ..moveTo(0, h * 0.42)
+      ..lineTo(w * 0.12, h * 0.33)
+      ..quadraticBezierTo(w * 0.18, h * 0.28, w * 0.25, h * 0.32)
+      ..lineTo(w * 0.35, h * 0.24)
+      ..quadraticBezierTo(w * 0.42, h * 0.19, w * 0.50, h * 0.26)
+      ..lineTo(w * 0.58, h * 0.22)
+      ..quadraticBezierTo(w * 0.65, h * 0.16, w * 0.72, h * 0.25)
+      ..lineTo(w * 0.82, h * 0.20)
+      ..quadraticBezierTo(w * 0.90, h * 0.15, w, h * 0.28)
+      ..lineTo(w, h * 0.50)
+      ..lineTo(0, h * 0.50)
+      ..close();
+
+    canvas.drawPath(mountains, mountainPaint);
+
+    // --- Fog/mist layers ---
+    for (var i = 0; i < 4; i++) {
+      final yOffset = h * (0.28 + i * 0.05);
+      final alpha = (isDark ? 0.06 : 0.12) - i * 0.02;
+      if (alpha <= 0) continue;
+
+      final fogPaint = Paint()
+        ..color = (isDark ? Colors.white : const Color(0xFFF0EDE6))
+            .withValues(alpha: alpha.clamp(0.01, 1.0))
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 30.0 + i * 12);
+
+      final fog = Path()
+        ..moveTo(-w * 0.1, yOffset + h * 0.04)
+        ..quadraticBezierTo(
+            w * 0.2, yOffset - h * 0.02, w * 0.4, yOffset + h * 0.03)
+        ..quadraticBezierTo(
+            w * 0.6, yOffset + h * 0.06, w * 0.8, yOffset - h * 0.01)
+        ..quadraticBezierTo(
+            w * 0.95, yOffset + h * 0.02, w * 1.1, yOffset + h * 0.05)
+        ..lineTo(w * 1.1, yOffset + h * 0.12)
+        ..lineTo(-w * 0.1, yOffset + h * 0.12)
+        ..close();
+
+      canvas.drawPath(fog, fogPaint);
+    }
+
+    // --- Soft cloud shapes floating at top ---
+    _drawCloud(canvas, Offset(w * 0.18, h * 0.10), w * 0.22,
+        isDark ? 0.06 : 0.14);
+    _drawCloud(canvas, Offset(w * 0.70, h * 0.08), w * 0.18,
+        isDark ? 0.05 : 0.12);
+    _drawCloud(canvas, Offset(w * 0.45, h * 0.15), w * 0.25,
+        isDark ? 0.04 : 0.10);
+  }
+
+  void _drawCloud(Canvas canvas, Offset center, double radius, double alpha) {
+    final cloudColor = (isDark ? Colors.white : const Color(0xFFE8E4DD))
+        .withValues(alpha: alpha);
+    final paint = Paint()
+      ..color = cloudColor
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.6);
+
+    // Three overlapping circles to form a cloud shape
+    canvas.drawCircle(center, radius * 0.5, paint);
+    canvas.drawCircle(
+        Offset(center.dx - radius * 0.35, center.dy + radius * 0.08),
+        radius * 0.38,
+        paint);
+    canvas.drawCircle(
+        Offset(center.dx + radius * 0.35, center.dy + radius * 0.05),
+        radius * 0.42,
+        paint);
+  }
+
+  @override
+  bool shouldRepaint(_MistPainter old) => old.isDark != isDark;
 }
 
 class _Blob extends StatelessWidget {
@@ -76,7 +176,7 @@ class _Blob extends StatelessWidget {
   }
 }
 
-/// Degradeli zemin + saydam AppBar iceren ekran iskeleti.
+/// Gradient background + transparent scaffold + optional AppBar.
 class GlassScaffold extends StatelessWidget {
   const GlassScaffold({
     super.key,
@@ -115,10 +215,10 @@ class GlassScaffold extends StatelessWidget {
   }
 }
 
-/// Buzlu cam yuzey.
+/// Frosted glass surface.
 ///
-/// `blur` yalnizca one cikan birkac kart icin acilir; uzun listelerde
-/// kaydirma akiciligini korumak adina bulaniklik olmadan kullanilir.
+/// `blur` is enabled only for a few prominent cards; regular list items
+/// skip the blur to keep scrolling performance smooth.
 class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
@@ -188,7 +288,7 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Degradeli, yuvarlak ana eylem dugmesi.
+/// Gradient pill button for primary actions.
 class GradientButton extends StatelessWidget {
   const GradientButton({
     super.key,
@@ -273,7 +373,7 @@ class GradientButton extends StatelessWidget {
   }
 }
 
-/// Bolum basligi: kucuk, aralikli ve sakin.
+/// Section title: small, spaced and calm.
 class SectionTitle extends StatelessWidget {
   const SectionTitle(this.text, {super.key, this.trailing});
 
@@ -300,7 +400,7 @@ class SectionTitle extends StatelessWidget {
   }
 }
 
-/// Uygulamanin kendi asistan simgesi: cam baloncuk icinde sade bir yuz.
+/// The app's own assistant icon: a glass bubble with a simple face.
 class AssistantAvatar extends StatelessWidget {
   const AssistantAvatar({super.key, this.size = 64});
 
@@ -374,10 +474,10 @@ class _FacePainter extends CustomPainter {
   bool shouldRepaint(_FacePainter old) => old.color != color;
 }
 
-/// Listelerde kartlarin sirayla, yumusakca belirmesini saglar.
+/// Staggered entrance animation for list items.
 ///
-/// `index` arttikca giris biraz gecikir; boylece ekran tek seferde degil
-/// akis halinde dolar. Azaltilmis hareket ayarinda animasyon atlanir.
+/// Items appear with increasing delay as `index` grows, giving a flowing
+/// cascade effect. Respects the reduced-motion accessibility setting.
 class AnimatedEntrance extends StatefulWidget {
   const AnimatedEntrance({
     super.key,
