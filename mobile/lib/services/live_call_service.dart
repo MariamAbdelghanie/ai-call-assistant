@@ -120,7 +120,9 @@ class LiveCallService extends ChangeNotifier {
 
       phase = CallPhase.connected;
       notifyListeners();
-    } catch (error) {
+    } catch (error, stack) {
+      debugPrint('[LiveCall] baglanti hatasi: $error');
+      debugPrintStack(stackTrace: stack, label: 'LiveCall');
       await _teardown();
       phase = CallPhase.failed;
       errorMessage = error.toString();

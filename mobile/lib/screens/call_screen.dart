@@ -135,10 +135,28 @@ class _CallScreenState extends State<CallScreen> {
                               size: 18, color: tokens.urgent),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text(
-                              _errorText(_call.errorMessage, strings),
-                              style: context.text.bodySmall
-                                  ?.copyWith(color: tokens.urgent),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _errorText(_call.errorMessage, strings),
+                                  style: context.text.bodySmall
+                                      ?.copyWith(color: tokens.urgent),
+                                ),
+                                if (_call.errorMessage != null &&
+                                    _call.errorMessage != 'server_missing' &&
+                                    _call.errorMessage != 'mic_denied') ...[
+                                  const SizedBox(height: 6),
+                                  SelectableText(
+                                    _call.errorMessage!,
+                                    maxLines: 4,
+                                    style: context.text.labelSmall?.copyWith(
+                                      color: tokens.muted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
