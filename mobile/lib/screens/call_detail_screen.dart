@@ -5,6 +5,7 @@ import '../l10n/strings.dart';
 import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/glass.dart';
 import '../utils/formatters.dart';
 import '../widgets/common.dart';
 
@@ -22,8 +23,8 @@ class CallDetailScreen extends StatelessWidget {
 
     final matches = state.calls.where((c) => c.callId == callId);
     if (matches.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: Text(strings.t('detailTitle'))),
+      return GlassScaffold(
+        title: strings.t('detailTitle'),
         body: EmptyState(
           icon: Icons.inbox_outlined,
           title: strings.t('emptyCalls'),
@@ -33,19 +34,17 @@ class CallDetailScreen extends StatelessWidget {
     }
     final call = matches.first;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.t('detailTitle')),
-        actions: [
-          IconButton(
-            tooltip: strings.t('delete'),
-            icon: Icon(Icons.delete_outline_rounded, color: tokens.urgent),
-            onPressed: () => _confirmDelete(context, state, call),
-          ),
-        ],
-      ),
+    return GlassScaffold(
+      title: strings.t('detailTitle'),
+      actions: [
+        IconButton(
+          tooltip: strings.t('delete'),
+          icon: Icon(Icons.delete_outline_rounded, color: tokens.urgent),
+          onPressed: () => _confirmDelete(context, state, call),
+        ),
+      ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +279,7 @@ class _Section extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radius),
-              border: Border.all(color: context.tokens.border),
+              border: Border.all(color: context.tokens.glassBorder),
             ),
             child: child,
           ),

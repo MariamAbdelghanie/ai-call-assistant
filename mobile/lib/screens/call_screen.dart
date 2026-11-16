@@ -6,6 +6,7 @@ import '../l10n/strings.dart';
 import '../services/live_call_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/glass.dart';
 import '../widgets/voice_orb.dart';
 
 /// Asistani uygulamadan arayip mimariyi canli denemek icin ekran.
@@ -37,7 +38,8 @@ class _CallScreenState extends State<CallScreen> {
         CallPhase.idle => OrbState.idle,
         CallPhase.connecting => OrbState.connecting,
         CallPhase.ending => OrbState.ended,
-        CallPhase.failed => OrbState.ended,
+        // Hata sonrasi kure yeniden aranabilir gorunsun.
+        CallPhase.failed => OrbState.idle,
         CallPhase.connected =>
           call.assistantSpeaking ? OrbState.speaking : OrbState.listening,
       };
@@ -68,8 +70,8 @@ class _CallScreenState extends State<CallScreen> {
     final strings = AppStrings.of(context);
     final tokens = context.tokens;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(strings.t('tabCall'))),
+    return GlassScaffold(
+      title: strings.t('tabCall'),
       body: ListenableBuilder(
         listenable: _call,
         builder: (context, _) {
@@ -133,10 +135,28 @@ class _CallScreenState extends State<CallScreen> {
                               size: 18, color: tokens.urgent),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text(
-                              _errorText(_call.errorMessage, strings),
-                              style: context.text.bodySmall
-                                  ?.copyWith(color: tokens.urgent),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _errorText(_call.errorMessage, strings),
+                                  style: context.text.bodySmall
+                                      ?.copyWith(color: tokens.urgent),
+                                ),
+                                if (_call.errorMessage != null &&
+                                    _call.errorMessage != 'server_missing' &&
+                                    _call.errorMessage != 'mic_denied') ...[
+                                  const SizedBox(height: 6),
+                                  SelectableText(
+                                    _call.errorMessage!,
+                                    maxLines: 4,
+                                    style: context.text.labelSmall?.copyWith(
+                                      color: tokens.muted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
@@ -155,9 +175,9 @@ class _CallScreenState extends State<CallScreen> {
                           label: strings.t(
                             _call.micEnabled ? 'callMute' : 'callUnmute',
                           ),
-                          background: tokens.raised,
+                          background: tokens.glass,
                           foreground: context.scheme.onSurface,
-                          border: tokens.border,
+                          border: tokens.glassBorder,
                           onTap: _call.toggleMic,
                         ),
                         const SizedBox(width: 28),
@@ -212,9 +232,9 @@ class _ConnectionPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
-            color: tokens.raised,
+            color: tokens.glass,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: tokens.border),
+            border: Border.all(color: tokens.glassBorder),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -268,7 +288,7 @@ class _CallButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: tokens.glow,
+              color: tokens.shadow,
               blurRadius: 28,
               offset: const Offset(0, 10),
             ),

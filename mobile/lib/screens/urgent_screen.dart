@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/glass.dart';
 import '../widgets/common.dart';
 import 'call_detail_screen.dart';
 
@@ -18,13 +19,13 @@ class UrgentScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final urgent = state.urgentCalls;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(strings.t('urgentTitle'))),
+    return GlassScaffold(
+      title: strings.t('urgentTitle'),
       body: RefreshIndicator(
         onRefresh: state.refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 110),
           children: [
             if (state.isDemo) DemoBanner(onOpenSettings: onOpenSettings),
             if (urgent.isNotEmpty)

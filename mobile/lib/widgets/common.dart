@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../models/call_summary.dart';
 import '../theme/app_theme.dart';
+import 'glass.dart';
 import '../utils/formatters.dart';
 
 /// Kucuk, renk kodlu durum etiketi.
@@ -68,13 +69,9 @@ class StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     return Expanded(
-      child: Container(
+      child: GlassCard(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        decoration: BoxDecoration(
-          color: tokens.raised,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: Border.all(color: tokens.border),
-        ),
+        radius: AppTheme.radiusSm,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -136,7 +133,7 @@ class EmptyState extends StatelessWidget {
               width: 84,
               height: 84,
               decoration: BoxDecoration(
-                color: tokens.brandSoft,
+                color: tokens.glass,
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 34, color: AppPalette.brand),
@@ -233,13 +230,10 @@ class CallCard extends StatelessWidget {
     final tokens = context.tokens;
     final accent = call.isUrgent ? tokens.urgent : AppPalette.brand;
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radius),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+    return GlassCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(18),
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -327,8 +321,8 @@ class CallCard extends StatelessWidget {
                   if (call.hasAppointment)
                     StatusBadge(
                       label: call.appointmentInfo,
-                      foreground: AppPalette.brandSoft,
-                      background: tokens.brandSoft,
+                      foreground: AppPalette.pink,
+                      background: tokens.glass,
                       icon: Icons.event_available_rounded,
                     ),
                   if (call.awaitingCallback)
@@ -370,9 +364,7 @@ class CallCard extends StatelessWidget {
                         ),
                 ),
               ],
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
