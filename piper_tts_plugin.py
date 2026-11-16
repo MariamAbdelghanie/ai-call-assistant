@@ -5,6 +5,7 @@ import os
 import re
 import time
 import uuid
+import aiohttp
 import edge_tts
 import miniaudio
 from pathlib import Path
@@ -389,6 +390,62 @@ class PiperTTS(tts.TTS):
             self._cache[seg_cache_key] = pcm_data
         return pcm_data
 
+    async def _synthesize_single_elevenlabs_segment(self, segment_text: str) -> bytes:
+        """ElevenLabs REST TTS. Anahtar ve ses kimligi .env dosyasindan okunur."""
+        api_key = os.getenv("ELEVENLABS_API_KEY", "").strip()
+        voice_id = os.getenv("ELEVENLABS_VOICE_ID", "").strip()
+        model_id = os.getenv("ELEVENLABS_MODEL", "eleven_flash_v2_5").strip() or "eleven_flash_v2_5"
+        if not api_key or not voice_id:
+            raise RuntimeError("ELEVENLABS_API_KEY veya ELEVENLABS_VOICE_ID tanimli degil")
+        raw_seg = segment_text.strip()
+        if not raw_seg:
+            return b""
+        lang = detect_text_language(raw_seg)
+        seg = humanize_times_for_tts(clean_turkish_tts_text(raw_seg), lang)
+        if not seg or not re.search(r"[\w\u0600-\u06FF\u0400-\u04FF]", seg):
+            return b""
+        cache_key = f"eleven::{voice_id}::{model_id}::{seg}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128"
+        headers = {"xi-api-key": api_key, "Content-Type": "application/json", "Accept": "audio/mpeg"}
+        payload = {"text": seg, "model_id": model_id}
+        timeout = aiohttp.ClientTimeout(total=20)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, json=payload, headers=headers) as resp:
+                if resp.status != 200:
+                    body = (await resp.text())[:200]
+                    raise RuntimeError(f"ElevenLabs HTTP {resp.status}: {body}")
+                raw_mp3 = await resp.read()
+        if not raw_mp3:
+            raise RuntimeError("ElevenLabs bos ses dondurdu")
+
+        decoded = await asyncio.to_thread(
+            miniaudio.decode,
+            raw_mp3,
+            output_format=miniaudio.SampleFormat.SIGNED16,
+            nchannels=1,
+            sample_rate=self.sample_rate,
+        )
+        pause = b"\x00\x00" * int(self.sample_rate * 0.14)
+        pcm_data = decoded.samples.tobytes() + pause
+        if len(self._cache) < 256:
+            self._cache[cache_key] = pcm_data
+        return pcm_data
+
+    async def synthesize_elevenlabs_raw(self, text: str) -> bytes:
+        if not text or not text.strip():
+            return b"\x00\x00" * 800
+        segments = [s.strip() for s in text.split("|") if s.strip()]
+        pcm_parts = []
+        for seg in segments:
+            part = await self._synthesize_single_elevenlabs_segment(seg)
+            if part:
+                pcm_parts.append(part)
+        data = b"".join(pcm_parts)
+        return data if data else b"\x00\x00" * 800
+
     async def synthesize_edge_raw(self, text: str, voice_id: str) -> bytes:
         if not text or not text.strip():
             return b"\x00\x00" * 800
@@ -513,9 +570,18 @@ class PiperChunkedStream(tts.ChunkedStream):
             output_emitter.flush()
             return
 
-        if mode in ("edge-emel", "edge-ahmet") or (mode == "piper-dfki" and detected_lang != "tr"):
+        is_eleven_ar = mode.startswith("elevenlabs-ar")
+        use_eleven = mode == "elevenlabs" or (is_eleven_ar and detected_lang == "ar")
+        edge_fallback = "edge-ahmet" if mode.endswith("ahmet") else "edge-emel"
+        if use_eleven:
             try:
-                pcm_bytes = await self._piper_tts.synthesize_edge_raw(raw_input, mode)
+                pcm_bytes = await self._piper_tts.synthesize_elevenlabs_raw(raw_input)
+            except Exception as e:
+                print(f"[TTS Fallback] ElevenLabs hatasi ({e}); Edge TTS kullaniliyor", flush=True)
+                pcm_bytes = await self._piper_tts.synthesize_edge_raw(raw_input, edge_fallback)
+        elif mode in ("edge-emel", "edge-ahmet") or is_eleven_ar or (mode == "piper-dfki" and detected_lang != "tr"):
+            try:
+                pcm_bytes = await self._piper_tts.synthesize_edge_raw(raw_input, mode if mode in ("edge-emel", "edge-ahmet") else edge_fallback)
             except Exception as e:
                 print(f"[TTS Fallback] Edge TTS error ({e}), using Google TTS fallback", flush=True)
                 pcm_bytes = await self._piper_tts.synthesize_google_raw(raw_input)

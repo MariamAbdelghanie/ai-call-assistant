@@ -115,6 +115,16 @@ def validate_configuration(
                     f".env dosyasına {key}=... satırını ekleyin.",
                 ))
 
+    tts_voice = str(current_config.get("tts_voice", "")).strip().lower()
+    if architecture == "cascade" and tts_voice.startswith("elevenlabs"):
+        for key in ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"):
+            if not _is_real_value(merged_env.get(key)):
+                issues.append(ValidationIssue(
+                    "warning", f"{key.lower()}-missing",
+                    f"ElevenLabs sesi seçili ama {key} ayarlanmamış; Edge TTS'e geri dönülecek.",
+                    f".env dosyasına {key}=... satırını ekleyin.",
+                ))
+
     if merged_env.get("LIVEKIT_API_KEY") == "devkey" or merged_env.get("LIVEKIT_API_SECRET") == "secret":
         issues.append(ValidationIssue(
             "warning", "livekit-dev-credentials", "LiveKit geliştirme anahtarları kullanılıyor.",

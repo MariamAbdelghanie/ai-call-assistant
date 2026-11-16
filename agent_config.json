@@ -1,16 +1,16 @@
 {
   "preset": "custom",
-  "stt_model": "whisper-large-v3-turbo",
+  "stt_model": "whisper-large-v3",
   "llm_model": "openai/gpt-oss-120b",
-  "tts_voice": "edge-ahmet",
+  "tts_voice": "elevenlabs-ar-ahmet",
   "stt_language": "auto",
   "assistant_mode": "hybrid",
-  "owner_language": "tr",
-  "work_start": "09:00",
-  "work_end": "17:00",
+  "work_start": "08:00",
+  "work_end": "20:00",
   "assistant_enabled": true,
   "greeting_text": "",
   "architecture": "cascade",
   "realtime_model": "gemini-3.8-live",
-  "realtime_voice": "Kore"
+  "realtime_voice": "Kore",
+  "owner_language": "tr"
 }

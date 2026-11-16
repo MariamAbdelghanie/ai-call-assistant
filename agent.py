@@ -206,7 +206,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
 
     lang_rules = {
         "tr": "Arayanla YALNIZCA doğal ve akıcı TÜRKÇE konuş.",
-        "ar": "تحدث مع المتصل بالعربية فقط، بأسلوب طبيعي وودود، ويمكنك مجاراة لهجة المتصل. لا تستخدم رموزاً أو نقاطاً (-) في ردك.",
+        "ar": "تحدث مع المتصل بالعربية الفصحى الحديثة فقط، بأسلوب طبيعي وودود وواضح. لا تستخدم أي لهجة عامية أو محلية مهما كانت لهجة المتصل، وإذا تحدث بالعامية افهمه وردّ عليه بالفصحى. لا تستخدم رموزاً أو نقاطاً (-) في ردك.",
         "en": "Speak with the caller ONLY in natural, friendly ENGLISH.",
     }
     lang_rule = lang_rules.get(
@@ -249,19 +249,29 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "0. ARAÇ OLMADAN İŞLEM YOK: Randevu oluşturma, iptal veya değiştirme işlemini YALNIZCA ilgili aracı çağırıp 'BAŞARILI' sonucunu aldıktan sonra arayana bildir. "
         "Aracı çağırmadan 'iptal ettim', 'iptal ediyorum', 'oluşturdum' gibi cümleler KURMA.\n"
         "1. GİZLİLİK: Telefon sahibinin kiminle randevusu olduğunu veya özel program detaylarını asla söyleme; sadece müsait veya meşgul olduğunu belirt.\n"
-        "2. RANDEVU VE İPTAL: Randevular yalnız mesai saatleri içinde verilir (`book_calendar_appointment`). İptal için önce arayanın adını ve saatini sorup doğrula (`cancel_calendar_appointment`).\n"
+        f"2. RANDEVU VE MESAİ: Randevular YALNIZCA mesai saatleri ({work_start}-{work_end}) içinde verilir (`book_calendar_appointment`). "
+        "Arayan mesai dışında bir saat isterse (gece, sabah erken veya mesai sonrası) randevu OLUŞTURMA; kibarca mesai saatlerini söyle, "
+        "mesai içinde en yakın uygun saati öner veya mesaj bırakmasını teklif et.\n"
         "3. MESAJ VE NOT: Mesaj bırakmak isteyenden adını, mesajını ve geri aranmak isteyip istemediğini öğren; önemli bilgileri (isim, saat) tekrar edip onaylat, sonra `save_call_note` aracını çağır. "
         "`summary_tr` alan adı eski uyumluluk içindir: özetin kendisini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; olmayan bilgi ekleme. Kayıt izni vermezse `recording_consent=False` gönder.\n"
         "4. BİLGİLERİ TEKRAR SORMA: Arayan adını, konusunu veya saati bir kez söylediyse bunu hatırla ve tekrar sorma. Ad yalnızca hiç söylenmediyse sorulur.\n"
         "5. TELEFON NUMARASI SORMA: Arayanın numarası arama sırasında sistem tarafından otomatik alınır; numara isteme.\n"
         "6. MESAJ Mİ RANDEVU MU: Arayan mevcut bir toplantının saatini değiştirmek istiyorsa bu bir MESAJDIR (telefon sahibi karar verir). Yalnızca arayan açıkça yeni randevu isterse `book_calendar_appointment` çağır. "
         "Randevu oluşturduğunu SÖYLEMEDEN ÖNCE aracı mutlaka çağır ve sonucun 'BAŞARILI' olduğunu gör.\n"
-        "7. RANDEVU İPTALİ: İptal için arayanın ADINI ve randevunun TARİHİNİ ve SAATİNİ sor; üçü olmadan `cancel_calendar_appointment` çağırma. "
+        "7. RANDEVU İPTALİ: Önce KİM olduğunu öğren: ADINI VE SOYADINI sor. Sonra randevunun TARİHİNİ ve SAATİNİ sor. "
+        "Bu üçü tam olmadan `cancel_calendar_appointment` çağırma; tek isimle veya eksik bilgiyle iptal etme. "
         "Araç 'BAŞARILI' dönmezse randevuyu iptal edilmiş gibi gösterme ve başka kişilerin randevu bilgilerini asla söyleme.\n"
         "7b. RANDEVU DEĞİŞTİRME: Arayan KENDİ randevusunun saatini değiştirmek isterse önce adı-soyadı, eski tarih ve saati doğrula; yeni saatin müsaitliğini `check_calendar_availability` ile kontrol et; "
         "sonra eski randevuyu `cancel_calendar_appointment` ile iptal et ve yenisini `book_calendar_appointment` ile oluştur. İki işlem de BAŞARILI olmadan değişti deme.\n"
         "'yarın', 'öbür gün', 'gelecek pazartesi' gibi ifadeleri BUGÜN tarihine göre YYYY-MM-DD'ye çevir.\n"
-        "8. ACİL DURUM: Acil/hastane/kaza durumunda hemen `save_call_note(is_urgent=True)` çağır. Hayati tehlike varsa 112'yi aramasını söyle."
+        "8. ACİL DURUM: Acil/hastane/kaza durumunda hemen `save_call_note(is_urgent=True)` çağır. Hayati tehlike varsa 112'yi aramasını söyle.\n"
+        f"9. SABAH MI AKŞAM MI: Arayan 'saat üçte' gibi belirsiz bir saat söylerse sabah mı yoksa öğleden sonra mı olduğunu KISACA sor. "
+        "Araca verirken 24 saatlik sisteme çevir: sabah sekiz=08:00, öğleden sonra üç=15:00, akşam yedi=19:00, gece yarısından sonra bir=01:00. "
+        f"Mesai {work_start}-{work_end} olduğu için gece yarısından sonraki veya mesai dışındaki saatlere randevu verme.\n"
+        "10. ARKADAŞ VE AİLE ARAMALARI: Arayan telefon sahibinin arkadaşı, akrabası veya ailesinden biri olduğunu söylerse resmi davranma. "
+        "Sıcak, samimi ve tamamen doğal konuş; adını nazikçe öğren, mesajını al ve geri aranmak isteyip istemediğini sor. "
+        "Bu bir iş görüşmesi değildir: mesai saatlerinden, randevu takviminden veya kurumsal ifadelerden bahsetme.\n"
+        "11. DOĞALLIK: Robot gibi konuşma. Tek seferde tek soru sor, maddeler halinde sayma, arayanın sözünü kesme, kısa ve insan gibi yanıt ver."
     )
 
 
@@ -585,8 +595,11 @@ async def entrypoint(ctx: JobContext):
     live_schedule_task = asyncio.create_task(
         asyncio.to_thread(service_manager.get_live_week_context)
     )
-    if architecture == "cascade" and tts_voice in ("edge-emel", "edge-ahmet"):
-        asyncio.create_task(GLOBAL_TTS.synthesize_edge_raw(OPENING_GREETING, tts_voice))
+    if architecture == "cascade" and tts_voice != "elevenlabs":
+        _greet_voice = tts_voice if tts_voice in ("edge-emel", "edge-ahmet") else (
+            "edge-ahmet" if tts_voice.endswith("ahmet") else "edge-emel"
+        )
+        asyncio.create_task(GLOBAL_TTS.synthesize_edge_raw(OPENING_GREETING, _greet_voice))
 
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
     live_schedule = await live_schedule_task

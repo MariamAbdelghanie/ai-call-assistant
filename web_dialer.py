@@ -279,6 +279,9 @@ main{max-width:1080px;margin:0 auto;padding:24px 20px 48px}
       <select id="cfgTts">
         <option value="edge-emel">Microsoft Edge Neural — kadın sesi</option>
         <option value="edge-ahmet">Microsoft Edge Neural — erkek sesi</option>
+        <option value="elevenlabs-ar-ahmet">ElevenLabs (Arapça) + Edge erkek (TR/EN)</option>
+        <option value="elevenlabs-ar-emel">ElevenLabs (Arapça) + Edge kadın (TR/EN)</option>
+        <option value="elevenlabs">ElevenLabs — tüm diller</option>
         <option value="google-tts">Google TTS (gTTS)</option>
         <option value="piper-dfki">Piper ONNX — yerel, çevrimdışı</option>
       </select>
