@@ -18,7 +18,7 @@ class CallDetailScreen extends StatelessWidget {
     final state = AppScope.of(context);
     final strings = AppStrings.of(context);
     final theme = Theme.of(context);
-    final status = context.status;
+    final tokens = context.tokens;
 
     final matches = state.calls.where((c) => c.callId == callId);
     if (matches.isEmpty) {
@@ -39,7 +39,7 @@ class CallDetailScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: strings.t('delete'),
-            icon: Icon(Icons.delete_outline_rounded, color: status.urgent),
+            icon: Icon(Icons.delete_outline_rounded, color: tokens.urgent),
             onPressed: () => _confirmDelete(context, state, call),
           ),
         ],
@@ -56,7 +56,7 @@ class CallDetailScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: (call.isUrgent
-                          ? status.urgent
+                          ? tokens.urgent
                           : theme.colorScheme.primary)
                       .withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(16),
@@ -66,7 +66,7 @@ class CallDetailScreen extends StatelessWidget {
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: call.isUrgent
-                        ? status.urgent
+                        ? tokens.urgent
                         : theme.colorScheme.primary,
                   ),
                 ),
@@ -87,7 +87,7 @@ class CallDetailScreen extends StatelessWidget {
                     Text(
                       Formatters.friendly(call.timestamp, strings),
                       style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: status.muted),
+                          ?.copyWith(color: tokens.muted),
                     ),
                   ],
                 ),
@@ -102,28 +102,28 @@ class CallDetailScreen extends StatelessWidget {
               if (call.isUrgent)
                 StatusBadge(
                   label: strings.t('urgentBadge'),
-                  foreground: status.urgent,
-                  background: status.urgentContainer,
+                  foreground: tokens.urgent,
+                  background: tokens.urgentSoft,
                   icon: Icons.priority_high_rounded,
                 ),
               if (call.awaitingCallback)
                 StatusBadge(
                   label: strings.t('callbackBadge'),
-                  foreground: status.accent,
-                  background: status.accentContainer,
+                  foreground: tokens.pending,
+                  background: tokens.pendingSoft,
                   icon: Icons.phone_callback_outlined,
                 ),
               if (call.calledBack)
                 StatusBadge(
                   label: strings.t('calledBack'),
-                  foreground: status.success,
-                  background: status.successContainer,
+                  foreground: tokens.success,
+                  background: tokens.successSoft,
                   icon: Icons.check_circle_outline,
                 ),
               StatusBadge(
                 label: strings.languageName(call.lang),
-                foreground: status.muted,
-                background: status.muted.withValues(alpha: 0.12),
+                foreground: tokens.muted,
+                background: tokens.muted.withValues(alpha: 0.12),
                 icon: Icons.translate_outlined,
               ),
             ],
@@ -268,7 +268,7 @@ class _Section extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: theme.textTheme.labelSmall?.copyWith(
-              color: context.status.muted,
+              color: context.tokens.muted,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),
@@ -280,7 +280,7 @@ class _Section extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radius),
-              border: Border.all(color: context.status.border),
+              border: Border.all(color: context.tokens.border),
             ),
             child: child,
           ),

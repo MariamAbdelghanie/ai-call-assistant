@@ -1,264 +1,326 @@
 import 'package:flutter/material.dart';
 
-/// Uygulamanin gorsel kimligi.
-/// Birincil renk: teal (guven, sakinlik). Vurgu: turuncu (eylem).
-/// Acil durumlar icin ayri bir kirmizi tonu kullanilir.
-class AppColors {
-  static const Color primary = Color(0xFF0D9488);
-  static const Color primaryDark = Color(0xFF2DD4BF);
-  static const Color accent = Color(0xFFEA580C);
-  static const Color accentDark = Color(0xFFFB923C);
-  static const Color urgent = Color(0xFFDC2626);
-  static const Color urgentDark = Color(0xFFF87171);
-  static const Color success = Color(0xFF059669);
-  static const Color successDark = Color(0xFF34D399);
+/// Gorsel kimlik: gece mavisi-mor zemin, canli indigo vurgu.
+/// Sesli asistan urunu icin sakin ama teknolojik bir his hedeflenir.
+class AppPalette {
+  // Marka
+  static const Color brand = Color(0xFF7C6CF6);
+  static const Color brandSoft = Color(0xFFA78BFA);
+  static const Color brandDeep = Color(0xFF5B4BE0);
 
-  static const Color lightBackground = Color(0xFFF2FBF9);
+  // Durum
+  static const Color urgent = Color(0xFFFF4D6D);
+  static const Color pending = Color(0xFFFFB020);
+  static const Color success = Color(0xFF22C55E);
+
+  // Koyu tema
+  static const Color darkBg = Color(0xFF0A0A12);
+  static const Color darkSurface = Color(0xFF15151F);
+  static const Color darkRaised = Color(0xFF1C1C28);
+  static const Color darkBorder = Color(0xFF272738);
+  static const Color darkText = Color(0xFFF4F4F8);
+  static const Color darkMuted = Color(0xFF8B8BA3);
+
+  // Acik tema
+  static const Color lightBg = Color(0xFFF6F6FB);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightBorder = Color(0xFFD5E9E5);
-  static const Color lightText = Color(0xFF10322F);
-  static const Color lightMuted = Color(0xFF5B7471);
-
-  static const Color darkBackground = Color(0xFF0B1413);
-  static const Color darkSurface = Color(0xFF12201E);
-  static const Color darkBorder = Color(0xFF24403C);
-  static const Color darkText = Color(0xFFE6F3F1);
-  static const Color darkMuted = Color(0xFF8FA9A5);
+  static const Color lightRaised = Color(0xFFFFFFFF);
+  static const Color lightBorder = Color(0xFFE6E6F0);
+  static const Color lightText = Color(0xFF14141E);
+  static const Color lightMuted = Color(0xFF63637C);
 }
 
-/// Durum renklerini tema moduna gore veren yardimci.
-class StatusColors extends ThemeExtension<StatusColors> {
-  const StatusColors({
+/// Tema uzantisi: durum renkleri, yumusak zeminler ve marka gradyani.
+class AppTokens extends ThemeExtension<AppTokens> {
+  const AppTokens({
     required this.urgent,
-    required this.urgentContainer,
+    required this.urgentSoft,
+    required this.pending,
+    required this.pendingSoft,
     required this.success,
-    required this.successContainer,
-    required this.accent,
-    required this.accentContainer,
+    required this.successSoft,
     required this.muted,
     required this.border,
+    required this.raised,
+    required this.brandSoft,
+    required this.glow,
   });
 
   final Color urgent;
-  final Color urgentContainer;
+  final Color urgentSoft;
+  final Color pending;
+  final Color pendingSoft;
   final Color success;
-  final Color successContainer;
-  final Color accent;
-  final Color accentContainer;
+  final Color successSoft;
   final Color muted;
   final Color border;
+  final Color raised;
+  final Color brandSoft;
+  final Color glow;
 
-  static const StatusColors light = StatusColors(
-    urgent: AppColors.urgent,
-    urgentContainer: Color(0xFFFEE9E9),
-    success: AppColors.success,
-    successContainer: Color(0xFFDFF5EC),
-    accent: AppColors.accent,
-    accentContainer: Color(0xFFFDEADC),
-    muted: AppColors.lightMuted,
-    border: AppColors.lightBorder,
+  static const AppTokens dark = AppTokens(
+    urgent: AppPalette.urgent,
+    urgentSoft: Color(0xFF2C1520),
+    pending: AppPalette.pending,
+    pendingSoft: Color(0xFF2C2113),
+    success: AppPalette.success,
+    successSoft: Color(0xFF132A1E),
+    muted: AppPalette.darkMuted,
+    border: AppPalette.darkBorder,
+    raised: AppPalette.darkRaised,
+    brandSoft: Color(0xFF1E1B34),
+    glow: Color(0x667C6CF6),
   );
 
-  static const StatusColors dark = StatusColors(
-    urgent: AppColors.urgentDark,
-    urgentContainer: Color(0xFF3A1A1A),
-    success: AppColors.successDark,
-    successContainer: Color(0xFF123228),
-    accent: AppColors.accentDark,
-    accentContainer: Color(0xFF3A2314),
-    muted: AppColors.darkMuted,
-    border: AppColors.darkBorder,
+  static const AppTokens light = AppTokens(
+    urgent: Color(0xFFE11D48),
+    urgentSoft: Color(0xFFFFE9ED),
+    pending: Color(0xFFB45309),
+    pendingSoft: Color(0xFFFFF2DC),
+    success: Color(0xFF15803D),
+    successSoft: Color(0xFFE4F7EB),
+    muted: AppPalette.lightMuted,
+    border: AppPalette.lightBorder,
+    raised: AppPalette.lightRaised,
+    brandSoft: Color(0xFFEFEDFE),
+    glow: Color(0x335B4BE0),
   );
+
+  LinearGradient get brandGradient => const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [AppPalette.brandDeep, AppPalette.brand, AppPalette.brandSoft],
+      );
 
   @override
-  StatusColors copyWith({
+  AppTokens copyWith({
     Color? urgent,
-    Color? urgentContainer,
+    Color? urgentSoft,
+    Color? pending,
+    Color? pendingSoft,
     Color? success,
-    Color? successContainer,
-    Color? accent,
-    Color? accentContainer,
+    Color? successSoft,
     Color? muted,
     Color? border,
-  }) {
-    return StatusColors(
-      urgent: urgent ?? this.urgent,
-      urgentContainer: urgentContainer ?? this.urgentContainer,
-      success: success ?? this.success,
-      successContainer: successContainer ?? this.successContainer,
-      accent: accent ?? this.accent,
-      accentContainer: accentContainer ?? this.accentContainer,
-      muted: muted ?? this.muted,
-      border: border ?? this.border,
-    );
-  }
+    Color? raised,
+    Color? brandSoft,
+    Color? glow,
+  }) =>
+      AppTokens(
+        urgent: urgent ?? this.urgent,
+        urgentSoft: urgentSoft ?? this.urgentSoft,
+        pending: pending ?? this.pending,
+        pendingSoft: pendingSoft ?? this.pendingSoft,
+        success: success ?? this.success,
+        successSoft: successSoft ?? this.successSoft,
+        muted: muted ?? this.muted,
+        border: border ?? this.border,
+        raised: raised ?? this.raised,
+        brandSoft: brandSoft ?? this.brandSoft,
+        glow: glow ?? this.glow,
+      );
 
   @override
-  StatusColors lerp(ThemeExtension<StatusColors>? other, double t) {
-    if (other is! StatusColors) return this;
-    return StatusColors(
+  AppTokens lerp(ThemeExtension<AppTokens>? other, double t) {
+    if (other is! AppTokens) return this;
+    return AppTokens(
       urgent: Color.lerp(urgent, other.urgent, t)!,
-      urgentContainer: Color.lerp(urgentContainer, other.urgentContainer, t)!,
+      urgentSoft: Color.lerp(urgentSoft, other.urgentSoft, t)!,
+      pending: Color.lerp(pending, other.pending, t)!,
+      pendingSoft: Color.lerp(pendingSoft, other.pendingSoft, t)!,
       success: Color.lerp(success, other.success, t)!,
-      successContainer: Color.lerp(successContainer, other.successContainer, t)!,
-      accent: Color.lerp(accent, other.accent, t)!,
-      accentContainer: Color.lerp(accentContainer, other.accentContainer, t)!,
+      successSoft: Color.lerp(successSoft, other.successSoft, t)!,
       muted: Color.lerp(muted, other.muted, t)!,
       border: Color.lerp(border, other.border, t)!,
+      raised: Color.lerp(raised, other.raised, t)!,
+      brandSoft: Color.lerp(brandSoft, other.brandSoft, t)!,
+      glow: Color.lerp(glow, other.glow, t)!,
     );
   }
 }
 
-extension StatusColorsX on BuildContext {
-  StatusColors get status =>
-      Theme.of(this).extension<StatusColors>() ?? StatusColors.light;
+extension AppTokensX on BuildContext {
+  AppTokens get tokens =>
+      Theme.of(this).extension<AppTokens>() ?? AppTokens.dark;
+  ColorScheme get scheme => Theme.of(this).colorScheme;
+  TextTheme get text => Theme.of(this).textTheme;
 }
 
 class AppTheme {
-  static const double radius = 16;
-  static const Duration fast = Duration(milliseconds: 160);
-  static const Duration normal = Duration(milliseconds: 240);
+  static const double radius = 22;
+  static const double radiusSm = 14;
+  static const Duration fast = Duration(milliseconds: 180);
+  static const Duration normal = Duration(milliseconds: 260);
 
-  static ThemeData light() => _base(
-        Brightness.light,
-        ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          brightness: Brightness.light,
-        ).copyWith(
-          primary: AppColors.primary,
-          onPrimary: Colors.white,
-          secondary: AppColors.accent,
-          onSecondary: Colors.white,
-          surface: AppColors.lightSurface,
-          onSurface: AppColors.lightText,
-          error: AppColors.urgent,
-          onError: Colors.white,
-          outlineVariant: AppColors.lightBorder,
-        ),
-        AppColors.lightBackground,
-        StatusColors.light,
+  static ThemeData dark() => _build(
+        brightness: Brightness.dark,
+        background: AppPalette.darkBg,
+        surface: AppPalette.darkSurface,
+        onSurface: AppPalette.darkText,
+        primary: AppPalette.brand,
+        onPrimary: Colors.white,
+        tokens: AppTokens.dark,
       );
 
-  static ThemeData dark() => _base(
-        Brightness.dark,
-        ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          brightness: Brightness.dark,
-        ).copyWith(
-          primary: AppColors.primaryDark,
-          onPrimary: const Color(0xFF00201C),
-          secondary: AppColors.accentDark,
-          onSecondary: const Color(0xFF2B1402),
-          surface: AppColors.darkSurface,
-          onSurface: AppColors.darkText,
-          error: AppColors.urgentDark,
-          onError: const Color(0xFF2B0A0A),
-          outlineVariant: AppColors.darkBorder,
-        ),
-        AppColors.darkBackground,
-        StatusColors.dark,
+  static ThemeData light() => _build(
+        brightness: Brightness.light,
+        background: AppPalette.lightBg,
+        surface: AppPalette.lightSurface,
+        onSurface: AppPalette.lightText,
+        primary: AppPalette.brandDeep,
+        onPrimary: Colors.white,
+        tokens: AppTokens.light,
       );
 
-  static ThemeData _base(
-    Brightness brightness,
-    ColorScheme scheme,
-    Color background,
-    StatusColors status,
-  ) {
+  static ThemeData _build({
+    required Brightness brightness,
+    required Color background,
+    required Color surface,
+    required Color onSurface,
+    required Color primary,
+    required Color onPrimary,
+    required AppTokens tokens,
+  }) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: AppPalette.brand,
+      brightness: brightness,
+    ).copyWith(
+      primary: primary,
+      onPrimary: onPrimary,
+      secondary: AppPalette.brandSoft,
+      surface: surface,
+      onSurface: onSurface,
+      error: tokens.urgent,
+      onError: Colors.white,
+      outlineVariant: tokens.border,
+    );
+
     final base = ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
-      extensions: <ThemeExtension<dynamic>>[status],
+      extensions: <ThemeExtension<dynamic>>[tokens],
+    );
+
+    final textTheme = base.textTheme.apply(
+      bodyColor: onSurface,
+      displayColor: onSurface,
     );
 
     return base.copyWith(
-      textTheme: base.textTheme.apply(
-        bodyColor: scheme.onSurface,
-        displayColor: scheme.onSurface,
+      textTheme: textTheme.copyWith(
+        headlineSmall: textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.6,
+        ),
+        titleLarge: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+        ),
+        titleMedium: textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
+        bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.5),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: background,
         surfaceTintColor: Colors.transparent,
-        foregroundColor: scheme.onSurface,
+        foregroundColor: onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: base.textTheme.titleLarge?.copyWith(
+        titleTextStyle: textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w700,
-          color: scheme.onSurface,
+          letterSpacing: -0.6,
+          color: onSurface,
         ),
       ),
       cardTheme: CardThemeData(
-        color: scheme.surface,
+        color: tokens.raised,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
-          side: BorderSide(color: status.border),
+          side: BorderSide(color: tokens.border),
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
-        side: BorderSide(color: status.border),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
-        backgroundColor: scheme.surface,
-        selectedColor: scheme.primary,
-        labelStyle: base.textTheme.labelLarge,
+        side: BorderSide(color: tokens.border),
+        shape: const StadiumBorder(),
+        backgroundColor: tokens.raised,
+        selectedColor: primary,
+        labelStyle: textTheme.labelLarge,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         showCheckmark: false,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surface,
+        fillColor: tokens.raised,
+        hintStyle: textTheme.bodyMedium?.copyWith(color: tokens.muted),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radius),
-          borderSide: BorderSide(color: status.border),
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: BorderSide(color: tokens.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radius),
-          borderSide: BorderSide(color: status.border),
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: BorderSide(color: tokens.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radius),
-          borderSide: BorderSide(color: scheme.primary, width: 2),
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: BorderSide(color: primary, width: 1.6),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 48),
+          minimumSize: const Size(0, 50),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radiusSm),
           ),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.1,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 48),
-          side: BorderSide(color: status.border),
+          minimumSize: const Size(0, 50),
+          side: BorderSide(color: tokens.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radiusSm),
           ),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: brightness == Brightness.dark
+            ? AppPalette.darkSurface
+            : AppPalette.lightSurface,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: scheme.primary.withValues(alpha: 0.16),
+        indicatorColor: tokens.brandSoft,
         elevation: 0,
-        height: 68,
+        height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        labelTextStyle: WidgetStatePropertyAll(
+          textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
       ),
-      dividerTheme: DividerThemeData(color: status.border, thickness: 1),
+      dividerTheme: DividerThemeData(color: tokens.border, thickness: 1),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(radiusSm),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: tokens.raised,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
         ),
       ),
     );

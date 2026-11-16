@@ -11,9 +11,14 @@ import 'call_detail_screen.dart';
 enum CallFilter { all, urgent, callback, today }
 
 class CallsScreen extends StatefulWidget {
-  const CallsScreen({super.key, required this.onOpenSettings});
+  const CallsScreen({
+    super.key,
+    required this.onOpenSettings,
+    required this.onStartCall,
+  });
 
   final VoidCallback onOpenSettings;
+  final VoidCallback onStartCall;
 
   @override
   State<CallsScreen> createState() => _CallsScreenState();
@@ -72,6 +77,13 @@ class _CallsScreenState extends State<CallsScreen> {
           children: [
             if (state.isDemo)
               DemoBanner(onOpenSettings: widget.onOpenSettings),
+            _AssistantHero(
+              enabled: state.config.enabled,
+              workHours:
+                  '${state.config.workStart} - ${state.config.workEnd}',
+              onStartCall: widget.onStartCall,
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 StatTile(
@@ -84,14 +96,14 @@ class _CallsScreenState extends State<CallsScreen> {
                 StatTile(
                   value: state.urgentCount,
                   label: strings.t('statUrgent'),
-                  color: context.status.urgent,
+                  color: context.tokens.urgent,
                   icon: Icons.priority_high_rounded,
                 ),
                 const SizedBox(width: 10),
                 StatTile(
                   value: state.awaitingCount,
                   label: strings.t('statWaiting'),
-                  color: context.status.accent,
+                  color: context.tokens.pending,
                   icon: Icons.phone_callback_outlined,
                 ),
               ],
@@ -192,5 +204,109 @@ class _CallsScreenState extends State<CallsScreen> {
         SnackBar(content: Text(strings.t('loadError'))),
       );
     }
+  }
+}
+
+/// Ustteki marka karti: asistanin durumu ve hizli arama dugmesi.
+class _AssistantHero extends StatelessWidget {
+  const _AssistantHero({
+    required this.enabled,
+    required this.workHours,
+    required this.onStartCall,
+  });
+
+  final bool enabled;
+  final String workHours;
+  final VoidCallback onStartCall;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
+    final tokens = context.tokens;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: tokens.brandGradient,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        boxShadow: [
+          BoxShadow(color: tokens.glow, blurRadius: 30, offset: const Offset(0, 12)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: enabled
+                            ? const Color(0xFF86EFAC)
+                            : const Color(0xFFFCA5A5),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      strings.t(enabled ? 'heroOn' : 'heroOff'),
+                      style: context.text.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.auto_awesome_rounded,
+                color: Colors.white.withValues(alpha: 0.85),
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            strings.t('heroTitle'),
+            style: context.text.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${strings.t('workHours')} · $workHours',
+            style: context.text.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppPalette.brandDeep,
+              ),
+              onPressed: onStartCall,
+              icon: const Icon(Icons.call_rounded, size: 19),
+              label: Text(strings.t('heroCta')),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -12,6 +12,10 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.3.0
+  # Uygulama icinden asistani aramak icin (LiveKit WebRTC).
+  # Surumler ilk kurulumda cozulur; calisan surumu `flutter pub deps` ile sabitleyebilirsiniz.
+  livekit_client: any
+  permission_handler: any
 
 dev_dependencies:
   flutter_test:
