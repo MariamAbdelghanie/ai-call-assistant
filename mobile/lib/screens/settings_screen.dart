@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/glass.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -42,10 +43,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final strings = AppStrings.of(context);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(strings.t('settingsTitle'))),
+    return GlassScaffold(
+      title: strings.t('settingsTitle'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 110),
         children: [
           _Group(
             title: strings.t('serverSection'),
@@ -282,7 +283,7 @@ class _Group extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radius),
-              border: Border.all(color: context.tokens.border),
+              border: Border.all(color: context.tokens.glassBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

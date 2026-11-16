@@ -43,9 +43,9 @@ class _VoiceOrbState extends State<VoiceOrb>
     final tokens = context.tokens;
     return switch (widget.state) {
       OrbState.idle => [AppPalette.brandDeep, AppPalette.brand],
-      OrbState.connecting => [tokens.pending, AppPalette.brandSoft],
-      OrbState.listening => [AppPalette.brand, AppPalette.brandSoft],
-      OrbState.speaking => [AppPalette.brandSoft, tokens.success],
+      OrbState.connecting => [tokens.pending, AppPalette.pink],
+      OrbState.listening => [AppPalette.brand, AppPalette.pink],
+      OrbState.speaking => [AppPalette.pink, tokens.success],
       OrbState.ended => [tokens.muted, tokens.muted],
     };
   }
