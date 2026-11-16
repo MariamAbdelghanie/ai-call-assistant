@@ -32,10 +32,10 @@ class UrgentScreen extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: context.status.urgentContainer,
+                  color: context.tokens.urgentSoft,
                   borderRadius: BorderRadius.circular(AppTheme.radius),
                   border: Border.all(
-                    color: context.status.urgent.withValues(alpha: 0.35),
+                    color: context.tokens.urgent.withValues(alpha: 0.35),
                   ),
                 ),
                 child: Row(
@@ -45,12 +45,12 @@ class UrgentScreen extends StatelessWidget {
                       height: 44,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: context.status.urgent.withValues(alpha: 0.16),
+                        color: context.tokens.urgent.withValues(alpha: 0.16),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.notifications_active_outlined,
-                        color: context.status.urgent,
+                        color: context.tokens.urgent,
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -62,13 +62,13 @@ class UrgentScreen extends StatelessWidget {
                             '${urgent.length}',
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: context.status.urgent,
+                              color: context.tokens.urgent,
                             ),
                           ),
                           Text(
                             strings.t('urgentTitle'),
                             style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: context.status.muted),
+                                ?.copyWith(color: context.tokens.muted),
                           ),
                         ],
                       ),

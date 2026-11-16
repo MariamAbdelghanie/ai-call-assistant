@@ -69,8 +69,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : Icons.cloud_done_outlined,
                     size: 18,
                     color: state.isDemo
-                        ? context.status.accent
-                        : context.status.success,
+                        ? context.tokens.pending
+                        : context.tokens.success,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -80,8 +80,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : strings.t('connected'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: state.isDemo
-                            ? context.status.accent
-                            : context.status.success,
+                            ? context.tokens.pending
+                            : context.tokens.success,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -206,9 +206,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: context.status.urgent,
+                    foregroundColor: context.tokens.urgent,
                     side: BorderSide(
-                      color: context.status.urgent.withValues(alpha: 0.5),
+                      color: context.tokens.urgent.withValues(alpha: 0.5),
                     ),
                   ),
                   onPressed: () => _confirmDeleteAll(context, state),
@@ -271,7 +271,7 @@ class _Group extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: theme.textTheme.labelSmall?.copyWith(
-              color: context.status.muted,
+              color: context.tokens.muted,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),
@@ -282,7 +282,7 @@ class _Group extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radius),
-              border: Border.all(color: context.status.border),
+              border: Border.all(color: context.tokens.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +313,7 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: context.status.muted),
+          Icon(icon, size: 18, color: context.tokens.muted),
           const SizedBox(width: 10),
           Expanded(
             child: Text(label, style: theme.textTheme.bodyMedium),

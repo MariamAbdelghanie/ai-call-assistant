@@ -119,13 +119,13 @@ class AppointmentsScreen extends StatelessWidget {
                                   Text(
                                     Formatters.friendly(call.timestamp, strings),
                                     style: theme.textTheme.bodySmall
-                                        ?.copyWith(color: context.status.muted),
+                                        ?.copyWith(color: context.tokens.muted),
                                   ),
                                 ],
                               ),
                             ),
                             Icon(Icons.chevron_right_rounded,
-                                color: context.status.muted),
+                                color: context.tokens.muted),
                           ],
                         ),
                       ),
