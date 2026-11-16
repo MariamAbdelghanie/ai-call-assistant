@@ -19,6 +19,10 @@ class AppStrings {
   static const Map<String, Map<String, String>> _values = {
     'tr': {
       'appTitle': 'Çağrı Asistanı',
+      'architectureHint': "Realtime daha hızlı yanıt verir; Cascade her bileşeni ayrı seçmenize izin verir.",
+      'archCascade': "Cascade",
+      'archRealtime': "Realtime",
+      'architectureSaved': "Kaydedildi. Sonraki çağrıda geçerli olur.",
       'welcomeTitle': "Akıllı çağrı asistanınızla tanışın",
       'welcomeSubtitle': "Siz meşgulken çağrıları karşılar, mesajı alır ve özetini size gönderir.",
       'welcomeCta': "Başlayalım",
@@ -124,6 +128,10 @@ class AppStrings {
     },
     'ar': {
       'appTitle': 'مساعد المكالمات',
+      'architectureHint': "Realtime أسرع في الرد، وCascade يتيح اختيار كل مكوّن على حدة.",
+      'archCascade': "Cascade",
+      'archRealtime': "Realtime",
+      'architectureSaved': "تم الحفظ. سيُطبّق في المكالمة القادمة.",
       'welcomeTitle': "تعرّف على مساعد مكالماتك الذكي",
       'welcomeSubtitle': "يرد على مكالماتك وأنت مشغول، ويأخذ الرسالة ويرسل لك ملخصها.",
       'welcomeCta': "لنبدأ",
@@ -228,6 +236,10 @@ class AppStrings {
     },
     'en': {
       'appTitle': 'Call Assistant',
+      'architectureHint': "Realtime answers faster; Cascade lets you pick each component.",
+      'archCascade': "Cascade",
+      'archRealtime': "Realtime",
+      'architectureSaved': "Saved. It applies to the next call.",
       'welcomeTitle': "Meet your smart call assistant",
       'welcomeSubtitle': "It answers while you are busy, takes the message and sends you a summary.",
       'welcomeCta': "Let's start",
