@@ -10,6 +10,7 @@ piper-tts>=1.8.0
 onnxruntime>=1.18.0
 edge-tts>=7.3.1
 gTTS>=2.5.4
+miniaudio>=1.60
 SpeechRecognition>=3.17.0
 
 # Google servisleri
