@@ -1,39 +1,41 @@
 import 'package:flutter/material.dart';
 
-/// Gorsel kimlik: pastel degradeli zemin uzerinde buzlu cam yuzeyler.
+/// Gorsel kimlik: nane yesili, krem ve pudra tonlarinda nese veren bir palet.
+/// Yuzeyler buzlu cam, zemin yumusak degradelerden olusur.
 class AppPalette {
   // Marka
-  static const Color brand = Color(0xFF8B7BF0);
-  static const Color brandDeep = Color(0xFF6C5CE0);
-  static const Color pink = Color(0xFFFF9EC4);
-  static const Color mint = Color(0xFF5FD6B0);
-  static const Color peach = Color(0xFFFFB38A);
+  static const Color brand = Color(0xFF4FAE8C);
+  static const Color brandLight = Color(0xFF7ED4B2);
+  static const Color brandDeep = Color(0xFF2E8C6E);
+  static const Color blush = Color(0xFFF2A1A1);
+  static const Color cream = Color(0xFFFDF6EC);
+  static const Color lilac = Color(0xFFC9B6E4);
 
   // Durum
-  static const Color urgent = Color(0xFFF2567C);
-  static const Color pending = Color(0xFFE08A2B);
-  static const Color success = Color(0xFF2FA37A);
+  static const Color urgent = Color(0xFFE86A6A);
+  static const Color pending = Color(0xFFDC9B3C);
+  static const Color success = Color(0xFF3FA37A);
 
   // Acik tema zemin duraklari
   static const List<Color> lightMesh = [
-    Color(0xFFD6F5EA),
-    Color(0xFFE7DCFF),
-    Color(0xFFFFD9E8),
-    Color(0xFFFFE6D2),
+    Color(0xFFE9F6EE),
+    Color(0xFFD8EEE2),
+    Color(0xFFFBEFE2),
+    Color(0xFFF4E9F6),
   ];
 
   // Koyu tema zemin duraklari
   static const List<Color> darkMesh = [
-    Color(0xFF13202A),
-    Color(0xFF221B3A),
-    Color(0xFF2E1B2E),
-    Color(0xFF1B1726),
+    Color(0xFF0E1A17),
+    Color(0xFF14241F),
+    Color(0xFF1D2422),
+    Color(0xFF151C21),
   ];
 
-  static const Color lightText = Color(0xFF2A2340);
-  static const Color lightMuted = Color(0xFF6B6283);
-  static const Color darkText = Color(0xFFF2EEFF);
-  static const Color darkMuted = Color(0xFF9E96BC);
+  static const Color lightText = Color(0xFF22443C);
+  static const Color lightMuted = Color(0xFF6B8A80);
+  static const Color darkText = Color(0xFFE8F4EE);
+  static const Color darkMuted = Color(0xFF93AFA6);
 }
 
 /// Cam yuzeyler ve durum renkleri icin tema uzantisi.
@@ -70,32 +72,32 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static const AppTokens light = AppTokens(
     mesh: AppPalette.lightMesh,
-    glass: Color(0x8CFFFFFF),
-    glassStrong: Color(0xCCFFFFFF),
-    glassBorder: Color(0x99FFFFFF),
+    glass: Color(0x99FFFFFF),
+    glassStrong: Color(0xD6FFFFFF),
+    glassBorder: Color(0xA6FFFFFF),
     muted: AppPalette.lightMuted,
     urgent: AppPalette.urgent,
-    urgentSoft: Color(0x26F2567C),
+    urgentSoft: Color(0x24E86A6A),
     pending: AppPalette.pending,
-    pendingSoft: Color(0x26E08A2B),
+    pendingSoft: Color(0x24DC9B3C),
     success: AppPalette.success,
-    successSoft: Color(0x262FA37A),
-    shadow: Color(0x1A5B4BA0),
+    successSoft: Color(0x243FA37A),
+    shadow: Color(0x1A2E8C6E),
     isDark: false,
   );
 
   static const AppTokens dark = AppTokens(
     mesh: AppPalette.darkMesh,
     glass: Color(0x14FFFFFF),
-    glassStrong: Color(0x24FFFFFF),
-    glassBorder: Color(0x2EFFFFFF),
+    glassStrong: Color(0x26FFFFFF),
+    glassBorder: Color(0x30FFFFFF),
     muted: AppPalette.darkMuted,
-    urgent: Color(0xFFFF7E9D),
-    urgentSoft: Color(0x33FF7E9D),
-    pending: Color(0xFFFFC46B),
-    pendingSoft: Color(0x33FFC46B),
-    success: Color(0xFF5FD6B0),
-    successSoft: Color(0x335FD6B0),
+    urgent: Color(0xFFFF8A8A),
+    urgentSoft: Color(0x33FF8A8A),
+    pending: Color(0xFFF0BE74),
+    pendingSoft: Color(0x33F0BE74),
+    success: Color(0xFF6FD6AE),
+    successSoft: Color(0x336FD6AE),
     shadow: Color(0x66000000),
     isDark: true,
   );
@@ -104,15 +106,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
   LinearGradient get brandGradient => const LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-        colors: [AppPalette.pink, AppPalette.brand],
+        colors: [AppPalette.brandLight, AppPalette.brand],
       );
 
   LinearGradient get softGradient => LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppPalette.pink.withValues(alpha: isDark ? 0.30 : 0.42),
-          AppPalette.brand.withValues(alpha: isDark ? 0.28 : 0.34),
+          AppPalette.brandLight.withValues(alpha: isDark ? 0.26 : 0.38),
+          AppPalette.blush.withValues(alpha: isDark ? 0.22 : 0.34),
         ],
       );
 
@@ -159,10 +161,10 @@ class AppTheme {
       brightness: brightness,
     ).copyWith(
       primary: brightness == Brightness.dark
-          ? AppPalette.brand
+          ? AppPalette.brandLight
           : AppPalette.brandDeep,
       onPrimary: Colors.white,
-      secondary: AppPalette.pink,
+      secondary: AppPalette.blush,
       surface: Colors.transparent,
       onSurface: onSurface,
       error: tokens.urgent,
@@ -174,7 +176,6 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      // Zemin degradesi GlassScaffold tarafindan cizilir.
       scaffoldBackgroundColor: Colors.transparent,
       extensions: <ThemeExtension<dynamic>>[tokens],
     );
@@ -216,6 +217,16 @@ class AppTheme {
           fontWeight: FontWeight.w800,
           letterSpacing: -0.7,
           color: onSurface,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: tokens.glass,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+          side: BorderSide(color: tokens.glassBorder),
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
@@ -278,8 +289,8 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: tokens.isDark
-            ? const Color(0xFF231D33)
-            : Colors.white.withValues(alpha: 0.96),
+            ? const Color(0xFF1B2A25)
+            : Colors.white.withValues(alpha: 0.97),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
