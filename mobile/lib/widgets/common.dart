@@ -321,7 +321,7 @@ class CallCard extends StatelessWidget {
                   if (call.hasAppointment)
                     StatusBadge(
                       label: call.appointmentInfo,
-                      foreground: AppPalette.pink,
+                      foreground: AppPalette.blush,
                       background: tokens.glass,
                       icon: Icons.event_available_rounded,
                     ),

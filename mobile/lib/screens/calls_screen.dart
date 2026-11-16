@@ -111,7 +111,7 @@ class _CallsScreenState extends State<CallsScreen> {
                       icon: Icons.event_rounded,
                       label: strings.t('tabAppointments'),
                       value: '${state.appointments.length}',
-                      color: AppPalette.mint,
+                      color: AppPalette.brandLight,
                       onTap: widget.onOpenAppointments,
                     ),
                   ),
@@ -218,13 +218,16 @@ class _CallsScreenState extends State<CallsScreen> {
                   message: strings.t('emptyCallsHint'),
                 )
               else
-                for (final call in visible)
+                for (final (index, call) in visible.indexed)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: CallCard(
-                      call: call,
-                      onTap: () => _openDetail(call),
-                      onToggleCalledBack: () => state.toggleCalledBack(call),
+                    child: AnimatedEntrance(
+                      index: index,
+                      child: CallCard(
+                        call: call,
+                        onTap: () => _openDetail(call),
+                        onToggleCalledBack: () => state.toggleCalledBack(call),
+                      ),
                     ),
                   ),
             ],

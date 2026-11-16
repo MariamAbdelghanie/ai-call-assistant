@@ -29,7 +29,7 @@ class GlassBackground extends StatelessWidget {
             top: -90,
             right: -70,
             child: _Blob(
-              color: AppPalette.pink.withValues(
+              color: AppPalette.blush.withValues(
                 alpha: context.tokens.isDark ? 0.22 : 0.45,
               ),
               size: 260,
@@ -39,7 +39,7 @@ class GlassBackground extends StatelessWidget {
             bottom: -110,
             left: -80,
             child: _Blob(
-              color: AppPalette.mint.withValues(
+              color: AppPalette.brandLight.withValues(
                 alpha: context.tokens.isDark ? 0.18 : 0.40,
               ),
               size: 300,
@@ -372,4 +372,68 @@ class _FacePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FacePainter old) => old.color != color;
+}
+
+/// Listelerde kartlarin sirayla, yumusakca belirmesini saglar.
+///
+/// `index` arttikca giris biraz gecikir; boylece ekran tek seferde degil
+/// akis halinde dolar. Azaltilmis hareket ayarinda animasyon atlanir.
+class AnimatedEntrance extends StatefulWidget {
+  const AnimatedEntrance({
+    super.key,
+    required this.child,
+    this.index = 0,
+    this.offset = 0.06,
+  });
+
+  final Widget child;
+  final int index;
+  final double offset;
+
+  @override
+  State<AnimatedEntrance> createState() => _AnimatedEntranceState();
+}
+
+class _AnimatedEntranceState extends State<AnimatedEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    final delay = Duration(milliseconds: 60 * widget.index.clamp(0, 8));
+    Future<void>.delayed(delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (reduceMotion) return widget.child;
+
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    return FadeTransition(
+      opacity: curve,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(0, widget.offset),
+          end: Offset.zero,
+        ).animate(curve),
+        child: widget.child,
+      ),
+    );
+  }
 }

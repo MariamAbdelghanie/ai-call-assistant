@@ -7,7 +7,7 @@ import '../services/live_call_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass.dart';
-import '../widgets/voice_orb.dart';
+import '../widgets/assistant_robot.dart';
 
 /// Asistani uygulamadan arayip mimariyi canli denemek icin ekran.
 class CallScreen extends StatefulWidget {
@@ -34,14 +34,14 @@ class _CallScreenState extends State<CallScreen> {
     return '$minutes:$seconds';
   }
 
-  OrbState _orbState(LiveCallService call) => switch (call.phase) {
-        CallPhase.idle => OrbState.idle,
-        CallPhase.connecting => OrbState.connecting,
-        CallPhase.ending => OrbState.ended,
-        // Hata sonrasi kure yeniden aranabilir gorunsun.
-        CallPhase.failed => OrbState.idle,
+  RobotMood _mood(LiveCallService call) => switch (call.phase) {
+        CallPhase.idle => RobotMood.idle,
+        CallPhase.connecting => RobotMood.connecting,
+        CallPhase.ending => RobotMood.ended,
+        // Hata sonrasi robot yeniden aranabilir gorunsun.
+        CallPhase.failed => RobotMood.idle,
         CallPhase.connected =>
-          call.assistantSpeaking ? OrbState.speaking : OrbState.listening,
+          call.assistantSpeaking ? RobotMood.speaking : RobotMood.listening,
       };
 
   String _statusText(LiveCallService call, AppStrings strings) {
@@ -89,11 +89,7 @@ class _CallScreenState extends State<CallScreen> {
                     onTap: widget.onOpenSettings,
                   ),
                   const Spacer(),
-                  VoiceOrb(
-                    state: _orbState(_call),
-                    size: 240,
-                    level: _call.assistantSpeaking ? 0.8 : 0.3,
-                  ),
+                  AssistantRobot(mood: _mood(_call), size: 260),
                   const SizedBox(height: 28),
                   AnimatedSwitcher(
                     duration: AppTheme.normal,
