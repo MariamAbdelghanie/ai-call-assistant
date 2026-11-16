@@ -24,3 +24,11 @@ _backup_*/
 
 # README şimdilik depoda tutulmuyor
 README.md
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/android/
+mobile/ios/
+mobile/.idea/
