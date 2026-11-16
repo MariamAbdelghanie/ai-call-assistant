@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -28,42 +27,9 @@ class GlassBackground extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Background misty mountain landscape with clouds & lake reflection
+          // Soyut zemin deseni: halkalar, yumusak isik ve kenar karartmasi.
           Positioned.fill(
-            child: CustomPaint(
-              painter: _MindoraNaturePainter(isDark: isDark),
-            ),
-          ),
-          // Ambient depth glow spots in Mindora palette tones
-          Positioned(
-            top: -60,
-            right: -40,
-            child: _GlowBlob(
-              color: AppPalette.mistBlue.withValues(
-                alpha: isDark ? 0.16 : 0.28,
-              ),
-              size: 260,
-            ),
-          ),
-          Positioned(
-            bottom: -80,
-            left: -50,
-            child: _GlowBlob(
-              color: AppPalette.sage.withValues(
-                alpha: isDark ? 0.14 : 0.24,
-              ),
-              size: 290,
-            ),
-          ),
-          Positioned(
-            top: 220,
-            left: -80,
-            child: _GlowBlob(
-              color: AppPalette.blush.withValues(
-                alpha: isDark ? 0.10 : 0.18,
-              ),
-              size: 220,
-            ),
+            child: CustomPaint(painter: _AuraPainter(isDark: isDark)),
           ),
           child,
         ],
@@ -72,9 +38,13 @@ class GlassBackground extends StatelessWidget {
   }
 }
 
-/// Custom painter for the Mindora misty lake, pine ridge mountains, and rolling clouds.
-class _MindoraNaturePainter extends CustomPainter {
-  _MindoraNaturePainter({required this.isDark});
+/// Sakin, soyut zemin deseni.
+///
+/// Fotograf yerine birkac buyuk, cok yumusak sekil kullanir: ic ice halkalar,
+/// genis bir isik yayi ve kenarlarda hafif bir karartma. Amac dikkat dagitmadan
+/// derinlik hissi vermek; bu yuzden tum degerler dusuk opaklikta tutulur.
+class _AuraPainter extends CustomPainter {
+  _AuraPainter({required this.isDark});
 
   final bool isDark;
 
@@ -83,160 +53,84 @@ class _MindoraNaturePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // --- Far Distant Mountain Range ---
-    final farMountainColor = (isDark
-            ? const Color(0xFF243B36)
-            : const Color(0xFFBACDC8))
-        .withValues(alpha: isDark ? 0.35 : 0.45);
+    // 1) Ust kosede genis isik yayi: sayfanin agirligini yukari tasir.
+    final arcCenter = Offset(w * 0.78, -h * 0.10);
+    canvas.drawCircle(
+      arcCenter,
+      w * 0.72,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            AppPalette.mistBlue.withValues(alpha: isDark ? 0.18 : 0.30),
+            AppPalette.mistBlue.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromCircle(center: arcCenter, radius: w * 0.72)),
+    );
 
-    final farMountainPath = Path()
-      ..moveTo(0, h * 0.44)
-      ..lineTo(w * 0.10, h * 0.36)
-      ..quadraticBezierTo(w * 0.16, h * 0.31, w * 0.24, h * 0.35)
-      ..lineTo(w * 0.36, h * 0.26)
-      ..quadraticBezierTo(w * 0.44, h * 0.21, w * 0.52, h * 0.28)
-      ..lineTo(w * 0.62, h * 0.23)
-      ..quadraticBezierTo(w * 0.70, h * 0.17, w * 0.78, h * 0.26)
-      ..lineTo(w * 0.88, h * 0.21)
-      ..quadraticBezierTo(w * 0.94, h * 0.17, w, h * 0.29)
-      ..lineTo(w, h * 0.55)
-      ..lineTo(0, h * 0.55)
-      ..close();
-
-    canvas.drawPath(farMountainPath, Paint()..color = farMountainColor);
-
-    // --- Mid-range Pine Ridge Mountains ---
-    final midMountainColor = (isDark
-            ? const Color(0xFF1E322D)
-            : const Color(0xFFA1B8B2))
-        .withValues(alpha: isDark ? 0.45 : 0.55);
-
-    final midMountainPath = Path()
-      ..moveTo(0, h * 0.47)
-      ..lineTo(w * 0.15, h * 0.40)
-      ..quadraticBezierTo(w * 0.25, h * 0.34, w * 0.33, h * 0.39)
-      ..lineTo(w * 0.48, h * 0.32)
-      ..quadraticBezierTo(w * 0.58, h * 0.27, w * 0.68, h * 0.35)
-      ..lineTo(w * 0.82, h * 0.30)
-      ..quadraticBezierTo(w * 0.92, h * 0.25, w, h * 0.37)
-      ..lineTo(w, h * 0.58)
-      ..lineTo(0, h * 0.58)
-      ..close();
-
-    canvas.drawPath(midMountainPath, Paint()..color = midMountainColor);
-
-    // --- Atmospheric Lake Horizon & Reflection ---
-    final waterColor = (isDark
-            ? const Color(0xFF172825)
-            : const Color(0xFFC7D7D3))
-        .withValues(alpha: isDark ? 0.30 : 0.40);
-
-    final waterRect = Rect.fromLTRB(0, h * 0.48, w, h * 0.75);
-    final waterPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          waterColor,
-          waterColor.withValues(alpha: 0.05),
-        ],
-      ).createShader(waterRect);
-    canvas.drawRect(waterRect, waterPaint);
-
-    // --- Layered Fog and Mist Banks ---
-    for (var i = 0; i < 4; i++) {
-      final yPos = h * (0.33 + i * 0.07);
-      final alpha = (isDark ? 0.08 : 0.14) - i * 0.02;
-      if (alpha <= 0) continue;
-
-      final fogPaint = Paint()
-        ..color = (isDark ? Colors.white : const Color(0xFFF1F5F4))
-            .withValues(alpha: alpha.clamp(0.01, 1.0))
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 28.0 + i * 10);
-
-      final fogPath = Path()
-        ..moveTo(-w * 0.1, yPos + h * 0.03)
-        ..quadraticBezierTo(
-            w * 0.25, yPos - h * 0.02, w * 0.45, yPos + h * 0.02)
-        ..quadraticBezierTo(
-            w * 0.65, yPos + h * 0.05, w * 0.85, yPos - h * 0.01)
-        ..quadraticBezierTo(
-            w * 0.98, yPos + h * 0.03, w * 1.15, yPos + h * 0.04)
-        ..lineTo(w * 1.15, yPos + h * 0.10)
-        ..lineTo(-w * 0.1, yPos + h * 0.10)
-        ..close();
-
-      canvas.drawPath(fogPath, fogPaint);
+    // 2) Ic ice halkalar: meditasyon arayuzlerindeki sakin ritmi verir.
+    final ringCenter = Offset(w * 0.5, h * 0.42);
+    for (var i = 0; i < 5; i++) {
+      canvas.drawCircle(
+        ringCenter,
+        w * (0.26 + i * 0.13),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.1
+          ..color = (isDark ? AppPalette.mistWhite : AppPalette.sage)
+              .withValues(alpha: (isDark ? 0.07 : 0.10) * (1 - i * 0.16)),
+      );
     }
 
-    // --- Soft Billowing Clouds in the Upper Sky ---
-    _paintCloud(
-      canvas,
-      Offset(w * 0.20, h * 0.09),
-      w * 0.24,
-      isDark ? 0.08 : 0.18,
-    );
-    _paintCloud(
-      canvas,
-      Offset(w * 0.75, h * 0.07),
-      w * 0.22,
-      isDark ? 0.07 : 0.16,
-    );
-    _paintCloud(
-      canvas,
-      Offset(w * 0.50, h * 0.14),
-      w * 0.28,
-      isDark ? 0.06 : 0.14,
-    );
-  }
-
-  void _paintCloud(Canvas canvas, Offset center, double radius, double alpha) {
-    final cloudColor = (isDark ? Colors.white : const Color(0xFFEDF3F1))
-        .withValues(alpha: alpha);
-    final paint = Paint()
-      ..color = cloudColor
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.55);
-
-    canvas.drawCircle(center, radius * 0.52, paint);
+    // 3) Alt tarafta genis, cok bulanik bir adacayi lekesi.
+    final blobCenter = Offset(w * 0.18, h * 0.88);
     canvas.drawCircle(
-      Offset(center.dx - radius * 0.36, center.dy + radius * 0.08),
-      radius * 0.40,
-      paint,
-    );
-    canvas.drawCircle(
-      Offset(center.dx + radius * 0.36, center.dy + radius * 0.06),
-      radius * 0.44,
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_MindoraNaturePainter old) => old.isDark != isDark;
-}
-
-class _GlowBlob extends StatelessWidget {
-  const _GlowBlob({required this.color, required this.size});
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-          boxShadow: [
-            BoxShadow(color: color, blurRadius: 100, spreadRadius: 36),
+      blobCenter,
+      w * 0.58,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            AppPalette.sage.withValues(alpha: isDark ? 0.16 : 0.24),
+            AppPalette.sage.withValues(alpha: 0.0),
           ],
-        ),
-      ),
+        ).createShader(Rect.fromCircle(center: blobCenter, radius: w * 0.58)),
+    );
+
+    // 4) Ortada cok hafif bir pudra dokunusu: paletteki sicak tonu tasir.
+    final blushCenter = Offset(w * 0.86, h * 0.62);
+    canvas.drawCircle(
+      blushCenter,
+      w * 0.40,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            AppPalette.blush.withValues(alpha: isDark ? 0.12 : 0.18),
+            AppPalette.blush.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromCircle(center: blushCenter, radius: w * 0.40)),
+    );
+
+    // 5) Kenar karartmasi: icerigi merkeze toplar, okunurlugu artirir.
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader = RadialGradient(
+          center: Alignment.center,
+          radius: 0.95,
+          colors: [
+            Colors.transparent,
+            (isDark ? Colors.black : AppPalette.deepSlate)
+                .withValues(alpha: isDark ? 0.30 : 0.06),
+          ],
+          stops: const [0.62, 1.0],
+        ).createShader(Offset.zero & size),
     );
   }
+
+  @override
+  bool shouldRepaint(_AuraPainter old) => old.isDark != isDark;
 }
+
+
 
 /// Gradient background + transparent scaffold + optional AppBar.
 class GlassScaffold extends StatelessWidget {
