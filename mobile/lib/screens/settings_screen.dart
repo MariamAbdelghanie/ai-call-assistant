@@ -128,15 +128,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               const Divider(height: 24),
+              Text(
+                strings.t('architecture'),
+                style: context.text.labelLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                strings.t('architectureHint'),
+                style: context.text.bodySmall
+                    ?.copyWith(color: context.tokens.muted),
+              ),
+              const SizedBox(height: 10),
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(
+                    value: 'cascade',
+                    label: Text(strings.t('archCascade')),
+                    icon: const Icon(Icons.account_tree_outlined, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: 'realtime',
+                    label: Text(strings.t('archRealtime')),
+                    icon: const Icon(Icons.bolt_rounded, size: 18),
+                  ),
+                ],
+                selected: {
+                  state.config.architecture == 'realtime'
+                      ? 'realtime'
+                      : 'cascade'
+                },
+                showSelectedIcon: false,
+                onSelectionChanged: (values) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final ok = await state.saveConfig(
+                    state.config.copyWith(architecture: values.first),
+                  );
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        strings.t(ok ? 'architectureSaved' : 'loadError'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
               _InfoRow(
                 icon: Icons.schedule_outlined,
                 label: strings.t('workHours'),
                 value: '${state.config.workStart} - ${state.config.workEnd}',
-              ),
-              _InfoRow(
-                icon: Icons.account_tree_outlined,
-                label: strings.t('architecture'),
-                value: state.config.architecture,
               ),
               _InfoRow(
                 icon: Icons.graphic_eq_rounded,

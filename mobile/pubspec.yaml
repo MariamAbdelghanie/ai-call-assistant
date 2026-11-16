@@ -16,6 +16,8 @@ dependencies:
   # Surumler ilk kurulumda cozulur; calisan surumu `flutter pub deps` ile sabitleyebilirsiniz.
   livekit_client: any
   permission_handler: any
+  # Gorusme sirasinda ekranin uyumasini engeller (baglanti kopmasin).
+  wakelock_plus: any
 
 dev_dependencies:
   flutter_test:

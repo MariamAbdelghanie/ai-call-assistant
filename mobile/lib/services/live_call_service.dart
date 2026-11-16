@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'http_adapter.dart';
 
@@ -110,6 +111,15 @@ class LiveCallService extends ChangeNotifier {
         }
       }
 
+      // Ekran uyursa Android uygulamayi arka plana alip baglantiyi kesiyor.
+      if (!kIsWeb) {
+        try {
+          await WakelockPlus.enable();
+        } catch (_) {
+          // Desteklenmiyorsa gorusme yine de devam eder.
+        }
+      }
+
       _startedAt = DateTime.now();
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
         final started = _startedAt;
@@ -163,6 +173,13 @@ class LiveCallService extends ChangeNotifier {
   }
 
   Future<void> _teardown() async {
+    if (!kIsWeb) {
+      try {
+        await WakelockPlus.disable();
+      } catch (_) {
+        // Yoksay.
+      }
+    }
     _ticker?.cancel();
     _ticker = null;
     _startedAt = null;

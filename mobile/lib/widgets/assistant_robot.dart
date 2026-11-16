@@ -74,8 +74,8 @@ class _AssistantRobotState extends State<AssistantRobot>
           face: AppPalette.lightText,
         ),
       RobotMood.listening => (
-          body: AppPalette.brandLight,
-          glow: AppPalette.brand,
+          body: AppPalette.cyan,
+          glow: AppPalette.cyan,
           face: AppPalette.lightText,
         ),
       RobotMood.speaking => (
@@ -258,8 +258,8 @@ class _RobotPainter extends CustomPainter {
     canvas.drawRRect(
       faceRect,
       Paint()..color = isDark
-          ? const Color(0xFF12201C)
-          : const Color(0xFF1E3A33),
+          ? const Color(0xFF170E2B)
+          : const Color(0xFF2A1B4A),
     );
 
     final eyeY = faceRect.center.dy - faceRect.height * 0.12;

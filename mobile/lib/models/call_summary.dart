@@ -131,18 +131,20 @@ class AssistantConfig {
         'assistant_enabled': enabled,
         'work_start': workStart,
         'work_end': workEnd,
+        'architecture': architecture,
       };
 
   AssistantConfig copyWith({
     bool? enabled,
     String? workStart,
     String? workEnd,
+    String? architecture,
   }) =>
       AssistantConfig(
         enabled: enabled ?? this.enabled,
         workStart: workStart ?? this.workStart,
         workEnd: workEnd ?? this.workEnd,
-        architecture: architecture,
+        architecture: architecture ?? this.architecture,
         ttsVoice: ttsVoice,
         realtimeVoice: realtimeVoice,
         ownerLanguage: ownerLanguage,

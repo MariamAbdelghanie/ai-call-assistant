@@ -3,39 +3,39 @@ import 'package:flutter/material.dart';
 /// Gorsel kimlik: nane yesili, krem ve pudra tonlarinda nese veren bir palet.
 /// Yuzeyler buzlu cam, zemin yumusak degradelerden olusur.
 class AppPalette {
-  // Marka
-  static const Color brand = Color(0xFF4FAE8C);
-  static const Color brandLight = Color(0xFF7ED4B2);
-  static const Color brandDeep = Color(0xFF2E8C6E);
-  static const Color blush = Color(0xFFF2A1A1);
-  static const Color cream = Color(0xFFFDF6EC);
-  static const Color lilac = Color(0xFFC9B6E4);
+  // Marka: derin mor-lila
+  static const Color brand = Color(0xFF8B5CF6);
+  static const Color brandLight = Color(0xFFB794F6);
+  static const Color brandDeep = Color(0xFF6D28D9);
+  static const Color blush = Color(0xFFF0A6D8);
+  static const Color cyan = Color(0xFF5EE7D6);
+  static const Color lilac = Color(0xFFC4B5FD);
 
   // Durum
-  static const Color urgent = Color(0xFFE86A6A);
-  static const Color pending = Color(0xFFDC9B3C);
-  static const Color success = Color(0xFF3FA37A);
+  static const Color urgent = Color(0xFFFF5D8F);
+  static const Color pending = Color(0xFFF0A741);
+  static const Color success = Color(0xFF34D399);
 
   // Acik tema zemin duraklari
   static const List<Color> lightMesh = [
-    Color(0xFFE9F6EE),
-    Color(0xFFD8EEE2),
-    Color(0xFFFBEFE2),
-    Color(0xFFF4E9F6),
+    Color(0xFFF3EEFF),
+    Color(0xFFEDE4FF),
+    Color(0xFFFBE9F7),
+    Color(0xFFEAF3FF),
   ];
 
-  // Koyu tema zemin duraklari
+  // Koyu tema zemin duraklari (referans tasarimdaki gece moru)
   static const List<Color> darkMesh = [
-    Color(0xFF0E1A17),
-    Color(0xFF14241F),
-    Color(0xFF1D2422),
-    Color(0xFF151C21),
+    Color(0xFF170E2B),
+    Color(0xFF241145),
+    Color(0xFF2E1150),
+    Color(0xFF140B22),
   ];
 
-  static const Color lightText = Color(0xFF22443C);
-  static const Color lightMuted = Color(0xFF6B8A80);
-  static const Color darkText = Color(0xFFE8F4EE);
-  static const Color darkMuted = Color(0xFF93AFA6);
+  static const Color lightText = Color(0xFF2A1B4A);
+  static const Color lightMuted = Color(0xFF6E5E90);
+  static const Color darkText = Color(0xFFF2EBFF);
+  static const Color darkMuted = Color(0xFFA796C8);
 }
 
 /// Cam yuzeyler ve durum renkleri icin tema uzantisi.
@@ -77,12 +77,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     glassBorder: Color(0xA6FFFFFF),
     muted: AppPalette.lightMuted,
     urgent: AppPalette.urgent,
-    urgentSoft: Color(0x24E86A6A),
+    urgentSoft: Color(0x24FF5D8F),
     pending: AppPalette.pending,
-    pendingSoft: Color(0x24DC9B3C),
+    pendingSoft: Color(0x24F0A741),
     success: AppPalette.success,
-    successSoft: Color(0x243FA37A),
-    shadow: Color(0x1A2E8C6E),
+    successSoft: Color(0x2434D399),
+    shadow: Color(0x1A6D28D9),
     isDark: false,
   );
 
@@ -92,12 +92,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     glassStrong: Color(0x26FFFFFF),
     glassBorder: Color(0x30FFFFFF),
     muted: AppPalette.darkMuted,
-    urgent: Color(0xFFFF8A8A),
-    urgentSoft: Color(0x33FF8A8A),
-    pending: Color(0xFFF0BE74),
-    pendingSoft: Color(0x33F0BE74),
-    success: Color(0xFF6FD6AE),
-    successSoft: Color(0x336FD6AE),
+    urgent: Color(0xFFFF7FAE),
+    urgentSoft: Color(0x33FF7FAE),
+    pending: Color(0xFFF7C579),
+    pendingSoft: Color(0x33F7C579),
+    success: Color(0xFF5EE7D6),
+    successSoft: Color(0x335EE7D6),
     shadow: Color(0x66000000),
     isDark: true,
   );
@@ -289,7 +289,7 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: tokens.isDark
-            ? const Color(0xFF1B2A25)
+            ? const Color(0xFF261548)
             : Colors.white.withValues(alpha: 0.97),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
