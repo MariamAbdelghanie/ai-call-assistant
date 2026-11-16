@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import '../models/call_summary.dart';
+import 'http_adapter.dart';
 
 /// `web_dialer.py` uzerindeki uc noktalarla konusur.
-/// Harici paket kullanmaz; yalnizca dart:io ve dart:convert.
+/// Harici HTTP paketi kullanmaz; platforma gore HttpAdapter secilir.
 ///
 ///   GET  /logs              -> cagri kayitlari
 ///   POST /logs/returned     -> {call_id, called_back}
@@ -13,16 +13,15 @@ import '../models/call_summary.dart';
 ///   GET  /api/config        -> asistan ayarlari
 ///   POST /api/config        -> ayar guncelleme
 class ApiClient {
-  ApiClient({this.timeout = const Duration(seconds: 8)});
+  ApiClient({Duration timeout = const Duration(seconds: 8)})
+      : _http = HttpAdapter(timeout: timeout);
 
-  final Duration timeout;
-  final HttpClient _client = HttpClient();
+  final HttpAdapter _http;
 
   Uri _uri(String baseUrl, String path) {
     final normalized = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
-    final withScheme = normalized.startsWith('http')
-        ? normalized
-        : 'http://$normalized';
+    final withScheme =
+        normalized.startsWith('http') ? normalized : 'http://$normalized';
     return Uri.parse('$withScheme$path');
   }
 
@@ -30,22 +29,8 @@ class ApiClient {
     Uri uri, {
     String method = 'GET',
     Map<String, dynamic>? body,
-  }) async {
-    final request = method == 'GET'
-        ? await _client.getUrl(uri).timeout(timeout)
-        : await _client.postUrl(uri).timeout(timeout);
-    request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-    if (body != null) {
-      request.headers.contentType = ContentType.json;
-      request.write(jsonEncode(body));
-    }
-    final response = await request.close().timeout(timeout);
-    final text = await response.transform(utf8.decoder).join();
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw HttpException('HTTP ${response.statusCode}', uri: uri);
-    }
-    return text;
-  }
+  }) =>
+      _http.send(uri, method: method, body: body);
 
   Future<List<CallSummary>> fetchCalls(String baseUrl) async {
     final text = await _send(_uri(baseUrl, '/logs'));
@@ -101,7 +86,7 @@ class ApiClient {
     );
   }
 
-  void dispose() => _client.close(force: true);
+  void dispose() => _http.close();
 }
 
 /// Sunucu yokken arayuzun bos gorunmemesi icin ornek kayitlar.
