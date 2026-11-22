@@ -5,6 +5,7 @@ import '../models/call_summary.dart';
 import '../theme/app_theme.dart';
 import 'glass.dart';
 import '../utils/formatters.dart';
+import 'soft_icon.dart';
 
 /// Kucuk, renk kodlu durum etiketi.
 class StatusBadge extends StatelessWidget {
@@ -19,7 +20,7 @@ class StatusBadge extends StatelessWidget {
   final String label;
   final Color foreground;
   final Color background;
-  final IconData? icon;
+  final AppIcon? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +34,7 @@ class StatusBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 13, color: foreground),
+            SoftIcon(icon!, size: 13, color: foreground),
             const SizedBox(width: 5),
           ],
           Text(
@@ -63,7 +64,7 @@ class StatTile extends StatelessWidget {
   final int value;
   final String label;
   final Color color;
-  final IconData icon;
+  final AppIcon icon;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +84,7 @@ class StatTile extends StatelessWidget {
                 color: color.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(icon, size: 16, color: color),
+              child: SoftIcon(icon, size: 16, color: color),
             ),
             const SizedBox(height: 12),
             Text(
@@ -116,7 +117,7 @@ class EmptyState extends StatelessWidget {
     required this.message,
   });
 
-  final IconData icon;
+  final AppIcon icon;
   final String title;
   final String message;
 
@@ -136,7 +137,7 @@ class EmptyState extends StatelessWidget {
                 color: tokens.glass,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 34, color: AppPalette.brand),
+              child: SoftIcon(icon, size: 34, color: AppPalette.brand),
             ),
             const SizedBox(height: 22),
             Text(
@@ -161,9 +162,16 @@ class EmptyState extends StatelessWidget {
 
 /// Sunucuya ulasilamadiginda listenin ustunde duran bilgi seridi.
 class DemoBanner extends StatelessWidget {
-  const DemoBanner({super.key, required this.onOpenSettings});
+  const DemoBanner({
+    super.key,
+    required this.onOpenSettings,
+    this.offline = false,
+  });
 
   final VoidCallback onOpenSettings;
+
+  /// true ise gercek kayitlar gosteriliyor ama sunucuya ulasilamiyor.
+  final bool offline;
 
   @override
   Widget build(BuildContext context) {
@@ -179,14 +187,14 @@ class DemoBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.cloud_off_rounded, size: 18, color: tokens.pending),
+          SoftIcon(AppIcon.cloudOff, size: 18, color: tokens.pending),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  strings.t('offlineDemo'),
+                  strings.t(offline ? 'offlineCached' : 'offlineDemo'),
                   style: context.text.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: tokens.pending,
@@ -194,7 +202,7 @@ class DemoBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  strings.t('offlineDemoHint'),
+                  strings.t(offline ? 'offlineCachedHint' : 'offlineDemoHint'),
                   style: context.text.bodySmall
                       ?.copyWith(color: tokens.muted, height: 1.4),
                 ),
@@ -287,7 +295,7 @@ class CallCard extends StatelessWidget {
                       label: strings.t('urgentBadge'),
                       foreground: tokens.urgent,
                       background: tokens.urgentSoft,
-                      icon: Icons.bolt_rounded,
+                      icon: AppIcon.urgent,
                     ),
                 ],
               ),
@@ -323,27 +331,27 @@ class CallCard extends StatelessWidget {
                       label: call.appointmentInfo,
                       foreground: AppPalette.blush,
                       background: tokens.glass,
-                      icon: Icons.event_available_rounded,
+                      icon: AppIcon.calendarOk,
                     ),
                   if (call.awaitingCallback)
                     StatusBadge(
                       label: strings.t('callbackBadge'),
                       foreground: tokens.pending,
                       background: tokens.pendingSoft,
-                      icon: Icons.phone_callback_rounded,
+                      icon: AppIcon.phoneBack,
                     ),
                   if (call.calledBack)
                     StatusBadge(
                       label: strings.t('calledBack'),
                       foreground: tokens.success,
                       background: tokens.successSoft,
-                      icon: Icons.check_circle_rounded,
+                      icon: AppIcon.check,
                     ),
                   StatusBadge(
                     label: strings.languageName(call.lang),
                     foreground: tokens.muted,
                     background: tokens.muted.withValues(alpha: 0.12),
-                    icon: Icons.translate_rounded,
+                    icon: AppIcon.globe,
                   ),
                 ],
               ),
@@ -354,12 +362,12 @@ class CallCard extends StatelessWidget {
                   child: call.calledBack
                       ? OutlinedButton.icon(
                           onPressed: onToggleCalledBack,
-                          icon: const Icon(Icons.undo_rounded, size: 18),
+                          icon: const SoftIcon(AppIcon.undo, size: 18),
                           label: Text(strings.t('markNotCalledBack')),
                         )
                       : FilledButton.icon(
                           onPressed: onToggleCalledBack,
-                          icon: const Icon(Icons.check_rounded, size: 18),
+                          icon: const SoftIcon(AppIcon.check, size: 18),
                           label: Text(strings.t('markCalledBack')),
                         ),
                 ),

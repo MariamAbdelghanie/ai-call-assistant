@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/soft_icon.dart';
 import 'appointments_screen.dart';
 import 'call_screen.dart';
 import 'calls_screen.dart';
@@ -75,8 +76,8 @@ class _HomeShellState extends State<HomeShell> {
               onDestinationSelected: _goTo,
               destinations: [
                 NavigationDestination(
-                  icon: const Icon(Icons.home_outlined),
-                  selectedIcon: const Icon(Icons.home_rounded),
+                  icon: SoftIcon(AppIcon.home, size: 24, color: tokens.muted, solid: true),
+                  selectedIcon: SoftIcon(AppIcon.home, size: 24, color: AppPalette.brand, solid: true),
                   label: strings.t('tabCalls'),
                 ),
                 NavigationDestination(
@@ -84,13 +85,13 @@ class _HomeShellState extends State<HomeShell> {
                     count: state.urgentCount,
                     isLabelVisible: state.urgentCount > 0,
                     backgroundColor: tokens.urgent,
-                    child: const Icon(Icons.bolt_outlined),
+                    child: SoftIcon(AppIcon.urgent, size: 24, color: tokens.muted, solid: true),
                   ),
                   selectedIcon: Badge.count(
                     count: state.urgentCount,
                     isLabelVisible: state.urgentCount > 0,
                     backgroundColor: tokens.urgent,
-                    child: const Icon(Icons.bolt_rounded),
+                    child: SoftIcon(AppIcon.urgent, size: 24, color: AppPalette.brand, solid: true),
                   ),
                   label: strings.t('tabUrgent'),
                 ),
@@ -99,13 +100,13 @@ class _HomeShellState extends State<HomeShell> {
                   label: strings.t('tabCall'),
                 ),
                 NavigationDestination(
-                  icon: const Icon(Icons.event_outlined),
-                  selectedIcon: const Icon(Icons.event_rounded),
+                  icon: SoftIcon(AppIcon.calendar, size: 24, color: tokens.muted, solid: true),
+                  selectedIcon: SoftIcon(AppIcon.calendar, size: 24, color: AppPalette.brand, solid: true),
                   label: strings.t('tabAppointments'),
                 ),
                 NavigationDestination(
-                  icon: const Icon(Icons.settings_outlined),
-                  selectedIcon: const Icon(Icons.settings_rounded),
+                  icon: SoftIcon(AppIcon.settings, size: 24, color: tokens.muted, solid: true),
+                  selectedIcon: SoftIcon(AppIcon.settings, size: 24, color: AppPalette.brand, solid: true),
                   label: strings.t('tabSettings'),
                 ),
               ],
@@ -126,22 +127,38 @@ class _CallTabIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    return AnimatedContainer(
-      duration: AppTheme.fast,
-      width: 46,
-      height: 32,
-      decoration: BoxDecoration(
-        gradient: tokens.fourColorGradient,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: AppPalette.sage.withValues(alpha: active ? 0.45 : 0.22),
-            blurRadius: active ? 18 : 10,
-            offset: const Offset(0, 5),
+    return SizedBox(
+      width: 52,
+      height: 40,
+      child: Center(
+        child: Transform.rotate(
+          angle: 0.785398, // 45 derece: kare baklava sekline doner
+          child: AnimatedContainer(
+            duration: AppTheme.fast,
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              gradient: tokens.brandGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppPalette.brand
+                      .withValues(alpha: active ? 0.48 : 0.26),
+                  blurRadius: active ? 18 : 11,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Transform.rotate(
+              angle: -0.785398,
+              child: const Center(
+                child: SoftIcon(AppIcon.phone,
+                    size: 19, color: Colors.white, solid: true),
+              ),
+            ),
           ),
-        ],
+        ),
       ),
-      child: const Icon(Icons.call_rounded, size: 18, color: Colors.white),
     );
   }
 }

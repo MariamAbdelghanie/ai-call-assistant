@@ -9,8 +9,8 @@
   "work_end": "20:00",
   "assistant_enabled": true,
   "greeting_text": "",
-  "architecture": "cascade",
+  "architecture": "realtime",
   "realtime_model": "gemini-3.8-live",
-  "realtime_voice": "Kore",
+  "realtime_voice": "Charon",
   "owner_language": "tr"
 }

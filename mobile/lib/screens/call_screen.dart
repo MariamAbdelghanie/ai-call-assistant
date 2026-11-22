@@ -5,7 +5,8 @@ import '../services/live_call_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass.dart';
-import '../widgets/assistant_robot.dart';
+import '../widgets/voice_orb.dart';
+import '../widgets/soft_icon.dart';
 
 /// Asistani uygulamadan arayip mimariyi canli denemek icin ekran.
 class CallScreen extends StatefulWidget {
@@ -31,16 +32,6 @@ class _CallScreenState extends State<CallScreen> {
     final seconds = (value.inSeconds % 60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
-
-  RobotMood _mood(LiveCallService call) => switch (call.phase) {
-        CallPhase.idle => RobotMood.idle,
-        CallPhase.connecting => RobotMood.connecting,
-        CallPhase.ending => RobotMood.ended,
-        // Hata sonrasi robot yeniden aranabilir gorunsun.
-        CallPhase.failed => RobotMood.idle,
-        CallPhase.connected =>
-          call.assistantSpeaking ? RobotMood.speaking : RobotMood.listening,
-      };
 
   String _statusText(LiveCallService call, AppStrings strings) {
     return switch (call.phase) {
@@ -87,8 +78,16 @@ class _CallScreenState extends State<CallScreen> {
                     onTap: widget.onOpenSettings,
                   ),
                   const Spacer(),
-                  AssistantRobot(mood: _mood(_call), size: 260),
-                  const SizedBox(height: 28),
+                  VoiceOrb(
+                    size: 280,
+                    speaking: _call.assistantSpeaking,
+                    listening: active && _call.micEnabled &&
+                        !_call.assistantSpeaking,
+                    dim: !active,
+                  ),
+                  const SizedBox(height: 22),
+                  OrbWaveform(active: active),
+                  const SizedBox(height: 14),
                   AnimatedSwitcher(
                     duration: AppTheme.normal,
                     child: Text(
@@ -125,7 +124,7 @@ class _CallScreenState extends State<CallScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline_rounded,
+                          SoftIcon(AppIcon.urgent,
                               size: 18, color: tokens.urgent),
                           const SizedBox(width: 10),
                           Expanded(
@@ -164,8 +163,8 @@ class _CallScreenState extends State<CallScreen> {
                       children: [
                         _RoundAction(
                           icon: _call.micEnabled
-                              ? Icons.mic_rounded
-                              : Icons.mic_off_rounded,
+                              ? AppIcon.mic
+                              : AppIcon.micOff,
                           label: strings.t(
                             _call.micEnabled ? 'callMute' : 'callUnmute',
                           ),
@@ -176,7 +175,7 @@ class _CallScreenState extends State<CallScreen> {
                         ),
                         const SizedBox(width: 28),
                         _RoundAction(
-                          icon: Icons.call_end_rounded,
+                          icon: AppIcon.phoneEnd,
                           label: strings.t('callHangUp'),
                           background: tokens.urgent,
                           foreground: Colors.white,
@@ -307,7 +306,7 @@ class _CallButton extends StatelessWidget {
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.call_rounded,
+                        const SoftIcon(AppIcon.phone,
                             color: Colors.white, size: 22),
                         const SizedBox(width: 10),
                         Text(
@@ -338,7 +337,7 @@ class _RoundAction extends StatelessWidget {
     this.size = 64,
   });
 
-  final IconData icon;
+  final AppIcon icon;
   final String label;
   final Color background;
   final Color foreground;
@@ -367,7 +366,7 @@ class _RoundAction extends StatelessWidget {
               child: SizedBox(
                 width: size,
                 height: size,
-                child: Icon(icon, color: foreground, size: size * 0.42),
+                child: SoftIcon(icon, color: foreground, size: size * 0.42),
               ),
             ),
           ),

@@ -1,52 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Mindora-inspired visual identity:
-/// Exact palette from the design specification:
-/// 1. #5E887E - Sage Green (Eucalyptus)
-/// 2. #A7C7E7 - Mist Blue (Airy Sky)
-/// 3. #2F3E46 - Deep Slate (Forest Charcoal)
-/// 4. #F1F5F4 - Mist White (Clean Atmosphere)
-/// 5. #EBAEB7 - Soft Blush (Dusty Rose Accent)
+/// Gorsel kimlik: yumusak pastel tonlar, lila-pembe-gok mavisi ucgeni.
+///
+/// Amac gozu yormayan, sakin ve "yazilim araci" gibi degil arkadas canlisi
+/// duran bir yuzey. Renk adlari kodun geri kalaniyla uyumlu kalsin diye
+/// korundu; yalnizca degerleri pastel paletle degistirildi.
 class AppPalette {
-  // 4 Main Colors + 1 Accent from the Mindora UI Kit:
-  static const Color sage = Color(0xFF5E887E);
-  static const Color mistBlue = Color(0xFFA7C7E7);
-  static const Color deepSlate = Color(0xFF2F3E46);
-  static const Color mistWhite = Color(0xFFF1F5F4);
-  static const Color blush = Color(0xFFEBAEB7);
+  // Koyu mor zemin uzerinde neon mor-macenta vurgu.
+  static const Color sage = Color(0xFFA855F7); // ana mor
+  static const Color mistBlue = Color(0xFFC4A6FF); // acik mor
+  static const Color deepSlate = Color(0xFF120A24); // koyu zemin
+  static const Color mistWhite = Color(0xFFF5F3FF); // acik metin
+  static const Color blush = Color(0xFFE879F9); // macenta vurgu
 
-  // Semantic mappings
-  static const Color brand = Color(0xFF5E887E);
-  static const Color brandLight = Color(0xFFA7C7E7);
-  static const Color brandDeep = Color(0xFF2F3E46);
-  static const Color cyan = Color(0xFFA7C7E7);
-  static const Color lilac = Color(0xFFBACEC7);
+  // Kategori renkleri
+  static const Color mint = Color(0xFF34D399);
+  static const Color peach = Color(0xFFFBBF4A);
+  static const Color violet = Color(0xFF8B5CF6);
+  static const Color neonCyan = Color(0xFF67E8F9);
+
+  // Anlamsal esleme
+  static const Color brand = Color(0xFFA855F7);
+  static const Color brandLight = Color(0xFFC4A6FF);
+  static const Color brandDeep = Color(0xFF6D28D9);
+  static const Color cyan = Color(0xFF67E8F9);
+  static const Color lilac = Color(0xFF8B5CF6);
 
   // Status colors that harmonise with the serene palette
-  static const Color urgent = Color(0xFFD9536B);
-  static const Color pending = Color(0xFFCDA04A);
-  static const Color success = Color(0xFF34B88A);
+  static const Color urgent = Color(0xFFFB5E7E);
+  static const Color pending = Color(0xFFFBBF4A);
+  static const Color success = Color(0xFF34D399);
 
   // Light theme background stops (serene misty landscape)
   static const List<Color> lightMesh = [
-    Color(0xFFF1F5F4),
-    Color(0xFFE4EDE9),
-    Color(0xFFDBE7E4),
-    Color(0xFFEDF3F1),
+    Color(0xFFFBFAFF),
+    Color(0xFFF6F3FD),
+    Color(0xFFF9F6FE),
+    Color(0xFFFDFCFF),
   ];
 
   // Dark theme background stops (deep pine forest twilight)
   static const List<Color> darkMesh = [
-    Color(0xFF14201E),
-    Color(0xFF1C2C29),
-    Color(0xFF243632),
-    Color(0xFF121B19),
+    Color(0xFF050309),
+    Color(0xFF07040D),
+    Color(0xFF0A0612),
+    Color(0xFF030106),
   ];
 
-  static const Color lightText = Color(0xFF2F3E46);
-  static const Color lightMuted = Color(0xFF6B867F);
-  static const Color darkText = Color(0xFFF1F5F4);
-  static const Color darkMuted = Color(0xFF9AB2AB);
+  static const Color lightText = Color(0xFF1E1333);
+  static const Color lightMuted = Color(0xFF756B8C);
+  static const Color darkText = Color(0xFFF5F3FF);
+  static const Color darkMuted = Color(0xFFA99CC9);
 }
 
 /// Theme extension for glass surfaces, gradients, and status tokens.
@@ -83,14 +88,14 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static const AppTokens light = AppTokens(
     mesh: AppPalette.lightMesh,
-    glass: Color(0x99FFFFFF),
-    glassStrong: Color(0xD6FFFFFF),
-    glassBorder: Color(0x80D5E4DE),
+    glass: Color(0xFFFFFFFF),
+    glassStrong: Color(0xFFFFFFFF),
+    glassBorder: Color(0x1FA855F7),
     muted: AppPalette.lightMuted,
     urgent: AppPalette.urgent,
-    urgentSoft: Color(0x20D9536B),
+    urgentSoft: Color(0x1FF2545B),
     pending: AppPalette.pending,
-    pendingSoft: Color(0x20CDA04A),
+    pendingSoft: Color(0x1FF5A623),
     success: AppPalette.success,
     successSoft: Color(0x2034B88A),
     shadow: Color(0x142F3E46),
@@ -99,9 +104,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static const AppTokens dark = AppTokens(
     mesh: AppPalette.darkMesh,
-    glass: Color(0x18FFFFFF),
-    glassStrong: Color(0x2BFFFFFF),
-    glassBorder: Color(0x335E887E),
+    glass: Color(0xF00E0A18),
+    glassStrong: Color(0xF5141026),
+    glassBorder: Color(0x1FFFFFFF),
     muted: AppPalette.darkMuted,
     urgent: Color(0xFFE87A8E),
     urgentSoft: Color(0x33E87A8E),
@@ -119,12 +124,11 @@ class AppTokens extends ThemeExtension<AppTokens> {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppPalette.sage,
-          AppPalette.mistBlue,
-          AppPalette.deepSlate,
-          AppPalette.mistWhite,
+          Color(0xFFC084FC),
+          Color(0xFFA855F7),
+          Color(0xFF7C3AED),
         ],
-        stops: [0.0, 0.35, 0.75, 1.0],
+        stops: [0.0, 0.55, 1.0],
       );
 
   /// Brand gradient for buttons and active states.
@@ -132,8 +136,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: isDark
-            ? const [Color(0xFF4C736A), Color(0xFF385750)]
-            : const [AppPalette.sage, Color(0xFF486E65)],
+            ? const [Color(0xFF7C3AED), Color(0xFFB36CF8)]
+            : const [Color(0xFF9F5BF0), Color(0xFFC084FC)],
       );
 
   /// Soft ethereal multi-color gradient for cards and hero panels.
@@ -141,9 +145,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppPalette.sage.withValues(alpha: isDark ? 0.22 : 0.30),
-          AppPalette.mistBlue.withValues(alpha: isDark ? 0.18 : 0.25),
-          AppPalette.blush.withValues(alpha: isDark ? 0.14 : 0.20),
+          AppPalette.sage.withValues(alpha: isDark ? 0.20 : 0.07),
+          AppPalette.mistBlue.withValues(alpha: isDark ? 0.16 : 0.06),
+          AppPalette.blush.withValues(alpha: isDark ? 0.13 : 0.06),
         ],
         stops: const [0.0, 0.55, 1.0],
       );
@@ -164,8 +168,8 @@ extension AppTokensX on BuildContext {
 }
 
 class AppTheme {
-  static const double radius = 24;
-  static const double radiusSm = 16;
+  static const double radius = 28;
+  static const double radiusSm = 18;
   static const Duration fast = Duration(milliseconds: 180);
   static const Duration normal = Duration(milliseconds: 280);
 
@@ -210,23 +214,26 @@ class AppTheme {
       extensions: <ThemeExtension<dynamic>>[tokens],
     );
 
-    final textTheme = base.textTheme.apply(
+    final textTheme = GoogleFonts.spaceGroteskTextTheme(base.textTheme).apply(
       bodyColor: onSurface,
       displayColor: onSurface,
-      fontFamily: 'Inter',
     );
 
     return base.copyWith(
       textTheme: textTheme.copyWith(
         headlineMedium: textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -1.2,
+          height: 1.08,
+        ),
+        headlineSmall: textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.8,
           height: 1.15,
         ),
-        headlineSmall: textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
-        ),
+        bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.55),
+        bodySmall: textTheme.bodySmall?.copyWith(height: 1.5),
+        labelSmall: textTheme.labelSmall?.copyWith(letterSpacing: 0.4),
         titleLarge: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
           letterSpacing: -0.3,
@@ -235,7 +242,6 @@ class AppTheme {
           fontWeight: FontWeight.w700,
           letterSpacing: -0.2,
         ),
-        bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.5),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,

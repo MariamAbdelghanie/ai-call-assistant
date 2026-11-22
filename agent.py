@@ -105,7 +105,11 @@ PROMPTS_BY_LANG = {
     ),
     "ar": (
         "مرحبا، السلام عليكم، أنا صديقه، أخته، أريد ترك رسالة، "
-        "حجز موعد، إلغاء الموعد، اتصل بي، عاجل، مستشفى، الساعة التاسعة صباحاً، الخامسة مساءً."
+        "حجز موعد، إلغاء الموعد، اتصل بي، عاجل، مستشفى، الساعة التاسعة صباحاً، الخامسة مساءً. "
+        # Lehceli kaliplar: Whisper'in agizlari dogru yazmasina yardim eder.
+        "عايز أسيب رسالة، إيه الأخبار، ممكن تقوله، كلمني، أنا صاحبه، عايز أحجز معاد، "
+        "بدي احكي معه، شو الأخبار، بدي احجز موعد، خلينا نشوف، "
+        "أبغى أحجز موعد، وش الأخبار، أبي أكلمه، تكفى خبره."
     ),
     "en": (
         "Hello, I would like to leave a message, book an appointment, "
@@ -157,6 +161,25 @@ MISSING_FIELD_HINTS = {
 }
 
 
+ARABIC_RANGE = re.compile(r"[\u0600-\u06FF]")
+TURKISH_CHARS = re.compile(r"[ğşıİĞŞÇÖÜçöü]")
+
+
+def script_hint(text: str) -> str | None:
+    """Yazi sisteminden kesin dil ipucu verir; yoksa None doner.
+
+    Whisper kisa cumlelerde dili karistirabiliyor. Arap harfleri gorulduyse
+    dil kesin Arapca; Turkce'ye ozgu harfler varsa kesin Turkce sayilir.
+    """
+    if not text:
+        return None
+    if ARABIC_RANGE.search(text):
+        return "ar"
+    if TURKISH_CHARS.search(text):
+        return "tr"
+    return None
+
+
 MODEL_PATH = Path(__file__).parent / "models" / "tr_TR-dfki-medium.onnx"
 STARTUP_CONFIG_ISSUES = validate_configuration(
     project_dir=Path(__file__).parent,
@@ -176,10 +199,10 @@ GLOBAL_TTS.prewarm([
     "Rica ederim, iyi günler dilerim!",
 ])
 GLOBAL_VAD = silero.VAD.load(
-    min_speech_duration=0.22,
-    min_silence_duration=0.50,
-    activation_threshold=0.65,
-    max_buffered_speech=15.0,
+    min_speech_duration=0.15,
+    min_silence_duration=0.42,
+    activation_threshold=0.45,
+    max_buffered_speech=20.0,
 )
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
@@ -188,7 +211,7 @@ def load_active_config() -> dict:
     default_cfg = {
         "preset": "natural_emel",
         "stt_model": "whisper-large-v3-turbo",
-        "llm_model": "openai/gpt-oss-120b",
+        "llm_model": "openai/gpt-oss-20b",
         "tts_voice": "edge-emel",
         "stt_language": "auto",
         "assistant_mode": "hybrid",
@@ -197,7 +220,7 @@ def load_active_config() -> dict:
         "work_end": "17:00",
         "assistant_enabled": True,
         "greeting_text": "",
-        "architecture": "cascade",
+        "architecture": "realtime",
         "realtime_model": "",
         "realtime_voice": "Puck",
     }
@@ -223,7 +246,7 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
 
     lang_rules = {
         "tr": "Arayanla YALNIZCA doğal ve akıcı TÜRKÇE konuş.",
-        "ar": "تحدث مع المتصل بالعربية الفصحى الحديثة فقط، بأسلوب طبيعي وودود وواضح. لا تستخدم أي لهجة عامية أو محلية مهما كانت لهجة المتصل، وإذا تحدث بالعامية افهمه وردّ عليه بالفصحى. لا تستخدم رموزاً أو نقاطاً (-) في ردك.",
+        "ar": "افهم المتصل مهما كانت لهجته: المصرية أو الشامية أو الخليجية أو المغاربية أو العراقية أو السودانية أو الفصحى، وافهم الكلمات العامية والاختصارات الدارجة ولا تطلب منه أن يتحدث بالفصحى أبداً. إذا لم تفهم كلمة واحدة فقط فاسأل عنها بلطف ولا تعتذر كثيراً. أما ردك أنت فيكون بالعربية الفصحى الحديثة فقط، بأسلوب طبيعي وودود وواضح وقصير، ولا تستخدم أي لهجة عامية في كلامك. لا تستخدم رموزاً أو نقاطاً (-) في ردك.",
         "en": "Speak with the caller ONLY in natural, friendly ENGLISH.",
     }
     lang_rule = lang_rules.get(
@@ -290,7 +313,19 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         f"Mesai {work_start}-{work_end} olduğu için gece yarısından sonraki veya mesai dışındaki saatlere randevu verme.\n"
         "10. ARKADAŞ VE AİLE ARAMALARI: Arayan telefon sahibinin arkadaşı, akrabası veya ailesinden biri olduğunu söylerse resmi davranma. "
         "Sıcak, samimi ve tamamen doğal konuş; adını nazikçe öğren, mesajını al ve geri aranmak isteyip istemediğini sor. "
-        "Bu bir iş görüşmesi değildir: mesai saatlerinden, randevu takviminden veya kurumsal ifadelerden bahsetme.\n"
+        "Bu bir iş görüşmesi değildir: MESAİ SAATLERİNDEN, randevu takviminden, müsaitlikten veya kurumsal ifadelerden ASLA bahsetme. "
+        "Böyle bir arayan bir buluşma saati söylerse (örneğin 'yarın akşam dokuzda görüşelim') bu bir RANDEVU DEĞİL, bir MESAJDIR: "
+        "saati olduğu gibi mesaja yaz, takvime bakma, 'mesai dışı' deme, onay isteme. Telefon sahibi kendisi karar verir.\n"
+        "10b. YAKINLIK ADI SAYILIR: Arayan kendini 'annesiyim', 'ablasıyım', 'arkadaşıyım', 'ممكن أنا ماما', 'أنا أخته' gibi bir yakınlıkla tanıtırsa "
+        "bu GEÇERLİ bir isimdir ve ad sorulmaya devam edilmez. Kayda '<Telefon sahibi>'nin annesi' biçiminde yaz. "
+        "Gerçek adını kendiliğinden söylerse onu kullan; söylemiyorsa yakınlık ifadesi yeterlidir, ısrar etme.\n"
+        f"10c. KAYIT DİLİ: `save_call_note` aracında iki alan İKİ FARKLI dilde yazılır. "
+        "`caller_purpose` alanını ARAYANIN GÖRÜŞMEDE KONUŞTUĞU DİLDE yaz: arayan Türkçe konuştuysa Türkçe, "
+        "Arapça konuştuysa Arapça, İngilizce konuştuysa İngilizce. "
+        f"`summary_tr` alanını ise DAİMA {LANG_NAMES_TR[owner_lang].upper()} yaz, çünkü onu telefon sahibi okuyacak. "
+        "Arayan Türkçe veya Arapça konuşurken `caller_purpose` alanına İngilizce yazma.\n"
+        "10d. BİLGİ UYDURMA: Fiyat, ücret, adres, süre veya başka bir ayrıntıyı kendiliğinden söyleme. "
+        "Telefon sahibinin sana vermediği bir bilgiyi tahmin etme; bilmiyorsan 'bunu kendisine ileteceğim' de.\n"
         "11. DOĞALLIK: Robot gibi konuşma. Tek seferde tek soru sor, maddeler halinde sayma, arayanın sözünü kesme, kısa ve insan gibi yanıt ver."
     )
 
@@ -310,11 +345,11 @@ class TurkishCallAssistant(Agent):
     def llm_node(self, chat_ctx: llm.ChatContext, tools: list[llm.Tool], model_settings):
         try:
             items = getattr(chat_ctx, "items", None)
-            if isinstance(items, list) and len(items) > 40:
+            if isinstance(items, list) and len(items) > 16:
                 sys_items = [it for it in items if getattr(it, "role", None) in ("system", "developer")]
                 other_items = [it for it in items if getattr(it, "role", None) not in ("system", "developer")]
-                if len(other_items) > 30:
-                    trimmed = sys_items[:1] + other_items[-30:]
+                if len(other_items) > 10:
+                    trimmed = sys_items[:1] + other_items[-10:]
                     while len(trimmed) > 1 and getattr(trimmed[1], "type", "") == "function_call_output":
                         trimmed.pop(1)
                     items[:] = trimmed
@@ -419,6 +454,18 @@ class TurkishCallAssistant(Agent):
             f"[Tool Call] Canceling calendar event: date={date_str}, time={time_hm}, caller={caller_name}",
             flush=True,
         )
+        eksik = []
+        if len(str(caller_name or "").strip().split()) < 2:
+            eksik.append("ad ve soyad")
+        if not str(date_str or "").strip():
+            eksik.append("randevunun tarihi")
+        if not str(time_hm or "").strip():
+            eksik.append("randevunun saati")
+        if eksik:
+            return (
+                "HATA: Iptal icin " + ", ".join(eksik) + " gerekli. "
+                "Arayandan bu bilgileri iste ve sonra tekrar dene."
+            )
         res = await asyncio.to_thread(
             service_manager.cancel_appointment, date_str, time_hm, caller_name
         )
@@ -434,7 +481,7 @@ class TurkishCallAssistant(Agent):
         caller_name: str = "İsimsiz Arayan",
         caller_purpose: str = "Mesaj Bırakma",
         summary_tr: str = "",
-        callback_requested: bool = True,
+        callback_requested: bool = False,
         is_urgent: bool = False,
         recording_consent: bool = True,
         caller_confirmed: bool = False,
@@ -465,7 +512,21 @@ class TurkishCallAssistant(Agent):
             )
 
         safe_name = (caller_name or "").strip()
-        if not safe_name or safe_name == "İsimsiz Arayan":
+        if not safe_name or safe_name in ANONYMOUS.values():
+            # Randevu alinirken veya daha once ogrenilmis bir ad varsa onu koru.
+            known = str(self.call_state.get("caller_name") or "").strip()
+            if known and known not in ANONYMOUS.values():
+                safe_name = known
+        if not safe_name or safe_name in ANONYMOUS.values():
+            # Isimsiz kayitlara yalnizca gercek bir mesaj veya acil durum
+            # varsa izin verilir; aksi halde modelden once ismi sormasi istenir.
+            if not is_urgent and len(str(summary_tr or "").split()) < 4:
+                print("[Brain] Kayit reddedildi: isim ve mesaj yok", flush=True)
+                return (
+                    "HATA: Kayit yapilamadi. Arayanin adini nazikce sor; ad vermek "
+                    "istemiyorsa en azindan birakmak istedigi mesaji ogren, sonra "
+                    "bu araci tekrar cagir."
+                )
             safe_name = ANONYMOUS[owner_lang]
         if not recording_consent:
             caller_purpose, summary_tr = NO_CONSENT_TEXT[owner_lang]
@@ -501,9 +562,64 @@ class RealtimeCallAssistant(TurkishCallAssistant):
         return
 
 
+# services.py'deki ortak listeye birkac belirti daha eklenir.
+EXTRA_URGENT_WORDS = (
+    "ameliyat", "polis", "ölüm", "olum", "kalp", "nefes", "112",
+    "نزيف", "إغماء", "اغماء", "حريق", "خطر",
+    "fire", "police", "bleeding", "unconscious",
+)
+ALL_URGENT_WORDS = tuple(URGENT_KEYWORDS) + EXTRA_URGENT_WORDS
+
+
+def transcript_has_urgency(transcript_lines: list[str]) -> bool:
+    """Gorusmede gercekten acil bir belirti gecip gecmedigine bakar.
+
+    Model zaman zaman siradan bir sohbeti de acil isaretliyor; bu durumda
+    kayit kurallari devre disi kaliyordu. Metinde hicbir acil isareti yoksa
+    etiket guvenilmez sayilir.
+    """
+    text = " ".join(transcript_lines).lower()
+    return any(word in text for word in ALL_URGENT_WORDS)
+
+
+def caller_word_count(transcript_lines: list[str]) -> int:
+    """Yalnizca ARAYANIN soyledigi kelimeleri sayar.
+
+    Asistanin kendi karsilama cumlesi de bir satir oldugu icin satir sayisina
+    bakmak yetmiyordu: telefonu acip hemen kapatan biri bile kayit olusturuyordu.
+    """
+    total = 0
+    for line in transcript_lines:
+        if line.startswith("Arayan:"):
+            total += len(line.split(":", 1)[1].split())
+    return total
+
+
+def should_skip_log(transcript_lines: list[str], call_state: dict) -> str:
+    """Kaydedilmeyecek gorusmeler icin sebebi, kaydedilecekse bos metin doner.
+
+    Acil durumlar her zaman kaydedilir; kisa ya da isimsiz olmalari onemli degil.
+    """
+    if call_state.get("is_urgent") and transcript_has_urgency(transcript_lines):
+        return ""
+    words = caller_word_count(transcript_lines)
+    if words < 4:
+        return f"arayan konusmadi (yalnizca {words} kelime)"
+    if not str(call_state.get("caller_name") or "").strip() and words < 10:
+        return f"isim yok ve icerik cok kisa ({words} kelime)"
+    return ""
+
+
 async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict):
     if call_state.get("final_summary_done") or len(transcript_lines) < 2:
         return
+
+    skip = should_skip_log(transcript_lines, call_state)
+    if skip:
+        call_state["final_summary_done"] = True
+        print(f"[Auto Summary] Kayit olusturulmadi: {skip}", flush=True)
+        return
+
     call_state["final_summary_done"] = True
     caller_lang = normalize_lang(call_state.get("selected_lang"), DEFAULT_LANG)
     owner_lang = normalize_lang(call_state.get("owner_language"), DEFAULT_LANG)
@@ -525,9 +641,11 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
         )
         return
 
-    client = AsyncOpenAI(
-        base_url="https://api.groq.com/openai/v1",
-        api_key=GROQ_API_KEY,
+    client = await asyncio.to_thread(
+        lambda: AsyncOpenAI(
+            base_url="https://api.groq.com/openai/v1",
+            api_key=GROQ_API_KEY,
+        )
     )
     try:
         print(f"[Auto Summary] Görüşme özeti hazırlanıyor ({LANG_NAMES_TR[owner_lang]})...", flush=True)
@@ -544,15 +662,21 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
                     "content": (
                         f"Bugünün tarihi: {today_str}, yarının tarihi: {tomorrow_str}.\n"
                         f"Aşağıdaki telefon görüşmesini analiz et. Görüşme {LANG_NAMES_TR[caller_lang]} yapıldı; "
-                        f"caller_name alanındaki gerçek adı koru; caller_purpose, summary_tr ve calendar_event_title alanlarını {LANG_NAMES_TR[owner_lang].upper()} yaz. "
+                        f"caller_name alanındaki gerçek adı koru. "
+                        f"caller_purpose alanını ARAYANIN KONUŞTUĞU DİLDE ({LANG_NAMES_TR[caller_lang].upper()}) yaz. "
+                        f"summary_tr ve calendar_event_title alanlarını ise {LANG_NAMES_TR[owner_lang].upper()} yaz. "
+                        "KURAL: Yalnızca görüşmede GEÇEN bilgileri yaz. Fiyat, ücret, adres, "
+                        "süre, kişi sayısı gibi konuşulmamış hiçbir ayrıntıyı ekleme veya tahmin etme. "
+                        "Emin olmadığın bir şeyi hiç yazma.\n"
+                        "KURAL: Saatleri daima 24 saatlik biçimde yaz (14:30), '2:30' gibi yazma.\n"
                         "Yalnızca JSON döndür:\n"
                         '{\n'
-                        f'  "caller_name": "Arayanın adı (söylemediyse \'{ANONYMOUS[owner_lang]}\')",\n'
-                        '  "caller_purpose": "Arama nedeni (kısa)",\n'
+                        f'  "caller_name": "Arayanın adı. Ad vermediyse ama yakınlığını söylediyse (annesi, ablası, arkadaşı) bunu ad olarak yaz, örn. \'Meryem\'in annesi\'. Hiçbiri yoksa \'{ANONYMOUS[owner_lang]}\'",\n'
+                        f'  "caller_purpose": "Arama nedeni, kısa, {LANG_NAMES_TR[caller_lang]} dilinde",\n'
                         '  "summary_tr": "Arayanın mesajının ve görüşmenin net özeti (sahibin dilinde)",\n'
-                        '  "is_urgent": false,\n'
-                        '  "callback_requested": true,\n'
-                        '  "recording_consent": true,\n'
+                        '  "is_urgent": "Yalnızca hastane, kaza, ambulans, yangın gibi gerçek bir acil durum varsa true; randevu, buluşma veya sıradan mesajlarda daima false",\n'
+                        '  "callback_requested": "Arayan AÇIKÇA geri aranmak istediyse true, aksi halde false",\n'
+                        '  "recording_consent": "Arayan kayda itiraz ettiyse false, aksi halde true",\n'
                         '  "calendar_event_iso": "Yalnızca mesai saatleri içinde kesin onaylanmış bir randevu varsa YYYY-MM-DDTHH:MM:00; yoksa boş string \'\'",\n'
                         '  "calendar_event_title": "Takvim için kısa başlık"\n'
                         '}'
@@ -562,11 +686,21 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
             ],
         )
         data = json.loads(resp.choices[0].message.content)
-        caller_name = data.get("caller_name") or call_state.get("caller_name") or ANONYMOUS[owner_lang]
+        def pick_name(*candidates: str) -> str:
+            for value in candidates:
+                text = str(value or "").strip()
+                if text and text not in ANONYMOUS.values():
+                    return text
+            return ANONYMOUS[owner_lang]
+
+        caller_name = pick_name(data.get("caller_name"), call_state.get("caller_name"))
         caller_purpose = data.get("caller_purpose") or call_state.get("caller_purpose") or ""
         summary_tr = data.get("summary_tr") or convo_text
         is_urgent = bool(data.get("is_urgent")) or bool(call_state.get("is_urgent"))
-        if any(k in convo_text.lower() for k in URGENT_KEYWORDS):
+        if is_urgent and not transcript_has_urgency(transcript_lines):
+            print("[Auto Summary] 'acil' etiketi metinde karsiligi olmadigi icin kaldirildi", flush=True)
+            is_urgent = False
+        if any(k in convo_text.lower() for k in ALL_URGENT_WORDS):
             is_urgent = True
         callback_requested = (
             bool(data.get("callback_requested"))
@@ -580,18 +714,22 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
         cal_iso = (data.get("calendar_event_iso") or "").strip()
         cal_title = (data.get("calendar_event_title") or caller_purpose).strip()
 
-        if (
-            cal_iso
-            and not call_state.get("appointment_info")
-            and not call_state.get("appointment_canceled")
-            and recording_consent is not False
-        ):
-            print(f"[Auto Summary Calendar Sync] Booking planned event at {cal_iso}: {cal_title}", flush=True)
-            cal_res = await asyncio.to_thread(
-                service_manager.book_appointment, caller_name, cal_title, cal_iso
-            )
-            if cal_res.startswith("BAŞARILI"):
-                call_state["appointment_info"] = f"{cal_iso[:16].replace('T', ' ')} ({cal_title})"
+        if cal_iso and not call_state.get("appointment_info"):
+            # Takvime yazilmaz, yalnizca ozete not dusulur: randevu acmak
+            # arayanin acik onayini gerektirir (bkz. kural 6 ve 6b).
+            print(f"[Auto Summary] Randevu onerisi kaydedilmedi (onay yok): {cal_iso} {cal_title}", flush=True)
+
+        # Ozet ciktiktan sonraki son kontrol: ne isim, ne randevu, ne de
+        # anlamli bir mesaj varsa kayit tutmanin degeri yok.
+        meaningful = (
+            is_urgent
+            or bool(str(caller_name or "").strip() and caller_name not in ANONYMOUS.values())
+            or bool(call_state.get("appointment_info"))
+            or len(str(summary_tr or "").split()) >= 4
+        )
+        if not meaningful:
+            print("[Auto Summary] Kayit olusturulmadi: isimsiz ve iceriksiz gorusme", flush=True)
+            return
 
         await asyncio.to_thread(
             service_manager.save_call_summary,
@@ -629,13 +767,13 @@ async def entrypoint(ctx: JobContext):
             "anahtar değerlerini değil yalnızca .env alanlarını kontrol edin."
         )
 
-    architecture = str(active_cfg.get("architecture", "cascade")).strip().lower()
+    architecture = str(active_cfg.get("architecture", "realtime")).strip().lower()
     if architecture not in ("cascade", "realtime"):
         architecture = "cascade"
     rt_model_name = str(active_cfg.get("realtime_model", "") or "").strip()
     rt_voice = str(active_cfg.get("realtime_voice", "Puck") or "Puck").strip()
     stt_model = active_cfg.get("stt_model", "whisper-large-v3-turbo")
-    llm_model = active_cfg.get("llm_model", "openai/gpt-oss-120b")
+    llm_model = active_cfg.get("llm_model", "openai/gpt-oss-20b")
     tts_voice = active_cfg.get("tts_voice", "edge-emel")
     assistant_enabled = active_cfg.get("assistant_enabled", True)
 
@@ -686,7 +824,9 @@ async def entrypoint(ctx: JobContext):
         "appointment_info": "",
         "appointment_canceled": False,
         "is_urgent": False,
-        "callback_requested": True,
+        # Geri arama yalnizca arayan istediginde isaretlenir; varsayilan olarak
+        # true birakilinca her kayit "geri donus bekliyor" gorunuyordu.
+        "callback_requested": False,
         "recording_consent": True,
         "owner_language": normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG),
         "selected_lang": "auto",
@@ -721,16 +861,32 @@ async def entrypoint(ctx: JobContext):
     call_state["notify_lang"] = notify_lang
 
     def on_whisper_lang_detected(iso_lang: str, text_val: str):
-        lang = normalize_lang(iso_lang, DEFAULT_LANG)
+        text = (text_val or "").strip()
+        lang = script_hint(text) or normalize_lang(iso_lang, DEFAULT_LANG)
         call_state["last_detected_iso"] = lang
-        # Arayan dil değiştirmez: ilk anlamlı cümleden sonra STT dilini sabitle
-        if not call_state.get("stt_locked") and len((text_val or "").split()) >= 2 and session_stt is not None:
-            call_state["stt_locked"] = True
-            try:
-                session_stt.update_options(language=lang, prompt=PROMPTS_BY_LANG.get(lang, ""))
-                print(f"[STT] Dil sabitlendi: {LANG_NAMES_TR[lang]}", flush=True)
-            except Exception as e:
-                print(f"[STT] Dil sabitlenemedi: {e}", flush=True)
+
+        if session_stt is None or len(text.split()) < 2:
+            return
+
+        # Tek bir yanlis tanima tum gorusmeyi yanlis dile kilitlemesin:
+        # ust uste iki ayni tahmin gerekiyor. Yazi sistemi ipucu (Arap harfleri,
+        # Turkce'ye ozgu harfler) tek basina da yeterli sayilir.
+        votes = call_state.setdefault("lang_votes", [])
+        votes.append(lang)
+        del votes[:-2]
+        strong = script_hint(text) is not None
+        if not strong and (len(votes) < 2 or votes[0] != votes[1]):
+            return
+
+        if call_state.get("stt_lang") == lang:
+            return
+
+        call_state["stt_lang"] = lang
+        try:
+            session_stt.update_options(language=lang, prompt=PROMPTS_BY_LANG.get(lang, ""))
+            print(f"[STT] Dil ayarlandi: {LANG_NAMES_TR[lang]}", flush=True)
+        except Exception as e:
+            print(f"[STT] Dil ayarlanamadi: {e}", flush=True)
 
     if architecture == "realtime":
         if lk_google is None:
@@ -777,13 +933,13 @@ async def entrypoint(ctx: JobContext):
         fallback_fast_llm = openai.LLM(
             base_url="https://api.groq.com/openai/v1",
             api_key=GROQ_API_KEY,
-            model="openai/gpt-oss-20b" if llm_model != "openai/gpt-oss-20b" else "openai/gpt-oss-120b",
+            model="llama-3.1-8b-instant" if llm_model != "llama-3.1-8b-instant" else "openai/gpt-oss-20b",
             temperature=0.2,
         )
         fallback_llama_llm = openai.LLM(
             base_url="https://api.groq.com/openai/v1",
             api_key=GROQ_API_KEY,
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             temperature=0.2,
         )
         session_llm = llm.FallbackAdapter([primary_llm, fallback_fast_llm, fallback_llama_llm])
@@ -793,7 +949,7 @@ async def entrypoint(ctx: JobContext):
             stt=session_stt,
             llm=session_llm,
             tts=GLOBAL_TTS,
-            preemptive_generation=False,
+            preemptive_generation=True,
             turn_handling={
                 "turn_detection": "vad",
                 "interruption": {"enabled": True, "mode": "vad"},

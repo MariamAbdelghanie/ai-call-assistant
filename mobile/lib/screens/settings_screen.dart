@@ -4,6 +4,7 @@ import '../l10n/strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass.dart';
+import '../widgets/soft_icon.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -58,16 +59,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: InputDecoration(
                   labelText: strings.t('serverUrl'),
                   hintText: strings.t('serverHint'),
-                  prefixIcon: const Icon(Icons.dns_outlined),
+                  prefixIcon: const SoftIcon(AppIcon.layers),
                 ),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(
+                  SoftIcon(
                     state.isDemo
-                        ? Icons.cloud_off_outlined
-                        : Icons.cloud_done_outlined,
+                        ? AppIcon.cloudOff
+                        : AppIcon.cloud,
                     size: 18,
                     color: state.isDemo
                         ? context.tokens.pending
@@ -100,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       SnackBar(content: Text(strings.t('saved'))),
                     );
                   },
-                  icon: const Icon(Icons.link_rounded, size: 18),
+                  icon: const SoftIcon(AppIcon.link, size: 18),
                   label: Text(strings.t('serverSave')),
                 ),
               ),
@@ -128,58 +129,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               const Divider(height: 24),
-              Text(
-                strings.t('architecture'),
-                style: context.text.labelLarge,
-              ),
+              Text(strings.t('voiceTitle'), style: context.text.labelLarge),
               const SizedBox(height: 4),
               Text(
-                strings.t('architectureHint'),
+                strings.t('voiceHint'),
                 style: context.text.bodySmall
                     ?.copyWith(color: context.tokens.muted),
               ),
               const SizedBox(height: 10),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'cascade',
-                    label: Text(strings.t('archCascade')),
-                    icon: const Icon(Icons.account_tree_outlined, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: 'realtime',
-                    label: Text(strings.t('archRealtime')),
-                    icon: const Icon(Icons.bolt_rounded, size: 18),
-                  ),
-                ],
-                selected: {
-                  state.config.architecture == 'realtime'
-                      ? 'realtime'
-                      : 'cascade'
-                },
-                showSelectedIcon: false,
-                onSelectionChanged: (values) async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final ok = await state.saveConfig(
-                    state.config.copyWith(architecture: values.first),
-                  );
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        strings.t(ok ? 'architectureSaved' : 'loadError'),
-                      ),
+              // Gemini Live'in hazir sesleri. Biri kotaya takilirsa
+              // digerine gecmek icin buradan degistirilir.
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final voice in const ['Kore', 'Puck', 'Charon', 'Fenrir'])
+                    ChoiceChip(
+                      label: Text(voice),
+                      selected: state.config.realtimeVoice == voice,
+                      onSelected: (_) async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final ok = await state.saveConfig(
+                          state.config.copyWith(
+                            architecture: 'realtime',
+                            realtimeVoice: voice,
+                          ),
+                        );
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              strings.t(ok ? 'saved' : 'loadError'),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                ],
               ),
               const SizedBox(height: 16),
               _InfoRow(
-                icon: Icons.schedule_outlined,
+                icon: AppIcon.clock,
                 label: strings.t('workHours'),
                 value: '${state.config.workStart} - ${state.config.workEnd}',
               ),
               _InfoRow(
-                icon: Icons.graphic_eq_rounded,
+                icon: AppIcon.wave,
                 label: strings.t('voice'),
                 value: state.config.activeVoice,
               ),
@@ -193,17 +187,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ButtonSegment(
                     value: ThemeMode.system,
                     label: Text(strings.t('themeSystem')),
-                    icon: const Icon(Icons.brightness_auto_outlined, size: 18),
+                    icon: const SoftIcon(AppIcon.auto, size: 18),
                   ),
                   ButtonSegment(
                     value: ThemeMode.light,
                     label: Text(strings.t('themeLight')),
-                    icon: const Icon(Icons.light_mode_outlined, size: 18),
+                    icon: const SoftIcon(AppIcon.sun, size: 18),
                   ),
                   ButtonSegment(
                     value: ThemeMode.dark,
                     label: Text(strings.t('themeDark')),
-                    icon: const Icon(Icons.dark_mode_outlined, size: 18),
+                    icon: const SoftIcon(AppIcon.moon, size: 18),
                   ),
                 ],
                 selected: {state.themeMode},
@@ -253,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   onPressed: () => _confirmDeleteAll(context, state),
-                  icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                  icon: const SoftIcon(AppIcon.trash, size: 18),
                   label: Text(strings.t('deleteAll')),
                 ),
               ),
@@ -343,7 +337,7 @@ class _InfoRow extends StatelessWidget {
     required this.value,
   });
 
-  final IconData icon;
+  final AppIcon icon;
   final String label;
   final String value;
 
@@ -354,7 +348,7 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: context.tokens.muted),
+          SoftIcon(icon, size: 18, color: context.tokens.muted),
           const SizedBox(width: 10),
           Expanded(
             child: Text(label, style: theme.textTheme.bodyMedium),

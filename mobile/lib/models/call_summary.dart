@@ -58,6 +58,21 @@ class CallSummary {
     );
   }
 
+  /// Cevrimdisi onbellek icin: sunucudan gelen bicimle birebir ayni.
+  Map<String, dynamic> toJson() => {
+        'call_id': callId,
+        'timestamp': timestamp?.toIso8601String() ?? '',
+        'caller_name': callerName,
+        'caller_number': callerNumber,
+        'caller_purpose': callerPurpose,
+        'summary_tr': summary,
+        'appointment_info': appointmentInfo,
+        'is_urgent': isUrgent,
+        'callback_requested': callbackRequested,
+        'called_back': calledBack,
+        'lang': lang,
+      };
+
   CallSummary copyWith({bool? calledBack}) => CallSummary(
         callId: callId,
         timestamp: timestamp,
@@ -97,7 +112,7 @@ class AssistantConfig {
     enabled: true,
     workStart: '08:00',
     workEnd: '20:00',
-    architecture: 'cascade',
+    architecture: 'realtime',
     ttsVoice: 'elevenlabs-ar-ahmet',
     realtimeVoice: 'Kore',
     ownerLanguage: 'tr',
@@ -120,7 +135,7 @@ class AssistantConfig {
           : true,
       workStart: str('work_start', '08:00'),
       workEnd: str('work_end', '20:00'),
-      architecture: str('architecture', 'cascade'),
+      architecture: str('architecture', 'realtime'),
       ttsVoice: str('tts_voice', 'edge-ahmet'),
       realtimeVoice: str('realtime_voice', 'Kore'),
       ownerLanguage: str('owner_language', 'tr'),
@@ -132,6 +147,9 @@ class AssistantConfig {
         'work_start': workStart,
         'work_end': workEnd,
         'architecture': architecture,
+        'tts_voice': ttsVoice,
+        'realtime_voice': realtimeVoice,
+        'owner_language': ownerLanguage,
       };
 
   AssistantConfig copyWith({
@@ -139,14 +157,17 @@ class AssistantConfig {
     String? workStart,
     String? workEnd,
     String? architecture,
+    String? ttsVoice,
+    String? realtimeVoice,
+    String? ownerLanguage,
   }) =>
       AssistantConfig(
         enabled: enabled ?? this.enabled,
         workStart: workStart ?? this.workStart,
         workEnd: workEnd ?? this.workEnd,
         architecture: architecture ?? this.architecture,
-        ttsVoice: ttsVoice,
-        realtimeVoice: realtimeVoice,
-        ownerLanguage: ownerLanguage,
+        ttsVoice: ttsVoice ?? this.ttsVoice,
+        realtimeVoice: realtimeVoice ?? this.realtimeVoice,
+        ownerLanguage: ownerLanguage ?? this.ownerLanguage,
       );
 }

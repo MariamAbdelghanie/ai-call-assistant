@@ -1,10 +1,12 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'soft_icon.dart';
 
-/// Serene misty mountain and cloud background, matching the Mindora UI design.
+/// Koyu mor zemin: neon halelerle derinlik verir, icerigi one cikarir.
 /// All screens are rendered on top of this atmospheric surface.
 class GlassBackground extends StatelessWidget {
   const GlassBackground({super.key, required this.child});
@@ -50,79 +52,93 @@ class _AuraPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Acik temada zemin neredeyse duz kalir; renk ve isik koyu temaya aittir.
+    if (!isDark) {
+      _softBlob(canvas, size, Offset(size.width * 0.82, -size.height * 0.06),
+          size.width * 0.62, AppPalette.brand, 0.07);
+      return;
+    }
+
     final w = size.width;
     final h = size.height;
 
-    // 1) Ust kosede genis isik yayi: sayfanin agirligini yukari tasir.
-    final arcCenter = Offset(w * 0.78, -h * 0.10);
-    canvas.drawCircle(
-      arcCenter,
-      w * 0.72,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            AppPalette.mistBlue.withValues(alpha: isDark ? 0.18 : 0.30),
-            AppPalette.mistBlue.withValues(alpha: 0.0),
-          ],
-        ).createShader(Rect.fromCircle(center: arcCenter, radius: w * 0.72)),
-    );
+    // 1) Ust ve alt kosede genis neon halesi.
+    _softBlob(canvas, size, Offset(w * 0.86, -h * 0.06), w * 0.62,
+        AppPalette.brand, 0.10);
+    _softBlob(canvas, size, Offset(w * 0.04, h * 0.96), w * 0.56,
+        AppPalette.violet, 0.08);
 
-    // 2) Ic ice halkalar: meditasyon arayuzlerindeki sakin ritmi verir.
-    final ringCenter = Offset(w * 0.5, h * 0.42);
-    for (var i = 0; i < 5; i++) {
-      canvas.drawCircle(
-        ringCenter,
-        w * (0.26 + i * 0.13),
+    // 2) Akan isik seritleri: referanstaki "aurora" hissini veren ogeler.
+    for (var i = 0; i < 3; i++) {
+      final baseY = h * (0.20 + i * 0.26);
+      final amp = h * (0.055 + i * 0.012);
+      final path = Path()..moveTo(-w * 0.08, baseY);
+      const steps = 40;
+      for (var s = 1; s <= steps; s++) {
+        final x = -w * 0.08 + (w * 1.16) * (s / steps);
+        final y = baseY + math.sin((s / steps) * math.pi * 2 + i) * amp;
+        path.lineTo(x, y);
+      }
+      canvas.drawPath(
+        path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.1
-          ..color = (isDark ? AppPalette.mistWhite : AppPalette.sage)
-              .withValues(alpha: (isDark ? 0.07 : 0.10) * (1 - i * 0.16)),
+          ..strokeWidth = 1.4
+          ..color = (i.isEven ? AppPalette.brandLight : AppPalette.blush)
+              .withValues(alpha: 0.05 - i * 0.012)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
       );
     }
 
-    // 3) Alt tarafta genis, cok bulanik bir adacayi lekesi.
-    final blobCenter = Offset(w * 0.18, h * 0.88);
-    canvas.drawCircle(
-      blobCenter,
-      w * 0.58,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            AppPalette.sage.withValues(alpha: isDark ? 0.16 : 0.24),
-            AppPalette.sage.withValues(alpha: 0.0),
-          ],
-        ).createShader(Rect.fromCircle(center: blobCenter, radius: w * 0.58)),
-    );
+    // 3) Merkezden disa acilan ince halkalar.
+    final ringCenter = Offset(w * 0.5, h * 0.40);
+    for (var i = 0; i < 4; i++) {
+      canvas.drawCircle(
+        ringCenter,
+        w * (0.30 + i * 0.15),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0
+          ..color = AppPalette.brandLight
+              .withValues(alpha: 0.035 * (1 - i * 0.2)),
+      );
+    }
 
-    // 4) Ortada cok hafif bir pudra dokunusu: paletteki sicak tonu tasir.
-    final blushCenter = Offset(w * 0.86, h * 0.62);
-    canvas.drawCircle(
-      blushCenter,
-      w * 0.40,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            AppPalette.blush.withValues(alpha: isDark ? 0.12 : 0.18),
-            AppPalette.blush.withValues(alpha: 0.0),
-          ],
-        ).createShader(Rect.fromCircle(center: blushCenter, radius: w * 0.40)),
-    );
-
-    // 5) Kenar karartmasi: icerigi merkeze toplar, okunurlugu artirir.
+    // 4) Kenarlarda hafif karartma: icerigi one cikarir.
     canvas.drawRect(
       Offset.zero & size,
       Paint()
         ..shader = RadialGradient(
           center: Alignment.center,
-          radius: 0.95,
+          radius: 1.0,
           colors: [
             Colors.transparent,
-            (isDark ? Colors.black : AppPalette.deepSlate)
-                .withValues(alpha: isDark ? 0.30 : 0.06),
+            const Color(0xFF000000).withValues(alpha: 0.75),
           ],
-          stops: const [0.62, 1.0],
+          stops: const [0.40, 1.0],
         ).createShader(Offset.zero & size),
+    );
+  }
+
+  /// Tek bir yumusak renk lekesi.
+  void _softBlob(
+    Canvas canvas,
+    Size size,
+    Offset center,
+    double radius,
+    Color color,
+    double alpha,
+  ) {
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            color.withValues(alpha: alpha),
+            color.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
   }
 
@@ -210,14 +226,53 @@ class GlassCard extends StatelessWidget {
           color: borderColor ?? tokens.glassBorder,
           width: 1.2,
         ),
+        // Koyu zeminde derinlik golgeyle degil, yuzeyin kendi isigiyla
+        // kurulur; acik temada ise yumusak bir golge kullanilir.
+        boxShadow: tokens.isDark
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF05020A).withValues(alpha: 0.55),
+                  blurRadius: 28,
+                  offset: const Offset(0, 12),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: AppPalette.deepSlate.withValues(alpha: 0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: shape,
-          onTap: onTap,
-          child: Padding(padding: padding, child: child),
-        ),
+      child: Stack(
+        children: [
+          if (tokens.isDark)
+            Positioned(
+              left: radius * 0.6,
+              right: radius * 0.6,
+              top: 0,
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.white.withValues(alpha: 0.18),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: shape,
+              onTap: onTap,
+              child: Padding(padding: padding, child: child),
+            ),
+          ),
+        ],
       ),
     );
 
@@ -258,7 +313,7 @@ class GradientButton extends StatelessWidget {
   });
 
   final String label;
-  final IconData? icon;
+  final AppIcon? icon;
   final VoidCallback? onTap;
   final bool busy;
   final double height;
@@ -309,7 +364,7 @@ class GradientButton extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (icon != null) ...[
-                            Icon(icon, color: Colors.white, size: 20),
+                            SoftIcon(icon!, color: Colors.white, size: 20),
                             const SizedBox(width: 10),
                           ],
                           Flexible(

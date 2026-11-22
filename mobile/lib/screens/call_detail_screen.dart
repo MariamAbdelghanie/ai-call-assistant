@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/glass.dart';
 import '../utils/formatters.dart';
 import '../widgets/common.dart';
+import '../widgets/soft_icon.dart';
 
 class CallDetailScreen extends StatelessWidget {
   const CallDetailScreen({super.key, required this.callId});
@@ -26,7 +27,7 @@ class CallDetailScreen extends StatelessWidget {
       return GlassScaffold(
         title: strings.t('detailTitle'),
         body: EmptyState(
-          icon: Icons.inbox_outlined,
+          icon: AppIcon.inbox,
           title: strings.t('emptyCalls'),
           message: strings.t('emptyCallsHint'),
         ),
@@ -39,7 +40,7 @@ class CallDetailScreen extends StatelessWidget {
       actions: [
         IconButton(
           tooltip: strings.t('delete'),
-          icon: Icon(Icons.delete_outline_rounded, color: tokens.urgent),
+          icon: SoftIcon(AppIcon.trash, color: tokens.urgent),
           onPressed: () => _confirmDelete(context, state, call),
         ),
       ],
@@ -103,27 +104,27 @@ class CallDetailScreen extends StatelessWidget {
                   label: strings.t('urgentBadge'),
                   foreground: tokens.urgent,
                   background: tokens.urgentSoft,
-                  icon: Icons.priority_high_rounded,
+                  icon: AppIcon.urgent,
                 ),
               if (call.awaitingCallback)
                 StatusBadge(
                   label: strings.t('callbackBadge'),
                   foreground: tokens.pending,
                   background: tokens.pendingSoft,
-                  icon: Icons.phone_callback_outlined,
+                  icon: AppIcon.phoneBack,
                 ),
               if (call.calledBack)
                 StatusBadge(
                   label: strings.t('calledBack'),
                   foreground: tokens.success,
                   background: tokens.successSoft,
-                  icon: Icons.check_circle_outline,
+                  icon: AppIcon.check,
                 ),
               StatusBadge(
                 label: strings.languageName(call.lang),
                 foreground: tokens.muted,
                 background: tokens.muted.withValues(alpha: 0.12),
-                icon: Icons.translate_outlined,
+                icon: AppIcon.globe,
               ),
             ],
           ),
@@ -146,7 +147,7 @@ class CallDetailScreen extends StatelessWidget {
               title: strings.t('appointment'),
               child: Row(
                 children: [
-                  Icon(Icons.event_available_outlined,
+                  SoftIcon(AppIcon.calendarOk,
                       size: 18, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
@@ -180,7 +181,7 @@ class CallDetailScreen extends StatelessWidget {
                         SnackBar(content: Text(strings.t('copied'))),
                       );
                     },
-                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    icon: const SoftIcon(AppIcon.copy, size: 18),
                     label: Text(strings.t('copyNumber')),
                   ),
               ],
@@ -193,12 +194,12 @@ class CallDetailScreen extends StatelessWidget {
               child: call.calledBack
                   ? OutlinedButton.icon(
                       onPressed: () => state.toggleCalledBack(call),
-                      icon: const Icon(Icons.undo_rounded, size: 18),
+                      icon: const SoftIcon(AppIcon.undo, size: 18),
                       label: Text(strings.t('markNotCalledBack')),
                     )
                   : FilledButton.icon(
                       onPressed: () => state.toggleCalledBack(call),
-                      icon: const Icon(Icons.check_rounded, size: 18),
+                      icon: const SoftIcon(AppIcon.check, size: 18),
                       label: Text(strings.t('markCalledBack')),
                     ),
             ),

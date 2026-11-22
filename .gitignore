@@ -34,6 +34,23 @@ ses_ornekleri/
 mobile/.dart_tool/
 mobile/build/
 mobile/.flutter-plugins*
-mobile/android/
-mobile/ios/
 mobile/.idea/
+mobile/ios/
+
+# Android: kaynaklar yuklenir (projenin derlenebilmesi icin gerekli),
+# yalnizca makineye ozel ve uretilen dosyalar haric tutulur.
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/*.iml
+mobile/android/.idea/
+
+# Gecici tani ve yedek dosyalari
+*.bak
+*.bak2
+adb.ps1
+check*.ps1
+
+# Ekran goruntuleri disinda uretilen ciktilar
+*.apk

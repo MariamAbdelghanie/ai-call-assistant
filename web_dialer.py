@@ -22,7 +22,7 @@ DEFAULT_CONFIG = {
     "work_end": "17:00",
     "assistant_enabled": True,
     "greeting_text": "",
-    "architecture": "cascade",
+    "architecture": "realtime",
     "realtime_model": "",
     "realtime_voice": "Puck",
 }
@@ -700,7 +700,24 @@ async def logs_endpoint(request: web.Request):
     return web.json_response([])
 
 
-app = web.Application()
+@web.middleware
+async def cors_middleware(request: web.Request, handler):
+    """Tarayicidan (Flutter web) yapilan isteklere izin verir.
+
+    Uygulama kromda calistirilinca farkli bir port kullaniyor; bu basliklar
+    olmadan tarayici istekleri engelliyor.
+    """
+    if request.method == "OPTIONS":
+        response = web.Response(status=204)
+    else:
+        response = await handler(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
+
+app = web.Application(middlewares=[cors_middleware])
 app.router.add_get("/", index)
 app.router.add_get("/ozetler", index)
 app.router.add_get("/token", token_endpoint)

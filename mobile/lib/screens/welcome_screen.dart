@@ -1,15 +1,16 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
 import '../theme/app_theme.dart';
-import '../widgets/assistant_robot.dart';
 import '../widgets/glass.dart';
+import '../widgets/soft_icon.dart';
+import '../widgets/voice_orb.dart';
 
-/// Mindora-inspired Welcome & Onboarding Screen:
-/// Features floating ethereal particles, interactive breathing agent core,
-/// frosted glass container, and staggered spring animations.
+/// Acilis ekrani.
+///
+/// Tek bir gorsel odak var: siyah zeminde duran kure. Metin blogu kurenin
+/// altinda hizalanir, eylem en altta tek basina durur. Robot karakteri yerine
+/// kure kullanilir; boylece acilis, gorusme ekraniyla ayni kimligi tasir.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key, required this.onStart});
 
@@ -21,39 +22,31 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen>
     with TickerProviderStateMixin {
-  // Staggered entrance animation
   late final AnimationController _enter = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1100),
+    duration: const Duration(milliseconds: 950),
   )..forward();
 
-  // Exit animation when user taps Start
   late final AnimationController _exit = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 650),
+    duration: const Duration(milliseconds: 520),
   );
 
-  // Breathing pulse for ambient glows
-  late final AnimationController _breathe = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 3200),
-  )..repeat(reverse: true);
-
-  // Floating misty particles
-  late final AnimationController _particles = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 14),
-  )..repeat();
-
   bool _leaving = false;
+  bool _poked = false;
 
   @override
   void dispose() {
     _enter.dispose();
     _exit.dispose();
-    _breathe.dispose();
-    _particles.dispose();
     super.dispose();
+  }
+
+  Future<void> _tapOrb() async {
+    if (_leaving) return;
+    setState(() => _poked = true);
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    if (mounted && !_leaving) setState(() => _poked = false);
   }
 
   Future<void> _takeOff() async {
@@ -69,207 +62,135 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     final tokens = context.tokens;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
-    final enter = CurvedAnimation(parent: _enter, curve: Curves.easeOutBack);
-    final exit = CurvedAnimation(parent: _exit, curve: Curves.easeInCubic);
-
     return GlassBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Stack(
-            children: [
-              // Floating ambient mist particles
-              if (!reduceMotion)
-                AnimatedBuilder(
-                  animation: _particles,
-                  builder: (context, _) => Positioned.fill(
-                    child: CustomPaint(
-                      painter: _MindoraParticlePainter(
-                        t: _particles.value,
-                        isDark: tokens.isDark,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_enter, _exit]),
+            builder: (context, _) {
+              final lift = reduceMotion
+                  ? 0.0
+                  : Curves.easeInCubic.transform(_exit.value);
+
+              return Opacity(
+                opacity: 1 - lift * 0.95,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 14, 28, 26),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Rise(
+                        animation: _enter,
+                        delay: 0.0,
+                        reduceMotion: reduceMotion,
+                        child: const _BrandRow(),
                       ),
-                    ),
+
+                      const Spacer(flex: 3),
+
+                      // Kure: ekranin tek gorsel odagi.
+                      Center(
+                        child: _Rise(
+                          animation: _enter,
+                          delay: 0.10,
+                          reduceMotion: reduceMotion,
+                          child: Transform.translate(
+                            offset: Offset(0, -lift * 220),
+                            child: GestureDetector(
+                              onTap: _tapOrb,
+                              behavior: HitTestBehavior.opaque,
+                              child: VoiceOrb(
+                                size: 300,
+                                speaking: _poked,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(flex: 3),
+
+                      // Metin solda hizali: ortalanmis blok sunum slaydi
+                      // gibi duruyordu, sola hizalama daha urun gibi durur.
+                      _Rise(
+                        animation: _enter,
+                        delay: 0.28,
+                        reduceMotion: reduceMotion,
+                        child: Transform.translate(
+                          offset: Offset(0, lift * 110),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                strings.t('welcomeHeadline'),
+                                style: context.text.headlineLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -1.4,
+                                  height: 1.05,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                strings.t('welcomeSubtitle'),
+                                style: context.text.bodyMedium?.copyWith(
+                                  color: tokens.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      // Ozellikler: ikon kutucugu yerine tek satirlik etiketler.
+                      _Rise(
+                        animation: _enter,
+                        delay: 0.40,
+                        reduceMotion: reduceMotion,
+                        child: Transform.translate(
+                          offset: Offset(0, lift * 140),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _Tag(
+                                icon: AppIcon.phone,
+                                label: strings.t('featureAnswer'),
+                              ),
+                              _Tag(
+                                icon: AppIcon.inbox,
+                                label: strings.t('featureNote'),
+                              ),
+                              _Tag(
+                                icon: AppIcon.spark,
+                                label: strings.t('featureSummary'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 26),
+
+                      _Rise(
+                        animation: _enter,
+                        delay: 0.52,
+                        reduceMotion: reduceMotion,
+                        child: Transform.translate(
+                          offset: Offset(0, lift * 180),
+                          child: _StartButton(
+                            label: strings.t('welcomeCta'),
+                            onTap: _takeOff,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
-              // Main Onboarding Layout
-              AnimatedBuilder(
-                animation: Listenable.merge([_enter, _exit, _breathe]),
-                builder: (context, _) {
-                  final lift = reduceMotion ? 0.0 : exit.value;
-                  final breatheVal = reduceMotion ? 0.5 : _breathe.value;
-
-                  return Opacity(
-                    opacity: (1 - lift * 0.95).clamp(0.0, 1.0),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-                      child: Column(
-                        children: [
-                          const Spacer(flex: 2),
-
-                          // Central Mindora Zen Agent with breathing aura
-                          Transform.translate(
-                            offset: Offset(0, -lift * 340),
-                            child: Transform.scale(
-                              scale: (reduceMotion ? 1.0 : enter.value).clamp(0.0, 1.0) *
-                                  (1 - lift * 0.20),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Breathing multi-ring aura
-                                  Container(
-                                    width: 280 + breatheVal * 28,
-                                    height: 280 + breatheVal * 28,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppPalette.sage.withValues(
-                                            alpha: 0.12 + breatheVal * 0.12,
-                                          ),
-                                          blurRadius: 70 + breatheVal * 24,
-                                          spreadRadius: 12 + breatheVal * 12,
-                                        ),
-                                        BoxShadow(
-                                          color: AppPalette.mistBlue.withValues(
-                                            alpha: 0.10 + breatheVal * 0.10,
-                                          ),
-                                          blurRadius: 50 + breatheVal * 18,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // The newly styled Mindora AI Agent
-                                  const AssistantRobot(
-                                    mood: RobotMood.idle,
-                                    size: 260,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          const Spacer(),
-
-                          // Frosted Glass Content Panel
-                          Transform.translate(
-                            offset: Offset(0, lift * 180),
-                            child: GlassCard(
-                              blur: true,
-                              strong: true,
-                              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
-                              radius: AppTheme.radius,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Top Mindora Pill Badge
-                                  _StaggeredItem(
-                                    animation: enter,
-                                    delay: 0.15,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: AppPalette.sage.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(999),
-                                        border: Border.all(
-                                          color: AppPalette.sage.withValues(alpha: 0.28),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 7,
-                                            height: 7,
-                                            decoration: const BoxDecoration(
-                                              color: AppPalette.sage,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'MINDORA • AI ASSISTANT',
-                                            style: context.text.labelSmall?.copyWith(
-                                              color: AppPalette.sage,
-                                              fontWeight: FontWeight.w800,
-                                              letterSpacing: 1.1,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Headline
-                                  _StaggeredItem(
-                                    animation: enter,
-                                    delay: 0.30,
-                                    child: Text(
-                                      strings.t('welcomeTitle'),
-                                      textAlign: TextAlign.center,
-                                      style: context.text.headlineMedium?.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        height: 1.15,
-                                        letterSpacing: -0.6,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-
-                                  // Subtitle
-                                  _StaggeredItem(
-                                    animation: enter,
-                                    delay: 0.45,
-                                    child: Text(
-                                      strings.t('welcomeSubtitle'),
-                                      textAlign: TextAlign.center,
-                                      style: context.text.bodyMedium?.copyWith(
-                                        color: tokens.muted,
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-
-                                  // Shimmering Start Button (Blended 4-color gradient)
-                                  _StaggeredItem(
-                                    animation: enter,
-                                    delay: 0.60,
-                                    child: GradientButton(
-                                      label: strings.t('welcomeCta'),
-                                      icon: Icons.arrow_forward_rounded,
-                                      height: 56,
-                                      useFourColors: true,
-                                      onTap: _takeOff,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-
-                                  // Bottom Hint
-                                  _StaggeredItem(
-                                    animation: enter,
-                                    delay: 0.70,
-                                    child: Text(
-                                      strings.t('welcomeHint'),
-                                      textAlign: TextAlign.center,
-                                      style: context.text.labelSmall?.copyWith(
-                                        color: tokens.muted,
-                                        letterSpacing: 0.2,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -277,93 +198,135 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 }
 
-/// Helper for staggered animated entrance.
-class _StaggeredItem extends StatelessWidget {
-  const _StaggeredItem({
-    required this.animation,
-    required this.delay,
-    required this.child,
-  });
-
-  final Animation<double> animation;
-  final double delay;
-  final Widget child;
+/// Ust satir: kucuk bir isaret ve uygulama adi.
+class _BrandRow extends StatelessWidget {
+  const _BrandRow();
 
   @override
   Widget build(BuildContext context) {
-    final t = ((animation.value - delay) / (1.0 - delay)).clamp(0.0, 1.0);
-    final curved = Curves.easeOutCubic.transform(t);
+    final strings = AppStrings.of(context);
+    return Row(
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [Color(0xFF3BE0FF), Color(0xFFFF4FD8)],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          strings.t('appTitle').toUpperCase(),
+          style: context.text.labelSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2.2,
+            color: context.tokens.muted,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-    return Opacity(
-      opacity: curved,
-      child: Transform.translate(
-        offset: Offset(0, (1 - curved) * 24),
-        child: child,
+/// Tek satirlik ozellik etiketi.
+class _Tag extends StatelessWidget {
+  const _Tag({required this.icon, required this.label});
+
+  final AppIcon icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 9, 15, 9),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SoftIcon(icon, size: 15, color: const Color(0xFF3BE0FF)),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: context.text.labelSmall?.copyWith(color: tokens.muted),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Floating particles resembling fireflies / mist orbs in the serene landscape.
-class _MindoraParticlePainter extends CustomPainter {
-  _MindoraParticlePainter({required this.t, required this.isDark});
+/// Tam genislikte, net bir eylem dugmesi.
+class _StartButton extends StatelessWidget {
+  const _StartButton({required this.label, required this.onTap});
 
-  final double t;
-  final bool isDark;
+  final String label;
+  final VoidCallback onTap;
 
-  static final List<_MistParticle> _particles = List.generate(16, (i) {
-    final rng = math.Random(i * 37 + 11);
-    return _MistParticle(
-      x: rng.nextDouble(),
-      y: rng.nextDouble(),
-      radius: 2.2 + rng.nextDouble() * 3.8,
-      speed: 0.4 + rng.nextDouble() * 0.8,
-      phase: rng.nextDouble() * math.pi * 2,
-      colorType: i % 4,
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: SizedBox(
+            height: 58,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: context.text.titleMedium?.copyWith(
+                    color: const Color(0xFF05010A),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const SoftIcon(AppIcon.chevron,
+                    size: 18, color: Color(0xFF05010A)),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final p in _particles) {
-      final angle = t * math.pi * 2 * p.speed + p.phase;
-      final dx = p.x * size.width + math.sin(angle) * 16;
-      final dy = p.y * size.height + math.cos(angle * 0.8) * 12;
-      final pulse = (math.sin(angle * 1.6) * 0.5 + 0.5);
-
-      final color = switch (p.colorType) {
-        0 => AppPalette.sage,
-        1 => AppPalette.mistBlue,
-        2 => AppPalette.blush,
-        _ => AppPalette.mistWhite,
-      };
-
-      final alpha = (isDark ? 0.14 : 0.22) + pulse * 0.12;
-
-      canvas.drawCircle(
-        Offset(dx, dy),
-        p.radius + pulse * 1.8,
-        Paint()
-          ..color = color.withValues(alpha: alpha)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.radius * 1.6 + pulse * 2.5),
-      );
-    }
   }
-
-  @override
-  bool shouldRepaint(_MindoraParticlePainter old) => old.t != t;
 }
 
-class _MistParticle {
-  const _MistParticle({
-    required this.x,
-    required this.y,
-    required this.radius,
-    required this.speed,
-    required this.phase,
-    required this.colorType,
+/// Icerigi sirayla asagidan yukari getirir.
+class _Rise extends StatelessWidget {
+  const _Rise({
+    required this.animation,
+    required this.delay,
+    required this.child,
+    required this.reduceMotion,
   });
 
-  final double x, y, radius, speed, phase;
-  final int colorType;
+  final Animation<double> animation;
+  final double delay;
+  final Widget child;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    if (reduceMotion) return child;
+    final v = Curves.easeOutCubic.transform(
+      ((animation.value - delay) / (1 - delay)).clamp(0.0, 1.0),
+    );
+    return Opacity(
+      opacity: v,
+      child: Transform.translate(offset: Offset(0, (1 - v) * 22), child: child),
+    );
+  }
 }
