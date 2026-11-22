@@ -17,7 +17,7 @@ yazılmış **mobil panel**.
 
 | Çağrı detayı | Randevular | Acil çağrılar |
 |---|---|---|
-| <img src="docs/screenshots/04-call-detail.png" width="240"> | <img src="docs/screenshots/05-appointments.png" width="240"> | <img src="docs/screenshots/06-urgent.jpg" width="240"> |
+| <img src="docs/screenshots/04-call-detail.png" width="240"> | <img src="docs/screenshots/05-appointments.png" width="240"> | <img src="docs/screenshots/06-urgent.png" width="240"> |
 
 | Çağrı özetleri | Ayarlar |
 |---|---|
