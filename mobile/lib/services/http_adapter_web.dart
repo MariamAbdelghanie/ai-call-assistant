@@ -9,6 +9,7 @@ class HttpAdapter {
     Uri uri, {
     String method = 'GET',
     Map<String, dynamic>? body,
+    Map<String, String>? headers,
   }) async {
     throw UnsupportedError(
       'Web surumunde sunucu baglantisi kullanilamaz. '

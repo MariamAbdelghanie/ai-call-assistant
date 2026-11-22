@@ -18,6 +18,10 @@ class ApiClient {
 
   final HttpAdapter _http;
 
+  /// Sunucudaki API_TOKEN ile ayni olmalidir. Bos birakilirsa baslik
+  /// gonderilmez; sunucu da korumasizsa istekler yine calisir.
+  String token = '';
+
   Uri _uri(String baseUrl, String path) {
     final normalized = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     final withScheme =
@@ -30,7 +34,12 @@ class ApiClient {
     String method = 'GET',
     Map<String, dynamic>? body,
   }) =>
-      _http.send(uri, method: method, body: body);
+      _http.send(
+        uri,
+        method: method,
+        body: body,
+        headers: token.isEmpty ? null : {'X-API-Token': token},
+      );
 
   Future<List<CallSummary>> fetchCalls(String baseUrl) async {
     final text = await _send(_uri(baseUrl, '/logs'));

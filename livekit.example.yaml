@@ -1,0 +1,15 @@
+port: 7880
+bind_addresses:
+  - ""
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: false
+  node_ip: 127.0.0.1   # lan_bridge.py calisma aninda gunceller
+redis:
+  address: redis:6379
+keys:
+  # python -c "import secrets; print(secrets.token_urlsafe(32))"
+  YOUR_LIVEKIT_API_KEY: YOUR_LIVEKIT_API_SECRET
+logging:
+  level: info

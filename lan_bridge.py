@@ -1,10 +1,15 @@
 import asyncio
 import json
+import os
 import re
 import socket
 import subprocess
+
+from dotenv import load_dotenv
 from pathlib import Path
 from setup_sip import setup_sip_inbound
+
+load_dotenv()
 
 IVR_SIGNAL_FILE = Path(__file__).parent / "ivr_signal.json"
 
@@ -72,9 +77,11 @@ def ensure_sip_and_livekit_ips(lan_ip: str, wsl_ip: str) -> None:
 
     if not env_out.startswith("true |") or f"nat_1_to_1_ip: {lan_ip}" not in env_out:
         print(f"[Bridge] Starting livekit-sip container for Wi-Fi IP: {lan_ip}", flush=True)
+        lk_key = os.getenv("LIVEKIT_API_KEY", "devkey")
+        lk_secret = os.getenv("LIVEKIT_API_SECRET", "secret")
         sip_cfg = (
-            "api_key: devkey\n"
-            "api_secret: secret\n"
+            f"api_key: {lk_key}\n"
+            f"api_secret: {lk_secret}\n"
             "ws_url: ws://livekit:7880\n"
             "redis:\n"
             "  address: redis:6379\n"

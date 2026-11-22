@@ -25,8 +25,12 @@ class AppState extends ChangeNotifier {
   // yerine ornek veri gosterilmesi, silinmis kayitlarin geri geldigi ve yeni
   // kayitlarin kayboldugu izlenimini veriyordu.
   static const _kCache = 'calls_cache';
+  static const _kToken = 'api_token';
 
   String serverUrl = '';
+
+  /// Sunucudaki API_TOKEN ile ayni olmalidir.
+  String apiToken = '';
   Locale locale = const Locale('tr');
   // Tasarim koyu zemin icin kurgulandi; acik tema yine ayarlardan secilebilir.
   ThemeMode themeMode = ThemeMode.dark;
@@ -53,6 +57,8 @@ class AppState extends ChangeNotifier {
   Future<void> load() async {
     _prefs = await SharedPreferences.getInstance();
     serverUrl = _prefs?.getString(_kServer) ?? '';
+    apiToken = _prefs?.getString(_kToken) ?? '';
+    _api.token = apiToken;
     final code = _prefs?.getString(_kLocale);
     if (code != null && code.isNotEmpty) locale = Locale(code);
     _hiddenIds = (_prefs?.getStringList(_kHidden) ?? const <String>[]).toSet();
@@ -89,6 +95,14 @@ class AppState extends ChangeNotifier {
   Future<void> setServerUrl(String value) async {
     serverUrl = value.trim();
     await _prefs?.setString(_kServer, serverUrl);
+    notifyListeners();
+    await refresh();
+  }
+
+  Future<void> setApiToken(String value) async {
+    apiToken = value.trim();
+    _api.token = apiToken;
+    await _prefs?.setString(_kToken, apiToken);
     notifyListeners();
     await refresh();
   }

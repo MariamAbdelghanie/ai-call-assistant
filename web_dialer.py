@@ -327,6 +327,33 @@ main{max-width:1080px;margin:0 auto;padding:24px 20px 48px}
 <div id="audioContainer" hidden></div>
 
 <script>
+// --- API belirteci -------------------------------------------------------
+// Sunucu korumali uc noktalar icin bir belirtec bekliyor. Belirtec bir kez
+// sorulur ve tarayicida saklanir; her istege basligi olarak eklenir.
+function apiToken(force) {
+  let tok = localStorage.getItem('api_token') || '';
+  if (!tok || force) {
+    tok = (window.prompt('Sunucu belirteci (.env icindeki API_TOKEN):', tok) || '').trim();
+    if (tok) localStorage.setItem('api_token', tok);
+  }
+  return tok;
+}
+
+async function apiFetch(url, options) {
+  const opts = Object.assign({}, options || {});
+  opts.headers = Object.assign({}, opts.headers || {});
+  const tok = apiToken(false);
+  if (tok) opts.headers['X-API-Token'] = tok;
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    // Belirtec yanlis: bir kez daha sor ve tekrar dene.
+    apiToken(true);
+    opts.headers['X-API-Token'] = localStorage.getItem('api_token') || '';
+    return fetch(url, opts);
+  }
+  return res;
+}
+
 const LANG_LABEL = { tr: 'Türkçe', ar: 'العربية', en: 'English' };
 let room = null, timerInt = null, seconds = 0, muted = false;
 let allLogs = [], filter = 'all';
@@ -368,7 +395,7 @@ async function startCall(){
   try{
     setStatus(false, 'Bağlanıyor…');
     document.getElementById('headline').innerText = 'Bağlanıyor…';
-    const data = await (await fetch('/token')).json();
+    const data = await (await apiFetch('/token')).json();
     room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
 
     room.on(LivekitClient.RoomEvent.TrackSubscribed, track => {
@@ -449,7 +476,7 @@ document.getElementById('filters').addEventListener('click', e => {
 });
 
 async function loadLogs(){
-  try{ allLogs = await (await fetch('/logs')).json(); }catch(e){ allLogs = []; }
+  try{ allLogs = await (await apiFetch('/logs')).json(); }catch(e){ allLogs = []; }
   renderLogs();
 }
 
@@ -493,12 +520,12 @@ function renderLogs(){
 }
 
 async function markReturned(id, val){
-  await fetch('/logs/returned', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({call_id:id, called_back:val})});
+  await apiFetch('/logs/returned', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({call_id:id, called_back:val})});
   loadLogs();
 }
 async function deleteLog(id){
   if (!confirm('Bu kayıt silinsin mi?')) return;
-  await fetch('/logs/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({call_id:id})});
+  await apiFetch('/logs/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({call_id:id})});
   loadLogs();
 }
 
@@ -532,7 +559,7 @@ document.getElementById('presets').addEventListener('click', e => {
 ['cfgStt','cfgLlm','cfgTts'].forEach(id => document.getElementById(id).addEventListener('change', markPreset));
 async function showActiveConfig(){
   try{
-    const c = await (await fetch('/api/config')).json();
+    const c = await (await apiFetch('/api/config')).json();
     document.getElementById('cfgLine').innerText = c.architecture === 'realtime'
       ? `Realtime · Gemini Live ${c.realtime_model || '(varsayılan)'} · ${c.realtime_voice}`
       : `Cascade · ${c.stt_model} · ${c.llm_model} · ${c.tts_voice}`;
@@ -540,7 +567,7 @@ async function showActiveConfig(){
 }
 async function openSettings(){
   try{
-    const c = await (await fetch('/api/config')).json();
+    const c = await (await apiFetch('/api/config')).json();
     document.getElementById('cfgStt').value = c.stt_model;
     document.getElementById('cfgLlm').value = c.llm_model;
     document.getElementById('cfgTts').value = c.tts_voice;
@@ -569,7 +596,7 @@ async function saveConfig(){
     work_start: document.getElementById('cfgWorkStart').value,
     work_end: document.getElementById('cfgWorkEnd').value,
   };
-  await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  await apiFetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   document.getElementById('cfgStatus').innerText = 'Kaydedildi ✓';
   showActiveConfig();
   setTimeout(closeSettings, 700);
@@ -700,6 +727,41 @@ async def logs_endpoint(request: web.Request):
     return web.json_response([])
 
 
+API_TOKEN = os.getenv("API_TOKEN", "").strip()
+
+# Belirtec gerektiren uc noktalar. Bunlar olmadan ayni agdaki herkes
+# cagri ozetlerini okuyabiliyor, silebiliyor ve ayarlari degistirebiliyordu.
+PROTECTED_PREFIXES = ("/logs", "/api/config", "/token")
+
+
+def _token_of(request: web.Request) -> str:
+    header = request.headers.get("X-API-Token", "").strip()
+    if header:
+        return header
+    auth = request.headers.get("Authorization", "").strip()
+    if auth.lower().startswith("bearer "):
+        return auth[7:].strip()
+    return request.query.get("token", "").strip()
+
+
+@web.middleware
+async def auth_middleware(request: web.Request, handler):
+    """Korunan uc noktalara yalnizca dogru belirtecle erisilir.
+
+    API_TOKEN bos birakilirsa koruma devre disi kalir; bu yalnizca yerel
+    gelistirme icindir ve acilista uyari basilir.
+    """
+    if not API_TOKEN or request.method == "OPTIONS":
+        return await handler(request)
+    if request.path.startswith(PROTECTED_PREFIXES):
+        if _token_of(request) != API_TOKEN:
+            return web.json_response(
+                {"error": "unauthorized"},
+                status=401,
+            )
+    return await handler(request)
+
+
 @web.middleware
 async def cors_middleware(request: web.Request, handler):
     """Tarayicidan (Flutter web) yapilan isteklere izin verir.
@@ -713,11 +775,11 @@ async def cors_middleware(request: web.Request, handler):
         response = await handler(request)
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-API-Token, Authorization"
     return response
 
 
-app = web.Application(middlewares=[cors_middleware])
+app = web.Application(middlewares=[cors_middleware, auth_middleware])
 app.router.add_get("/", index)
 app.router.add_get("/ozetler", index)
 app.router.add_get("/token", token_endpoint)

@@ -6,6 +6,8 @@ __pycache__/
 
 # GİZLİ: anahtarlar ve servis hesapları (asla yüklenmez)
 .env
+# Gercek LiveKit anahtarlarini icerir; ornegi livekit.example.yaml
+livekit.yaml
 firebase-credentials.json
 credentials.json
 *firebase-adminsdk*.json

@@ -15,12 +15,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _server;
+  late final TextEditingController _token;
   bool _initialised = false;
 
   @override
   void initState() {
     super.initState();
     _server = TextEditingController();
+    _token = TextEditingController();
   }
 
   @override
@@ -28,6 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.didChangeDependencies();
     if (!_initialised) {
       _server.text = AppScope.of(context).serverUrl;
+      _token.text = AppScope.of(context).apiToken;
       _initialised = true;
     }
   }
@@ -35,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _server.dispose();
+    _token.dispose();
     super.dispose();
   }
 
@@ -91,11 +95,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Sunucudaki API_TOKEN ile ayni olmali. Bos birakilirsa
+              // sunucu korumasizsa yine calisir.
+              TextField(
+                controller: _token,
+                autocorrect: false,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: strings.t('apiToken'),
+                  helperText: strings.t('apiTokenHint'),
+                  helperMaxLines: 2,
+                ),
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: () async {
                     final messenger = ScaffoldMessenger.of(context);
+                    await state.setApiToken(_token.text);
                     await state.setServerUrl(_server.text);
                     messenger.showSnackBar(
                       SnackBar(content: Text(strings.t('saved'))),

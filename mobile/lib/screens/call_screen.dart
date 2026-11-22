@@ -190,7 +190,12 @@ class _CallScreenState extends State<CallScreen> {
                       label: strings.t('callStart'),
                       onTap: _call.isBusy
                           ? null
-                          : () => _call.start(state.serverUrl),
+                          : () {
+                              // Belirtec cagri aninda ayarlardan alinir;
+                              // kullanici ayarda degistirirse hemen gecerli olur.
+                              _call.apiToken = state.apiToken;
+                              _call.start(state.serverUrl);
+                            },
                     ),
                 ],
               ),

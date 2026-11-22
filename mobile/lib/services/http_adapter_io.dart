@@ -12,11 +12,13 @@ class HttpAdapter {
     Uri uri, {
     String method = 'GET',
     Map<String, dynamic>? body,
+    Map<String, String>? headers,
   }) async {
     final request = method == 'GET'
         ? await _client.getUrl(uri).timeout(timeout)
         : await _client.postUrl(uri).timeout(timeout);
     request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+    headers?.forEach(request.headers.set);
     if (body != null) {
       request.headers.contentType = ContentType.json;
       request.write(jsonEncode(body));

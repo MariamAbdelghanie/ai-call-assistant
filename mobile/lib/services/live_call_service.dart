@@ -21,6 +21,10 @@ class LiveCallService extends ChangeNotifier {
 
   final HttpAdapter _http;
 
+  /// Sunucudaki API_TOKEN. /token ucu da korumali oldugu icin gereklidir.
+  /// Istek icindeki yerel "token" degiskeni LiveKit belirtecidir, bu degil.
+  String apiToken = '';
+
   lk.Room? _room;
   lk.EventsListener<lk.RoomEvent>? _listener;
   Timer? _ticker;
@@ -72,7 +76,10 @@ class LiveCallService extends ChangeNotifier {
         return;
       }
 
-      final raw = await _http.send(_uri(baseUrl, '/token'));
+      final raw = await _http.send(
+        _uri(baseUrl, '/token'),
+        headers: apiToken.isEmpty ? null : {'X-API-Token': apiToken},
+      );
       final data = jsonDecode(raw);
       if (data is! Map<String, dynamic>) {
         throw Exception('token yaniti beklenen bicimde degil');

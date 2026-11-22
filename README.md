@@ -120,6 +120,106 @@ takvim ve veritabanı tarafında değişiklik gerekmez.
 
 ---
 
+## Güvenlik
+
+Bu projede uygulanmış olan korumalar:
+
+**API belirteci** — `/logs`, `/api/config` ve `/token` uç noktaları `.env`
+içindeki `API_TOKEN` olmadan yanıt vermez. Belirteç, mobil uygulamada
+**Ayarlar → Sunucu belirteci** alanından, web panelinde ise ilk açılışta bir
+kez girilir. Yanlış veya eksik belirteçte sunucu `401` döner.
+
+> Bu koruma eklenmeden önce aynı ağdaki herkes çağrı özetlerini okuyabiliyor,
+> silebiliyor ve asistanın ayarlarını değiştirebiliyordu.
+
+**LiveKit anahtarları** — Varsayılan `devkey` / `secret` çifti herkesin
+bildiği örnek değerlerdir; bunlarla herhangi biri geçerli bir token üretip
+görüşmelere katılabilir. Projede rastgele üretilmiş anahtarlar kullanılır ve
+`.env`, `livekit.yaml` ile `lan_bridge.py` aynı değerleri okur.
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+`livekit.yaml` gerçek anahtarları içerdiği için depoya yüklenmez. Depoyu
+klonladıktan sonra örnek dosyayı kopyalayıp kendi anahtarlarınızı yazın:
+
+```bash
+copy livekit.example.yaml livekit.yaml    # Windows
+# cp livekit.example.yaml livekit.yaml    # Linux / macOS
+```
+
+**Firestore kuralları** — Veritabanına tüm istemci erişimi kapalıdır:
+
+```
+match /{document=**} {
+  allow read, write: if false;
+}
+```
+
+Sunucu, Admin SDK (servis hesabı) ile bağlandığı için bu kuraldan etkilenmez.
+Mobil uygulama Firestore'a doğrudan bağlanmaz; verileri `web_dialer.py`
+üzerinden alır. Firebase'in kurulumda önerdiği test kuralı
+(`allow read, write: if true`) veritabanını herkese açar ve kullanılmamalıdır.
+
+**Sırlar depoya girmez** — `.env`, servis hesabı JSON dosyaları, çağrı
+kayıtları ve üretilen APK'lar `.gitignore` ile dışarıda tutulur. Depoda yalnızca
+değer içermeyen `.env.example` bulunur.
+
+**Asistan tarafındaki korumalar** — Randevu yalnızca arayanın açık onayıyla
+açılır; iptal için ad, soyad, tarih ve saatin dördü de doğrulanır; başka
+kişilerin randevu bilgileri paylaşılmaz; fiyat, adres ya da süre gibi
+konuşulmamış hiçbir bilgi uydurulmaz; çalıp kapanan veya isimsiz ve içeriksiz
+görüşmeler kayıt oluşturmaz.
+
+---
+
+## Yayına almadan önce yapılması gerekenler
+
+Proje şu anda **çalışan bir prototiptir**: tek bir bilgisayarda, yerel ağda
+çalışır. Gerçek kullanıcıların aradığı bir hizmete dönüşmesi için aşağıdakiler
+tamamlanmalıdır.
+
+### Zorunlu
+
+| Konu | Durum | Yapılacak |
+|---|---|---|
+| **Kimlik doğrulama** | Yok | Panelde kullanıcı girişi; şu an belirteci bilen herkes tüm kayıtları görür |
+| **HTTPS** | Yok | Sunucu `http://` üzerinden çalışıyor; sertifika ve alan adı gerekir |
+| **Barındırma** | Yok | Sunucu bir bilgisayarda; bulut sunucuya taşınmalı |
+| **Gizlilik politikası** | Yok | Yazılı metin, saklama süresi ve silme talebi akışı (aşağıya bakınız) |
+| **Veri saklama süresi** | Yok | Kayıtlar süresiz birikiyor; otomatik silme eklenmeli |
+| **İstek sınırı** | Yok | Uç noktalarda hız sınırı yok |
+| **Yedekleme** | Yok | Firestore ve yapılandırma için düzenli yedek |
+
+### Gizlilik ve KVKK
+
+Asistan **telefon görüşmelerini kaydedip metne çeviriyor**; bu, üçüncü
+kişilere ait kişisel veridir. Türkiye'de KVKK, Avrupa'da GDPR kapsamına girer.
+
+Mevcut durum: asistan karşılama cümlesinde *"Görüşmemiz kaydedilmektedir"*
+diyerek **bilgilendirme yapıyor**. Bu doğru bir adımdır ancak tek başına
+yeterli değildir.
+
+Eksikler:
+
+1. **Yazılı politika** — hangi verinin, hangi amaçla, nerede, ne kadar süreyle
+   tutulduğunu ve hangi üçüncü taraflara (Google Gemini, Google Takvim,
+   Firebase) aktarıldığını açıklayan bir metin.
+2. **Saklama süresi** — belirlenmiş bir süre (örneğin 90 gün) ve bu sürenin
+   sonunda kayıtları otomatik silen bir görev.
+3. **Silme talebi** — arayanın kendi kaydının silinmesini isteyebilmesi ve bu
+   talebin işletilebilmesi.
+
+Bu üçü tamamlanmadan hizmet gerçek çağrı almamalıdır.
+
+### Önerilen
+
+Yapılandırılmış ve merkezî günlük kaydı, hata ve kesinti bildirimleri,
+yetki seviyeleri (okuma / yönetim) ve bildirim e-postaları.
+
+---
+
 ## Kurulum
 
 ### Gereksinimler
@@ -162,6 +262,8 @@ Gerekli anahtarlar ve nereden alınacakları:
 | `GOOGLE_CALENDAR_ID` | Takvimini kullanacağınız Google hesabının e-postası |
 | `NTFY_TOPIC` | Tahmin edilemeyecek rastgele bir isim seçin |
 | `ELEVENLABS_API_KEY` | https://elevenlabs.io (isteğe bağlı) |
+| `API_TOKEN` | Rastgele üretin; panel ve mobil uygulama bu değerle bağlanır |
+| `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | Rastgele üretin; `livekit.yaml` ile aynı olmalı |
 
 > Bu depoda hiçbir gerçek anahtar bulunmaz. `.env`, servis hesabı JSON
 > dosyaları ve çağrı kayıtları `.gitignore` ile dışarıda tutulur.
@@ -175,6 +277,14 @@ Firebase Console'da bir proje açıp **Firestore**'u etkinleştirin, servis
 hesabı anahtarını `firebase-credentials.json` adıyla proje köküne koyun.
 
 ### 5. LiveKit
+
+```bash
+copy livekit.example.yaml livekit.yaml    # Windows
+# cp livekit.example.yaml livekit.yaml    # Linux / macOS
+```
+
+`livekit.yaml` içindeki `keys` bölümünü `.env` dosyasındaki
+`LIVEKIT_API_KEY` ve `LIVEKIT_API_SECRET` ile aynı yapın, sonra:
 
 ```bash
 docker compose up -d
@@ -208,8 +318,11 @@ yerel IP adresini yazın:
 http://192.168.1.x:8080
 ```
 
-(`ipconfig` veya `ifconfig` ile öğrenebilirsiniz. Telefon ve bilgisayar aynı
-Wi-Fi ağında olmalı. `Bağlandı` yazısını görmelisiniz.)
+Hemen altındaki **Sunucu belirteci** alanına `.env` dosyasındaki `API_TOKEN`
+değerini yazın; bu alan boş bırakılırsa sunucu `401` döner.
+
+(IP adresini `ipconfig` veya `ifconfig` ile öğrenebilirsiniz. Telefon ve
+bilgisayar aynı Wi-Fi ağında olmalı. `Bağlandı` yazısını görmelisiniz.)
 
 APK üretmek için:
 
@@ -258,5 +371,10 @@ arası iletişimi engeller; böyle bir ağda yerel bağlantı çalışmaz.
 
 ## Durum
 
-Asistan ve mobil panel çalışır durumda. Sıradaki adım gerçek bir bulut
-numarasının bağlanmasıdır.
+Asistan ve mobil panel çalışır durumda ve proje **gerçek bir bulut numarasına
+bağlanmaya hazırdır**; akış kod değişikliği gerektirmeden çalışır, yalnızca SIP
+yapılandırması eklenir (bkz. *Gerçek bir numaraya bağlama*).
+
+Numara bağlanmadan önce *Yayına almadan önce yapılması gerekenler* bölümündeki
+zorunlu maddelerin, özellikle gizlilik politikası ve veri saklama süresinin
+tamamlanması gerekir.
