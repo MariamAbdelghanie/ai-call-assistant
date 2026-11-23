@@ -56,3 +56,6 @@ check*.ps1
 
 # Ekran goruntuleri disinda uretilen ciktilar
 *.apk
+
+rabia*.txt
+scr.ps1

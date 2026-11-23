@@ -83,6 +83,14 @@ NO_CONSENT_TEXT = {
            "The caller did not consent to recording; only a callback request was taken."),
 }
 
+# Arayan kapatmadan once notu dinleyip onaylamadiysa kayit silinmez, ancak
+# "teyitsiz" olarak isaretlenir; sahibi bilginin dogrulanmadigini gorur.
+UNCONFIRMED_PREFIX = {
+    "tr": "[Teyitsiz]",
+    "ar": "[غير مؤكد]",
+    "en": "[Unconfirmed]",
+}
+
 APPOINTMENT_TEXT = {
     "tr": "{name} için {when} saatine '{reason}' randevusu oluşturuldu.",
     "ar": "تم حجز موعد لـ {name} في {when} بخصوص: {reason}.",
@@ -155,8 +163,13 @@ def to_brain_language(code: str) -> Language:
 
 
 MISSING_FIELD_HINTS = {
+    "caller_purpose": "arama nedenini",
     "message": "arayanin mesajini",
     "callback_requested": "geri aranmak isteyip istemedigini",
+    "callback_number": "geri aranacak telefon numarasini",
+    "callback_request_for_no_consent": (
+        "kayit izni yoksa geri aranmak isteyip istemedigini"
+    ),
     "confirmed": "bilgileri tekrar edip onayini",
 }
 
@@ -297,8 +310,18 @@ def build_agent_instructions(lang: str, live_schedule: str, active_cfg: dict, gr
         "`save_call_note` aracını caller_confirmed=True ile çağır. Araç HATA dönerse eksiği sor ve tekrar dene. "
         "Özet metnini SAHİP ÖZETİ DİLİNDE yaz. İsimleri, telefon numaralarını, tarihleri ve saatleri değiştirme; "
         "olmayan bilgi ekleme. Kayıt izni vermezse `recording_consent=False` gönder.\n"
+        "3b. ONAY OLMADAN KAYIT YOK: `caller_confirmed=True` SADECE arayana bilgileri tekrar edip net bir 'evet' aldıktan sonra gönderilir. "
+        "Kendi tahminini onaylanmış gibi kaydetme. Arayan onay vermeden konuyu kapatırsa kayıt 'teyitsiz' olarak işaretlenir, "
+        "bu yüzden onayı almak her zaman daha iyidir.\n"
+        "3c. KAYIT İZNİ: Arayan görüşmenin kaydedilmesini veya not alınmasını istemediğini söylerse `recording_consent=False` gönder. "
+        "Bu durumda mesaj ve arama nedeni SAKLANMAZ; bu yüzden en azından geri aranmak isteyip istemediğini mutlaka öğren "
+        "(`callback_requested`), yoksa arama hiçbir iz bırakmaz.\n"
+        "3d. ARAMA NEDENİ ZORUNLU: Kayıt izni varsa `caller_purpose` alanı boş gönderilemez. "
+        "Arayan konusunu söylemediyse 'hangi konuda aradığınızı not edeyim?' diye kısaca sor.\n"
         "4. BİLGİLERİ TEKRAR SORMA: Arayan adını, konusunu veya saati bir kez söylediyse bunu hatırla ve tekrar sorma. Ad yalnızca hiç söylenmediyse sorulur.\n"
-        "5. TELEFON NUMARASI SORMA: Arayanın numarası arama sırasında sistem tarafından otomatik alınır; numara isteme.\n"
+        "5. TELEFON NUMARASI: Normal telefon aramalarında numara sistem tarafından otomatik alınır; numara isteme. "
+        "ANCAK arayan geri aranmak istiyorsa ve araç `geri aranacak telefon numarasini` eksik diye HATA dönerse "
+        "(internet/web üzerinden gelen aramalarda numara görünmez), numarasını bir kez nazikçe sor ve `callback_number` alanına yaz.\n"
         "6. RANDEVUYU SEN BAŞLATMA: Randevuyu YALNIZCA arayan açıkça isterse aç. Arayan randevu istemediyse randevu önerme ve oluşturma; mesaj al. Mevcut bir toplantının saatini değiştirme talebi de bir MESAJDIR (telefon sahibi karar verir).\n"
         "6b. RANDEVU ÜÇ ADIMDIR: (1) ad ve SOYADI öğren, (2) tarihi ve saati netleştir, (3) '<Ad Soyad>, <gün> <saat> için randevu oluşturuyorum, onaylıyor musunuz?' diye SOR ve net bir evet al. Ancak bundan sonra `book_calendar_appointment` aracını caller_confirmed=True ile çağır. Araç HATA dönerse eksik bilgiyi sor ve tekrar dene; 'BAŞARILI' görmeden randevu oluştu deme.\n"
         "7. RANDEVU İPTALİ: Önce KİM olduğunu öğren: ADINI VE SOYADINI sor. Sonra randevunun TARİHİNİ ve SAATİNİ sor. "
@@ -474,14 +497,15 @@ class TurkishCallAssistant(Agent):
             self.call_state["appointment_info"] = f"İPTAL EDİLDİ ({date_str} {time_hm})"
         return res
 
-    @function_tool(description="Arayanın SÖZLÜ ONAYINDAN sonra mesajı, arama nedenini, geri aranma isteğini ve acil durumu kaydeder. caller_purpose ve summary_tr sahibin dilinde yazılır. caller_confirmed yalnızca arayan bilgileri onayladıktan sonra True gönderilir.")
+    @function_tool(description="Arayanın SÖZLÜ ONAYINDAN sonra mesajı, arama nedenini, geri aranma isteğini ve acil durumu kaydeder. caller_purpose arayanın konuştuğu dilde, summary_tr sahibin dilinde yazılır. Kayıt izni yoksa recording_consent=False gönder; bu durumda içerik saklanmaz ve callback_requested zorunludur. caller_confirmed yalnızca arayan bilgileri tekrar dinleyip onayladıktan sonra True gönderilir.")
     async def save_call_note(
         self,
         context: RunContext,
         caller_name: str = "İsimsiz Arayan",
-        caller_purpose: str = "Mesaj Bırakma",
+        caller_purpose: str = "",
         summary_tr: str = "",
         callback_requested: bool = False,
+        callback_number: str = "",
         is_urgent: bool = False,
         recording_consent: bool = True,
         caller_confirmed: bool = False,
@@ -493,13 +517,21 @@ class TurkishCallAssistant(Agent):
         owner_lang = normalize_lang(self.active_cfg.get("owner_language"), DEFAULT_LANG)
 
         # agent_brain sozlesmesi: eksik veya teyitsiz kayit kabul edilmez.
+        consent_granted = bool(recording_consent)
+        known_number = str(self.call_state.get("caller_number") or "").strip()
+        # VoIP/Web aramalarinda numara gorunmez; geri arama isteniyorsa sorulur.
+        number_required = (not known_number) or known_number in ("VoIP / Web", "VoIP/Web")
         draft = CallMessage(
             call_id=str(self.call_state.get("call_id") or "cagri"),
             caller_language=to_brain_language(self.current_lang()),
             owner_language=to_brain_language(owner_lang),
-            message=(summary_tr or "").strip() or None,
+            caller_purpose=(caller_purpose or "").strip() if consent_granted else None,
+            message=(summary_tr or "").strip() if consent_granted else None,
             caller_name=(caller_name or "").strip() or None,
             callback_requested=bool(callback_requested),
+            callback_number=(callback_number or "").strip() or None,
+            callback_number_required=number_required,
+            recording_consent=consent_granted,
             confirmed=bool(caller_confirmed),
         )
         missing = draft.missing_required_fields()
@@ -535,7 +567,8 @@ class TurkishCallAssistant(Agent):
         self.call_state["caller_purpose"] = caller_purpose
         self.call_state["is_urgent"] = bool(is_urgent)
         self.call_state["callback_requested"] = bool(callback_requested)
-        self.call_state["recording_consent"] = bool(recording_consent)
+        self.call_state["callback_number"] = (callback_number or "").strip()
+        self.call_state["recording_consent"] = consent_granted
 
         await asyncio.to_thread(
             service_manager.save_call_summary,
@@ -550,6 +583,11 @@ class TurkishCallAssistant(Agent):
             caller_number=self.call_state.get("caller_number", "VoIP / Web"),
             lang=owner_lang,
         )
+        # Bu arac kaydi tamamladi; gorusme bittiginde otomatik ozet ayni cagriyi
+        # ikinci kez kaydetmemelidir. Isaret yalnizca kayit basariyla yazildiktan
+        # sonra atanir, boylece depolama hatasinda cagri kaydedilmis sayilmaz.
+        self.call_state["note_confirmed"] = True
+        self.call_state["final_summary_done"] = True
         return "Mesaj ve görüşme notu başarıyla kaydedildi."
 
 
@@ -619,6 +657,12 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
         call_state["final_summary_done"] = True
         print(f"[Auto Summary] Kayit olusturulmadi: {skip}", flush=True)
         return
+
+    # Arayan notu dinleyip onaylamadan kapattiysa kayit silinmez, fakat
+    # "teyitsiz" etiketiyle saklanir: sahibi bilgiyi dogrulamadan kullanmaz.
+    if not call_state.get("note_confirmed"):
+        call_state["note_unconfirmed"] = True
+        print("[Auto Summary] Arayan onayi alinmadi; kayit teyitsiz olarak isaretlendi", flush=True)
 
     call_state["final_summary_done"] = True
     caller_lang = normalize_lang(call_state.get("selected_lang"), DEFAULT_LANG)
@@ -710,6 +754,9 @@ async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict
         recording_consent = data.get("recording_consent", True)
         if recording_consent is False:
             caller_purpose, summary_tr = NO_CONSENT_TEXT[owner_lang]
+        elif call_state.get("note_unconfirmed"):
+            prefix = UNCONFIRMED_PREFIX.get(owner_lang, UNCONFIRMED_PREFIX["tr"])
+            caller_purpose = f"{prefix} {caller_purpose}".strip()
 
         cal_iso = (data.get("calendar_event_iso") or "").strip()
         cal_title = (data.get("calendar_event_title") or caller_purpose).strip()
@@ -827,7 +874,10 @@ async def entrypoint(ctx: JobContext):
         # Geri arama yalnizca arayan istediginde isaretlenir; varsayilan olarak
         # true birakilinca her kayit "geri donus bekliyor" gorunuyordu.
         "callback_requested": False,
+        "callback_number": "",
         "recording_consent": True,
+        "note_confirmed": False,
+        "note_unconfirmed": False,
         "owner_language": normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG),
         "selected_lang": "auto",
         "last_detected_iso": DEFAULT_LANG,

@@ -31,8 +31,10 @@ yazılmış **mobil panel**.
 Arapçada lehçeleri (Mısır, Şam, Körfez) anlar, yanıtı Modern Standart
 Arapça verir.
 
-**Mesaj alma** — Mesajı alır, geri aranmak isteyip istemediğini sorar,
-bilgileri tekrar edip onay aldıktan sonra kaydeder.
+**Mesaj alma** — Arama nedenini ve mesajı alır, geri aranmak isteyip
+istemediğini sorar, bilgileri tekrar edip onay aldıktan sonra kaydeder.
+Numarası görünmeyen (web / VoIP) aramalarda geri arama isteniyorsa numarayı
+bir kez sorar.
 
 **Randevu** — Ad ve soyadı öğrenir, tarih ve saati netleştirir, müsaitliği
 **Google Takvim**'den kontrol eder, arayandan açık onay aldıktan sonra
@@ -52,6 +54,20 @@ söyler.
 
 **Gereksiz kayıt tutmaz** — Çalıp kapanan, sessiz kalan veya isimsiz ve
 içeriksiz görüşmeler için kayıt oluşturulmaz.
+
+**Kayıt izni** — Arayan görüşmenin kaydedilmesini istemediğini söylerse
+mesaj ve arama nedeni **saklanmaz**; yalnızca adı ve geri arama talebi
+tutulur. Bu durumda geri arama sorusu zorunludur, aksi halde arama hiçbir
+iz bırakmadan kapanır.
+
+**Onaysız kayıt olmaz** — Kayıt, arayan bilgileri tekrar dinleyip açıkça
+onayladıktan sonra oluşturulur. Arayan onay vermeden kapatırsa kayıt silinmez
+ama özet alanı `[Teyitsiz]` etiketiyle işaretlenir, böylece telefon sahibi
+doğrulanmamış bir bilgiyi kesin bilgi gibi kullanmaz.
+
+**Aynı çağrı iki kez kaydedilmez** — Görüşme sırasında kayıt aracı başarıyla
+çalıştıysa kapanıştaki otomatik özet devreye girmez; her çağrı için tek kayıt
+oluşur.
 
 **Bilgi uydurmaz** — Fiyat, ücret, adres veya süre gibi konuşulmamış hiçbir
 ayrıntıyı kendiliğinden söylemez.
@@ -212,6 +228,12 @@ Eksikler:
    talebin işletilebilmesi.
 
 Bu üçü tamamlanmadan hizmet gerçek çağrı almamalıdır.
+
+Tamamlanan madde: **kayıt reddi hakkı**. Arayan kaydedilmek istemediğini
+söylediğinde görüşme içeriği artık hiç saklanmıyor (bkz. *Asistan ne
+yapıyor → Kayıt izni*); yalnızca geri arama talebi tutuluyor. Böylece
+bilgilendirme tek yönlü bir duyuru olmaktan çıkıp arayanın gerçekten
+reddedebileceği bir seçeneğe dönüşüyor.
 
 ### Önerilen
 
