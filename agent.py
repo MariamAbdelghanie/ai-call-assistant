@@ -155,8 +155,11 @@ def to_brain_language(code: str) -> Language:
 
 
 MISSING_FIELD_HINTS = {
+    "caller_purpose": "arama nedenini",
     "message": "arayanin mesajini",
     "callback_requested": "geri aranmak isteyip istemedigini",
+    "callback_number": "geri aranacak numarayi",
+    "callback_request_for_no_consent": "kayıt izni yoksa geri arama isteyip istemedigini",
     "confirmed": "bilgileri tekrar edip onayini",
 }
 
@@ -479,7 +482,7 @@ class TurkishCallAssistant(Agent):
         self,
         context: RunContext,
         caller_name: str = "İsimsiz Arayan",
-        caller_purpose: str = "Mesaj Bırakma",
+        caller_purpose: str = "",
         summary_tr: str = "",
         callback_requested: bool = False,
         is_urgent: bool = False,
@@ -493,13 +496,16 @@ class TurkishCallAssistant(Agent):
         owner_lang = normalize_lang(self.active_cfg.get("owner_language"), DEFAULT_LANG)
 
         # agent_brain sozlesmesi: eksik veya teyitsiz kayit kabul edilmez.
+        consent_granted = bool(recording_consent)
         draft = CallMessage(
             call_id=str(self.call_state.get("call_id") or "cagri"),
             caller_language=to_brain_language(self.current_lang()),
             owner_language=to_brain_language(owner_lang),
-            message=(summary_tr or "").strip() or None,
+            caller_purpose=(caller_purpose or "").strip() if consent_granted else None,
+            message=(summary_tr or "").strip() if consent_granted else None,
             caller_name=(caller_name or "").strip() or None,
             callback_requested=bool(callback_requested),
+            recording_consent=consent_granted,
             confirmed=bool(caller_confirmed),
         )
         missing = draft.missing_required_fields()
@@ -535,7 +541,7 @@ class TurkishCallAssistant(Agent):
         self.call_state["caller_purpose"] = caller_purpose
         self.call_state["is_urgent"] = bool(is_urgent)
         self.call_state["callback_requested"] = bool(callback_requested)
-        self.call_state["recording_consent"] = bool(recording_consent)
+        self.call_state["recording_consent"] = consent_granted
 
         await asyncio.to_thread(
             service_manager.save_call_summary,
@@ -550,6 +556,11 @@ class TurkishCallAssistant(Agent):
             caller_number=self.call_state.get("caller_number", "VoIP / Web"),
             lang=owner_lang,
         )
+        # Bu araç kaydı tamamladı; görüşme bittiğinde otomatik özet aynı çağrıyı
+        # ikinci kez kaydetmemelidir. Bu işaret yalnızca kalıcı kayıt başarılıysa
+        # atanır; depolama hatasında çağrı durumu yanlışlıkla tamamlanmış sayılmaz.
+        self.call_state["note_confirmed"] = True
+        self.call_state["final_summary_done"] = True
         return "Mesaj ve görüşme notu başarıyla kaydedildi."
 
 
@@ -612,6 +623,14 @@ def should_skip_log(transcript_lines: list[str], call_state: dict) -> str:
 
 async def auto_summarize_on_hangup(transcript_lines: list[str], call_state: dict):
     if call_state.get("final_summary_done") or len(transcript_lines) < 2:
+        return
+
+    # Görüşme metninden tahmin yürütüp kayıt oluşturmak yerine, yalnızca arayanın
+    # dinleyip onayladığı notu saklarız. Bu hem yanlış özetleri hem de izinsiz
+    # kayıtları önler.
+    if not call_state.get("note_confirmed"):
+        call_state["final_summary_done"] = True
+        print("[Auto Summary] Kayit olusturulmadi: arayan onayi alinmadi", flush=True)
         return
 
     skip = should_skip_log(transcript_lines, call_state)
@@ -828,6 +847,7 @@ async def entrypoint(ctx: JobContext):
         # true birakilinca her kayit "geri donus bekliyor" gorunuyordu.
         "callback_requested": False,
         "recording_consent": True,
+        "note_confirmed": False,
         "owner_language": normalize_lang(active_cfg.get("owner_language"), DEFAULT_LANG),
         "selected_lang": "auto",
         "last_detected_iso": DEFAULT_LANG,
