@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
 import '../main.dart';
+import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_header.dart';
-import '../widgets/soft_icon.dart';
+import '../widgets/settings_row.dart';
 
+/// Ayarlar ekrani.
+///
+/// Eskiden butun alanlar (sunucu adresi, belirtec, ses secimi, tema, dil)
+/// ayni anda aciktı; sayfa uzun bir form yiginina donusuyordu. Simdi her
+/// ayar tek satir: solda ikon, ortada adi, sagda su anki degeri. Degistirmek
+/// icin satira dokunuluyor ve secenekler alttan acilan yaprakta cikiyor.
+/// Boylece sayfa bir bakista okunuyor, derinlik istege bagli oluyor.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -15,289 +23,138 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late final TextEditingController _server;
-  late final TextEditingController _token;
-  bool _initialised = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _server = TextEditingController();
-    _token = TextEditingController();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialised) {
-      _server.text = AppScope.of(context).serverUrl;
-      _token.text = AppScope.of(context).apiToken;
-      _initialised = true;
-    }
-  }
-
-  @override
-  void dispose() {
-    _server.dispose();
-    _token.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final strings = AppStrings.of(context);
-    final theme = Theme.of(context);
-
+    final tokens = context.tokens;
     final auth = AuthScope.of(context);
     final user = auth.user;
+
+    final languageNames = <String, String>{
+      'tr': 'Türkçe',
+      'ar': 'العربية',
+      'en': 'English',
+    };
+    final themeNames = <ThemeMode, String>{
+      ThemeMode.system: strings.t('themeSystem'),
+      ThemeMode.light: strings.t('themeLight'),
+      ThemeMode.dark: strings.t('themeDark'),
+    };
 
     return AppHeaderScaffold(
       title: strings.t('settingsTitle'),
       subtitle: strings.t('settingsSubtitle'),
-      headerChild: user == null
-          ? null
-          : HeaderProfile(
+      overlap: 34,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
+        children: [
+          // Hesap karti: turuncu bandin uzerine binen beyaz kart. Bandin
+          // icinde durdugunda ad ve e-posta zeminle karisiyordu.
+          if (user != null) ...[
+            _ProfileCard(
               name: auth.displayName,
               email: user.email ?? '',
               photoUrl: auth.photoUrl,
             ),
-      overlap: 22,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
-        children: [
-          _Group(
+            const SizedBox(height: 18),
+          ],
+
+          SettingsGroup(
             title: strings.t('serverSection'),
-            children: [
-              TextField(
-                controller: _server,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: strings.t('serverUrl'),
-                  hintText: strings.t('serverHint'),
-                  prefixIcon: const SoftIcon(AppIcon.layers),
-                ),
+            rows: [
+              SettingsRow(
+                icon: Icons.dns_outlined,
+                label: strings.t('serverUrl'),
+                value: state.serverUrl,
+                onTap: () => _openServerSheet(context, state),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  SoftIcon(
-                    state.isDemo ? AppIcon.cloudOff : AppIcon.cloud,
-                    size: 18,
-                    color: state.isDemo
-                        ? context.tokens.pending
-                        : context.tokens.success,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      state.isDemo
-                          ? strings.t('offlineDemo')
-                          : strings.t('connected'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: state.isDemo
-                            ? context.tokens.pending
-                            : context.tokens.success,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Sunucudaki API_TOKEN ile ayni olmali. Bos birakilirsa
-              // sunucu korumasizsa yine calisir.
-              TextField(
-                controller: _token,
-                autocorrect: false,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: strings.t('apiToken'),
-                  helperText: strings.t('apiTokenHint'),
-                  helperMaxLines: 2,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    await state.setApiToken(_token.text);
-                    await state.setServerUrl(_server.text);
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(strings.t('saved'))),
-                    );
-                  },
-                  icon: const SoftIcon(AppIcon.link, size: 18),
-                  label: Text(strings.t('serverSave')),
-                ),
-              ),
-            ],
-          ),
-          _Group(
-            title: strings.t('assistantSection'),
-            children: [
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                value: state.config.enabled,
-                title: Text(strings.t('assistantEnabled')),
-                onChanged: (value) async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final ok = await state.saveConfig(
-                    state.config.copyWith(enabled: value),
-                  );
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        strings.t(ok ? 'saved' : 'loadError'),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const Divider(height: 24),
-              Text(strings.t('voiceTitle'), style: context.text.labelLarge),
-              const SizedBox(height: 4),
-              Text(
-                strings.t('voiceHint'),
-                style: context.text.bodySmall
-                    ?.copyWith(color: context.tokens.muted),
-              ),
-              const SizedBox(height: 10),
-              // Gemini Live'in hazir sesleri. Biri kotaya takilirsa
-              // digerine gecmek icin buradan degistirilir.
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final voice in const [
-                    'Kore',
-                    'Puck',
-                    'Charon',
-                    'Fenrir'
-                  ])
-                    ChoiceChip(
-                      label: Text(voice),
-                      selected: state.config.realtimeVoice == voice,
-                      onSelected: (_) async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        final ok = await state.saveConfig(
-                          state.config.copyWith(
-                            architecture: 'realtime',
-                            realtimeVoice: voice,
-                          ),
-                        );
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              strings.t(ok ? 'saved' : 'loadError'),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _InfoRow(
-                icon: AppIcon.clock,
-                label: strings.t('workHours'),
-                value: '${state.config.workStart} - ${state.config.workEnd}',
-              ),
-              _InfoRow(
-                icon: AppIcon.wave,
-                label: strings.t('voice'),
-                value: state.config.activeVoice,
-              ),
-            ],
-          ),
-          _Group(
-            title: strings.t('appearance'),
-            children: [
-              SegmentedButton<ThemeMode>(
-                segments: [
-                  ButtonSegment(
-                    value: ThemeMode.system,
-                    label: Text(strings.t('themeSystem')),
-                    icon: const SoftIcon(AppIcon.auto, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.light,
-                    label: Text(strings.t('themeLight')),
-                    icon: const SoftIcon(AppIcon.sun, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.dark,
-                    label: Text(strings.t('themeDark')),
-                    icon: const SoftIcon(AppIcon.moon, size: 18),
-                  ),
-                ],
-                selected: {state.themeMode},
-                showSelectedIcon: false,
-                onSelectionChanged: (values) =>
-                    state.setThemeMode(values.first),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                strings.t('appLanguage'),
-                style: theme.textTheme.labelLarge,
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final entry in const <(String, String)>[
-                    ('tr', 'Türkçe'),
-                    ('ar', 'العربية'),
-                    ('en', 'English'),
-                  ])
-                    ChoiceChip(
-                      label: Text(entry.$2),
-                      selected: state.locale.languageCode == entry.$1,
-                      labelStyle: TextStyle(
-                        color: state.locale.languageCode == entry.$1
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      onSelected: (_) => state.setLocale(Locale(entry.$1)),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          _Group(
-            title: strings.t('privacy'),
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: context.tokens.urgent,
-                    side: BorderSide(
-                      color: context.tokens.urgent.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  onPressed: () => _confirmDeleteAll(context, state),
-                  icon: const SoftIcon(AppIcon.trash, size: 18),
-                  label: Text(strings.t('deleteAll')),
-                ),
+              SettingsRow(
+                icon: state.isDemo
+                    ? Icons.cloud_off_rounded
+                    : Icons.cloud_done_rounded,
+                label: strings.t('apiToken'),
+                value: state.isDemo
+                    ? strings.t('offlineDemo')
+                    : strings.t('connected'),
+                valueColor: state.isDemo ? tokens.pending : tokens.success,
+                onTap: () => _openServerSheet(context, state),
               ),
             ],
           ),
 
-          // Cikis en altta, gruplardan ayri duruyor: yanlislikla basilmasi
-          // zor olsun diye hem uzakta hem de farkli bir bicimde.
-          const SizedBox(height: 8),
+          SettingsGroup(
+            title: strings.t('assistantSection'),
+            rows: [
+              SettingsRow(
+                icon: Icons.support_agent_rounded,
+                label: strings.t('assistantEnabled'),
+                trailing: Switch.adaptive(
+                  value: state.config.enabled,
+                  onChanged: (value) => _saveConfig(
+                    context,
+                    state,
+                    state.config.copyWith(enabled: value),
+                  ),
+                ),
+              ),
+              SettingsRow(
+                icon: Icons.graphic_eq_rounded,
+                label: strings.t('voiceTitle'),
+                value: state.config.realtimeVoice,
+                onTap: () => _openVoiceSheet(context, state),
+              ),
+              SettingsRow(
+                icon: Icons.schedule_rounded,
+                label: strings.t('workHours'),
+                value: '${state.config.workStart} - ${state.config.workEnd}',
+              ),
+            ],
+          ),
+
+          SettingsGroup(
+            title: strings.t('appearance'),
+            rows: [
+              SettingsRow(
+                icon: Icons.contrast_rounded,
+                label: strings.t('appearance'),
+                value: themeNames[state.themeMode],
+                onTap: () => _openThemeSheet(context, state, themeNames),
+              ),
+              SettingsRow(
+                icon: Icons.translate_rounded,
+                label: strings.t('appLanguage'),
+                value: languageNames[state.locale.languageCode],
+                onTap: () => _openLanguageSheet(context, state, languageNames),
+              ),
+            ],
+          ),
+
+          SettingsGroup(
+            title: strings.t('privacy'),
+            rows: [
+              SettingsRow(
+                icon: Icons.delete_outline_rounded,
+                label: strings.t('deleteAll'),
+                danger: true,
+                onTap: () => _confirmDeleteAll(context, state),
+              ),
+            ],
+          ),
+
+          // Cikis en altta ve gruplardan ayri: yanlislikla basilmasi zor
+          // olsun diye hem uzakta hem farkli bicimde.
+          const SizedBox(height: 4),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.tonalIcon(
-              style: FilledButton.styleFrom(
-                backgroundColor: context.tokens.urgentSoft,
-                foregroundColor: context.tokens.urgent,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: tokens.urgent,
+                side: BorderSide(color: tokens.urgent.withValues(alpha: 0.45)),
                 padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius),
+                ),
               ),
               onPressed: auth.isBusy ? null : () => _confirmSignOut(context),
               icon: const Icon(Icons.logout_rounded, size: 19),
@@ -308,6 +165,211 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _saveConfig(
+    BuildContext context,
+    AppState state,
+    AssistantConfig config,
+  ) async {
+    final strings = AppStrings.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await state.saveConfig(config);
+    messenger.showSnackBar(
+      SnackBar(content: Text(strings.t(ok ? 'saved' : 'loadError'))),
+    );
+  }
+
+  /// Sunucu adresi ve belirteci: ikisi birlikte kaydedildigi icin ayni
+  /// yaprakta duruyor.
+  Future<void> _openServerSheet(BuildContext context, AppState state) async {
+    final strings = AppStrings.of(context);
+    final tokens = context.tokens;
+    final messenger = ScaffoldMessenger.of(context);
+    final server = TextEditingController(text: state.serverUrl);
+    final token = TextEditingController(text: state.apiToken);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: tokens.isDark ? AppPalette.darkSurface : Colors.white,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          left: 22,
+          right: 22,
+          top: 2,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 22,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              strings.t('serverSection'),
+              style: context.text.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: server,
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              decoration: InputDecoration(
+                labelText: strings.t('serverUrl'),
+                hintText: strings.t('serverHint'),
+                prefixIcon: const Icon(Icons.dns_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Sunucudaki API_TOKEN ile ayni olmali. Sunucu korumasizsa
+            // bos birakildiginda da calisir.
+            TextField(
+              controller: token,
+              autocorrect: false,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: strings.t('apiToken'),
+                helperText: strings.t('apiTokenHint'),
+                helperMaxLines: 2,
+                prefixIcon: const Icon(Icons.key_outlined),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Icon(
+                  state.isDemo
+                      ? Icons.cloud_off_rounded
+                      : Icons.cloud_done_rounded,
+                  size: 18,
+                  color: state.isDemo ? tokens.pending : tokens.success,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    state.isDemo
+                        ? strings.t('offlineDemo')
+                        : strings.t('connected'),
+                    style: context.text.bodySmall?.copyWith(
+                      color: state.isDemo ? tokens.pending : tokens.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 52,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  await state.setApiToken(token.text);
+                  await state.setServerUrl(server.text);
+                  if (sheetContext.mounted) {
+                    Navigator.of(sheetContext).pop();
+                  }
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(strings.t('saved'))),
+                  );
+                },
+                icon: const Icon(Icons.link_rounded, size: 18),
+                label: Text(strings.t('serverSave')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    server.dispose();
+    token.dispose();
+  }
+
+  /// Gemini Live'in hazir sesleri. Biri kotaya takilirsa digerine gecmek
+  /// icin buradan degistirilir.
+  Future<void> _openVoiceSheet(BuildContext context, AppState state) async {
+    final strings = AppStrings.of(context);
+    final choice = await showChoiceSheet<String>(
+      context: context,
+      title: strings.t('voiceTitle'),
+      subtitle: strings.t('voiceHint'),
+      selected: state.config.realtimeVoice,
+      items: const [
+        (value: 'Kore', label: 'Kore', hint: null, icon: Icons.graphic_eq),
+        (value: 'Puck', label: 'Puck', hint: null, icon: Icons.graphic_eq),
+        (value: 'Charon', label: 'Charon', hint: null, icon: Icons.graphic_eq),
+        (value: 'Fenrir', label: 'Fenrir', hint: null, icon: Icons.graphic_eq),
+      ],
+    );
+    if (choice == null || !context.mounted) return;
+    await _saveConfig(
+      context,
+      state,
+      state.config.copyWith(architecture: 'realtime', realtimeVoice: choice),
+    );
+  }
+
+  Future<void> _openThemeSheet(
+    BuildContext context,
+    AppState state,
+    Map<ThemeMode, String> names,
+  ) async {
+    final strings = AppStrings.of(context);
+    final choice = await showChoiceSheet<ThemeMode>(
+      context: context,
+      title: strings.t('appearance'),
+      selected: state.themeMode,
+      items: [
+        (
+          value: ThemeMode.system,
+          label: names[ThemeMode.system]!,
+          hint: null,
+          icon: Icons.brightness_auto_rounded
+        ),
+        (
+          value: ThemeMode.light,
+          label: names[ThemeMode.light]!,
+          hint: null,
+          icon: Icons.light_mode_rounded
+        ),
+        (
+          value: ThemeMode.dark,
+          label: names[ThemeMode.dark]!,
+          hint: null,
+          icon: Icons.dark_mode_rounded
+        ),
+      ],
+    );
+    if (choice == null) return;
+    state.setThemeMode(choice);
+  }
+
+  Future<void> _openLanguageSheet(
+    BuildContext context,
+    AppState state,
+    Map<String, String> names,
+  ) async {
+    final strings = AppStrings.of(context);
+    final choice = await showChoiceSheet<String>(
+      context: context,
+      title: strings.t('appLanguage'),
+      selected: state.locale.languageCode,
+      items: [
+        for (final entry in names.entries)
+          (
+            value: entry.key,
+            label: entry.value,
+            hint: null,
+            icon: Icons.translate_rounded
+          ),
+      ],
+    );
+    if (choice == null) return;
+    state.setLocale(Locale(choice));
   }
 
   Future<void> _confirmSignOut(BuildContext context) async {
@@ -363,78 +425,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _Group extends StatelessWidget {
-  const _Group({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: context.tokens.muted,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              // colorScheme.surface temada saydam; kart zemini icin
-              // token kullanilir, yoksa grup arka plansiz gorunur.
-              color: context.tokens.glass,
-              borderRadius: BorderRadius.circular(AppTheme.radius),
-              border: Border.all(color: context.tokens.glassBorder),
-              boxShadow: context.tokens.cardShadow,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
+/// Turuncu bandin uzerine binen beyaz hesap karti.
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.name,
+    required this.email,
+    this.photoUrl,
   });
 
-  final AppIcon icon;
-  final String label;
-  final String value;
+  final String name;
+  final String email;
+  final String? photoUrl;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+    final tokens = context.tokens;
+    final initial =
+        name.trim().isEmpty ? 'C' : name.trim().characters.first.toUpperCase();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+      decoration: BoxDecoration(
+        color: tokens.glass,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        border: Border.all(color: tokens.glassBorder),
+        boxShadow: tokens.cardShadow,
+      ),
+      child: Column(
         children: [
-          SoftIcon(icon, size: 18, color: context.tokens.muted),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(label, style: theme.textTheme.bodyMedium),
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 34,
+                backgroundColor: AppPalette.indigoSoft,
+                foregroundImage:
+                    photoUrl == null ? null : NetworkImage(photoUrl!),
+                child: Text(
+                  initial,
+                  style: context.text.headlineSmall?.copyWith(
+                    color: AppPalette.indigo,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              // Oturumun acik oldugunu gosteren nokta.
+              Positioned(
+                right: 2,
+                bottom: 2,
+                child: Container(
+                  width: 15,
+                  height: 15,
+                  decoration: BoxDecoration(
+                    color: tokens.success,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: tokens.glass, width: 2.5),
+                  ),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 12),
           Text(
-            value,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.text.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              email,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.bodySmall?.copyWith(color: tokens.muted),
+            ),
+          ],
         ],
       ),
     );

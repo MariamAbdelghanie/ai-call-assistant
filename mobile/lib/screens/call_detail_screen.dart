@@ -55,9 +55,10 @@ class CallDetailScreen extends StatelessWidget {
           tooltip: strings.t('delete'),
         ),
       ],
-      overlap: 18,
+      // Bu sayfa bandin altinda buyuk bir ad satiriyla basliyor; govdeyi
+      // banda bindirince ad bandin icine giriyordu.
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 0, 18, 40),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 40),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
