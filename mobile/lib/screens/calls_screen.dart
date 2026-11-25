@@ -244,19 +244,15 @@ class _CallsScreenState extends State<CallsScreen> {
 
             // Ikili satir: solda oranlar, sagda tek buyuk rakam. Farkli
             // yukseklikte iki kart yan yana durunca sayfanin ritmi kirilir.
+            // Halka ve kadran dar sutunda sikisiyordu; iki kart artik
+            // esit genislikte ve ayni yukseklikte.
             IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    flex: 6,
-                    child: LanguageMixCard(calls: state.calls),
-                  ),
+                  Expanded(child: LanguageMixCard(calls: state.calls)),
                   const SizedBox(width: 12),
-                  Expanded(
-                    flex: 5,
-                    child: PeakHourCard(calls: state.calls),
-                  ),
+                  Expanded(child: PeakHourCard(calls: state.calls)),
                 ],
               ),
             ),

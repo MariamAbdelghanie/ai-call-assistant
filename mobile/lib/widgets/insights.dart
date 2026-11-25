@@ -145,15 +145,14 @@ class LanguageMixCard extends StatelessWidget {
 
   static const _order = ['tr', 'ar', 'en'];
   static const _colors = {
-    'tr': AppPalette.brand,
-    'ar': AppPalette.mint,
-    'en': AppPalette.violet,
+    'tr': AppPalette.orange,
+    'ar': Color(0xFF34D399),
+    'en': Color(0xFF7AA2FF),
   };
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    final tokens = context.tokens;
 
     final counts = <String, int>{for (final k in _order) k: 0};
     for (final c in calls) {
@@ -162,38 +161,78 @@ class LanguageMixCard extends StatelessWidget {
     }
     final total = counts.values.fold<int>(0, (a, b) => a + b);
 
-    return GlassCard(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      radius: 20,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        // Lacivert kart: sayfadaki beyaz kart dizisini kirar ve dil
+        // dagilimini tek bakista ayirt edilir bir blok yapar.
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppPalette.indigo, AppPalette.indigoDeep],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppPalette.indigoDeep.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             strings.t('langMixTitle'),
-            style:
-                context.text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: SizedBox(
-              height: 10,
-              child: total == 0
-                  ? ColoredBox(color: tokens.glassBorder)
-                  : Row(
-                      children: [
-                        for (final key in _order)
-                          if (counts[key]! > 0)
-                            Expanded(
-                              flex: counts[key]!,
-                              child: ColoredBox(color: _colors[key]!),
-                            ),
-                      ],
-                    ),
+            style: context.text.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 14),
-          for (final key in _order) ...[
+          // Halka: cubuk serit yerine, yuzdeler arasindaki farki daha
+          // iyi gosteriyor ve ortasinda toplam cagri sayisi duruyor.
+          Center(
+            child: SizedBox(
+              width: 104,
+              height: 104,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: const Size.square(104),
+                    painter: _DonutPainter(
+                      values: [for (final k in _order) counts[k]!.toDouble()],
+                      colors: [for (final k in _order) _colors[k]!],
+                      track: Colors.white.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$total',
+                        style: context.text.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      Text(
+                        strings.t('statTotal'),
+                        style: context.text.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.65),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (final key in _order)
             Padding(
               padding: const EdgeInsets.only(bottom: 7),
               child: Row(
@@ -210,7 +249,9 @@ class LanguageMixCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       strings.t('lang_$key'),
-                      style: context.text.bodySmall,
+                      style: context.text.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.86),
+                      ),
                     ),
                   ),
                   Text(
@@ -218,21 +259,20 @@ class LanguageMixCard extends StatelessWidget {
                         ? '0%'
                         : '${((counts[key]! / total) * 100).round()}%',
                     style: context.text.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: tokens.muted,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
         ],
       ),
     );
   }
 }
 
-/// Tek bir buyuk rakam: en yogun saat.
 class PeakHourCard extends StatelessWidget {
   const PeakHourCard({super.key, required this.calls});
 
@@ -261,11 +301,10 @@ class PeakHourCard extends StatelessWidget {
     final label = peak == null ? '—' : '${peak.toString().padLeft(2, '0')}:00';
 
     return GlassCard(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       radius: 20,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
@@ -281,26 +320,182 @@ class PeakHourCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          Text(
-            label,
-            style: context.text.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppPalette.brand,
-              letterSpacing: -1,
+          const SizedBox(height: 14),
+          // Saat kadrani: rakam tek basina soyuttu; ibre gunun hangi
+          // dilimi oldugunu (sabah mi, aksam mi) anlatiyor.
+          Center(
+            child: SizedBox(
+              width: 104,
+              height: 104,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: const Size.square(104),
+                    painter: _ClockPainter(
+                      hour: peak,
+                      ring: tokens.glassBorder,
+                      hand: AppPalette.orange,
+                      tick: tokens.muted,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: context.text.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppPalette.indigo,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            peak == null
-                ? strings.t('peakHourEmpty')
-                : '$best ${strings.t('peakHourUnit')}',
-            style: context.text.bodySmall?.copyWith(color: tokens.muted),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              peak == null
+                  ? strings.t('peakHourEmpty')
+                  : '$best ${strings.t('peakHourUnit')}',
+              textAlign: TextAlign.center,
+              style: context.text.bodySmall?.copyWith(color: tokens.muted),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+/// Dil dagilimi halkasi.
+class _DonutPainter extends CustomPainter {
+  _DonutPainter({
+    required this.values,
+    required this.colors,
+    required this.track,
+  });
+
+  final List<double> values;
+  final List<Color> colors;
+  final Color track;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 13.0;
+    final rect = (Offset.zero & size).deflate(stroke / 2 + 2);
+    final total = values.fold<double>(0, (a, b) => a + b);
+
+    canvas.drawArc(
+      rect,
+      0,
+      math.pi * 2,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..color = track,
+    );
+    if (total <= 0) return;
+
+    var start = -math.pi / 2;
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] <= 0) continue;
+      // Dilimler arasinda kucuk bir bosluk birakiyoruz; bitisik
+      // yaylar tek renk gibi okunuyordu.
+      final sweep = math.pi * 2 * (values[i] / total);
+      canvas.drawArc(
+        rect,
+        start + 0.03,
+        math.max(sweep - 0.06, 0.02),
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = stroke
+          ..strokeCap = StrokeCap.round
+          ..color = colors[i],
+      );
+      start += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DonutPainter oldDelegate) =>
+      oldDelegate.values.toString() != values.toString();
+}
+
+/// En yogun saati gosteren kadran.
+class _ClockPainter extends CustomPainter {
+  _ClockPainter({
+    required this.hour,
+    required this.ring,
+    required this.hand,
+    required this.tick,
+  });
+
+  final int? hour;
+  final Color ring;
+  final Color hand;
+  final Color tick;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2 - 3;
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = ring,
+    );
+
+    // 12 cizik: kadranin saat oldugunu anlatan sey bu.
+    for (var i = 0; i < 12; i++) {
+      final angle = -math.pi / 2 + i * math.pi / 6;
+      final outer = center + Offset(math.cos(angle), math.sin(angle)) * radius;
+      final inner = center +
+          Offset(math.cos(angle), math.sin(angle)) *
+              (radius - (i % 3 == 0 ? 8 : 5));
+      canvas.drawLine(
+        inner,
+        outer,
+        Paint()
+          ..strokeWidth = i % 3 == 0 ? 2 : 1
+          ..strokeCap = StrokeCap.round
+          ..color = tick.withValues(alpha: i % 3 == 0 ? 0.55 : 0.3),
+      );
+    }
+
+    if (hour == null) return;
+
+    // Ibre 24 saatlik degeri 12'lik kadrana oturtur.
+    final angle = -math.pi / 2 + (hour! % 12) * math.pi / 6;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      (hour! % 12) * math.pi / 6,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round
+        ..color = hand.withValues(alpha: 0.35),
+    );
+    canvas.drawLine(
+      center,
+      center + Offset(math.cos(angle), math.sin(angle)) * (radius - 14),
+      Paint()
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round
+        ..color = hand,
+    );
+    canvas.drawCircle(center, 3.5, Paint()..color = hand);
+  }
+
+  @override
+  bool shouldRepaint(_ClockPainter oldDelegate) => oldDelegate.hour != hour;
 }
 
 /// Haftalik egilim grafigi: yumusak bir cizgi, altinda sonen bir dolgu
