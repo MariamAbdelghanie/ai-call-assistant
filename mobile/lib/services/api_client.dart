@@ -156,8 +156,7 @@ class DemoData {
         callerName: 'Mehmet Kaya',
         callerNumber: '+90 5xx xxx 09 51',
         callerPurpose: 'Acil durum',
-        summary:
-            'Mehmet Kaya acil olarak aranmak istediğini belirtti. Deponun '
+        summary: 'Mehmet Kaya acil olarak aranmak istediğini belirtti. Deponun '
             'elektriği kesilmiş, bugün içinde dönülmesi gerekiyor.',
         appointmentInfo: '',
         isUrgent: true,

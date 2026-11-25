@@ -95,8 +95,7 @@ class _UrgentScreenState extends State<UrgentScreen> {
                       rank: index + 1,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) =>
-                              CallDetailScreen(callId: call.callId),
+                          builder: (_) => CallDetailScreen(callId: call.callId),
                         ),
                       ),
                       onToggle: () => state.toggleCalledBack(call),
@@ -209,8 +208,8 @@ class _UrgentCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         _ActionChip(
                           done: done,
-                          label: strings
-                              .t(done ? 'calledBack' : 'markCalledBack'),
+                          label:
+                              strings.t(done ? 'calledBack' : 'markCalledBack'),
                           onTap: onToggle,
                         ),
                       ],

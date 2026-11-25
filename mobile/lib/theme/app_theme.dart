@@ -42,6 +42,7 @@ class AppPalette {
   static const Color pending = Color(0xFFE0890B);
   static const Color success = Color(0xFF2FA86A);
   static const Color info = Color(0xFF3B82F6);
+
   /// Randevu/ajanda icin yumusak indigo: turuncuyla carpismayan tek
   /// soguk ton, boylece takvim ogeleri listede kendiliginden ayrisiyor.
   static const Color scheduled = Color(0xFF5B6CD9);

@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-
 /// Parola gucu kurallari.
 ///
 /// Parola hicbir zaman bizim veritabanimiza yazilmaz. Firebase

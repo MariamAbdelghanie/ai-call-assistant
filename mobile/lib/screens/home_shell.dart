@@ -46,7 +46,8 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     return Scaffold(
-      backgroundColor: tokens.isDark ? AppPalette.darkSurface : const Color(0xFFF7F7F8),
+      backgroundColor:
+          tokens.isDark ? AppPalette.darkSurface : const Color(0xFFF7F7F8),
       body: AnimatedSwitcher(
         duration: AppTheme.normal,
         switchInCurve: Curves.easeOutCubic,

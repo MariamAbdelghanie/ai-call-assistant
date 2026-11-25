@@ -72,30 +72,37 @@ class AppStrings {
       'authTooManyRequests': 'Çok fazla deneme. Biraz sonra tekrar deneyin.',
       'authNetwork': 'Bağlantı kurulamadı. İnternetinizi kontrol edin.',
       'verifyEmailSent': 'Doğrulama e-postası gönderildi.',
-      'pwStoredNote': 'Parolanız Firebase tarafından şifrelenerek saklanır; uygulama parolanızı görmez.',
+      'pwStoredNote':
+          'Parolanız Firebase tarafından şifrelenerek saklanır; uygulama parolanızı görmez.',
       // --- Oturum acma ---
       'loginBrandTagline': 'Yapay zeka destekli çağrı asistanı',
       'loginTitle': 'Hesabınıza giriş yapın',
-      'loginSubtitle': 'Çağrı kayıtlarınıza ve randevularınıza güvenli şekilde erişin.',
+      'loginSubtitle':
+          'Çağrı kayıtlarınıza ve randevularınıza güvenli şekilde erişin.',
       'loginGoogle': 'Google ile devam et',
       'loginBusy': 'Giriş yapılıyor…',
       'loginFootnote': 'Devam ederek hizmet koşullarını kabul etmiş olursunuz.',
       'loginWhyTitle': 'Neden giriş gerekiyor?',
-      'loginWhyBody': 'Çağrı kayıtları kişisel veri içerir; yalnızca hesap sahibi görebilir.',
-      'authNotConfigured': 'Google girişi henüz yapılandırılmadı. Kurulum için docs/FIREBASE_SETUP.md dosyasına bakın.',
+      'loginWhyBody':
+          'Çağrı kayıtları kişisel veri içerir; yalnızca hesap sahibi görebilir.',
+      'authNotConfigured':
+          'Google girişi henüz yapılandırılmadı. Kurulum için docs/FIREBASE_SETUP.md dosyasına bakın.',
       'authCancelled': 'Giriş iptal edildi.',
-      'authFailed': 'Giriş yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.',
+      'authFailed':
+          'Giriş yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.',
       'authDetails': 'Teknik ayrıntı',
       'account': 'Hesap',
       'signOut': 'Çıkış yap',
       'signOutConfirm': 'Oturumu kapatmak istiyor musunuz?',
       'appTitle': 'Çağrı Asistanı',
-      'architectureHint': "Realtime daha hızlı yanıt verir; Cascade her bileşeni ayrı seçmenize izin verir.",
+      'architectureHint':
+          "Realtime daha hızlı yanıt verir; Cascade her bileşeni ayrı seçmenize izin verir.",
       'archCascade': "Cascade",
       'archRealtime': "Realtime",
       'architectureSaved': "Kaydedildi. Sonraki çağrıda geçerli olur.",
       'welcomeTitle': "Akıllı çağrı asistanınızla tanışın",
-      'welcomeSubtitle': "Siz meşgulken çağrıları karşılar, mesajı alır ve özetini size gönderir.",
+      'welcomeSubtitle':
+          "Siz meşgulken çağrıları karşılar, mesajı alır ve özetini size gönderir.",
       'welcomeBadge': "HAZIR",
       'welcomeTagline': "Her Zaman Yanınızda",
       'welcomeHeadline': "Çağrılarınızı\nasistan karşılasın.",
@@ -168,7 +175,8 @@ class AppStrings {
       'emptyUrgent': 'Acil çağrı yok',
       'emptyUrgentHint': 'Acil olarak işaretlenen çağrılar burada toplanır.',
       'emptyAppointments': 'Randevu kaydı yok',
-      'emptyAppointmentsHint': 'Asistanın oluşturduğu randevular burada listelenir.',
+      'emptyAppointmentsHint':
+          'Asistanın oluşturduğu randevular burada listelenir.',
       'urgentBadge': 'ACİL',
       'callbackBadge': 'Geri dönüş istedi',
       'calledBack': 'Arandı',
@@ -195,9 +203,9 @@ class AppStrings {
       'connected': 'Bağlandı',
       'offlineDemo': 'Örnek veriler gösteriliyor',
       'offlineCached': 'Sunucuya ulaşılamıyor',
-      'offlineCachedHint': 'Son alınan kayıtlar gösteriliyor. Silme işlemi şu anda yapılamaz; sunucu adresini kontrol edin.',
-      'offlineDemoHint':
-          'Sunucuya ulaşılamadı. Aşağıdaki kayıtlar örnektir.',
+      'offlineCachedHint':
+          'Son alınan kayıtlar gösteriliyor. Silme işlemi şu anda yapılamaz; sunucu adresini kontrol edin.',
+      'offlineDemoHint': 'Sunucuya ulaşılamadı. Aşağıdaki kayıtlar örnektir.',
       'appearance': 'Görünüm',
       'themeSystem': 'Sistem',
       'themeLight': 'Açık',
@@ -218,7 +226,8 @@ class AppStrings {
       'apiToken': 'Sunucu belirteci',
       'apiTokenHint': '.env dosyasındaki API_TOKEN ile aynı olmalı.',
       'voiceTitle': 'Asistan sesi',
-      'voiceHint': 'Gemini Live sesi. Biri kota nedeniyle çalışmazsa diğerine geçin.',
+      'voiceHint':
+          'Gemini Live sesi. Biri kota nedeniyle çalışmazsa diğerine geçin.',
       'voice': 'Ses',
       'refresh': 'Yenile',
       'retry': 'Tekrar dene',
@@ -279,7 +288,8 @@ class AppStrings {
       'authTooManyRequests': 'محاولات كثيرة. حاول بعد قليل.',
       'authNetwork': 'تعذّر الاتصال. تحقق من الإنترنت.',
       'verifyEmailSent': 'تم إرسال رسالة التأكيد.',
-      'pwStoredNote': 'تُحفظ كلمة المرور مشفّرة لدى Firebase؛ التطبيق لا يراها.',
+      'pwStoredNote':
+          'تُحفظ كلمة المرور مشفّرة لدى Firebase؛ التطبيق لا يراها.',
       // --- تسجيل الدخول ---
       'loginBrandTagline': 'مساعد مكالمات مدعوم بالذكاء الاصطناعي',
       'loginTitle': 'سجّل الدخول إلى حسابك',
@@ -288,8 +298,10 @@ class AppStrings {
       'loginBusy': 'جارٍ تسجيل الدخول…',
       'loginFootnote': 'بالمتابعة أنت توافق على شروط الخدمة.',
       'loginWhyTitle': 'لماذا تسجيل الدخول؟',
-      'loginWhyBody': 'سجلات المكالمات تحتوي بيانات شخصية؛ صاحب الحساب وحده يراها.',
-      'authNotConfigured': 'تسجيل الدخول بجوجل غير مهيأ بعد. راجع ملف docs/FIREBASE_SETUP.md.',
+      'loginWhyBody':
+          'سجلات المكالمات تحتوي بيانات شخصية؛ صاحب الحساب وحده يراها.',
+      'authNotConfigured':
+          'تسجيل الدخول بجوجل غير مهيأ بعد. راجع ملف docs/FIREBASE_SETUP.md.',
       'authCancelled': 'تم إلغاء تسجيل الدخول.',
       'authFailed': 'تعذّر تسجيل الدخول. تحقق من الاتصال وحاول مرة أخرى.',
       'authDetails': 'تفاصيل تقنية',
@@ -297,12 +309,14 @@ class AppStrings {
       'signOut': 'تسجيل الخروج',
       'signOutConfirm': 'هل تريد تسجيل الخروج؟',
       'appTitle': 'مساعد المكالمات',
-      'architectureHint': "Realtime أسرع في الرد، وCascade يتيح اختيار كل مكوّن على حدة.",
+      'architectureHint':
+          "Realtime أسرع في الرد، وCascade يتيح اختيار كل مكوّن على حدة.",
       'archCascade': "Cascade",
       'archRealtime': "Realtime",
       'architectureSaved': "تم الحفظ. سيُطبّق في المكالمة القادمة.",
       'welcomeTitle': "تعرّف على مساعد مكالماتك الذكي",
-      'welcomeSubtitle': "يرد على مكالماتك وأنت مشغول، ويأخذ الرسالة ويرسل لك ملخصها.",
+      'welcomeSubtitle':
+          "يرد على مكالماتك وأنت مشغول، ويأخذ الرسالة ويرسل لك ملخصها.",
       'welcomeBadge': "جاهز",
       'welcomeTagline': "معك في كل وقت",
       'welcomeHeadline': "دع المساعد\nيرد على مكالماتك.",
@@ -402,7 +416,8 @@ class AppStrings {
       'connected': 'متصل',
       'offlineDemo': 'يتم عرض بيانات تجريبية',
       'offlineCached': 'تعذّر الوصول إلى الخادم',
-      'offlineCachedHint': 'معروض آخر سجلات تم جلبها. المسح غير ممكن الآن؛ تحقّقي من عنوان الخادم.',
+      'offlineCachedHint':
+          'معروض آخر سجلات تم جلبها. المسح غير ممكن الآن؛ تحقّقي من عنوان الخادم.',
       'offlineDemoHint': 'تعذر الوصول إلى الخادم. السجلات أدناه أمثلة.',
       'appearance': 'المظهر',
       'themeSystem': 'النظام',
@@ -485,7 +500,8 @@ class AppStrings {
       'authTooManyRequests': 'Too many attempts. Try again shortly.',
       'authNetwork': 'Could not connect. Check your internet.',
       'verifyEmailSent': 'Verification email sent.',
-      'pwStoredNote': 'Your password is stored hashed by Firebase; the app never sees it.',
+      'pwStoredNote':
+          'Your password is stored hashed by Firebase; the app never sees it.',
       // --- Sign in ---
       'loginBrandTagline': 'AI-powered call assistant',
       'loginTitle': 'Sign in to your account',
@@ -494,8 +510,10 @@ class AppStrings {
       'loginBusy': 'Signing in…',
       'loginFootnote': 'By continuing you accept the terms of service.',
       'loginWhyTitle': 'Why sign in?',
-      'loginWhyBody': 'Call records hold personal data; only the account owner can see them.',
-      'authNotConfigured': 'Google sign-in is not configured yet. See docs/FIREBASE_SETUP.md.',
+      'loginWhyBody':
+          'Call records hold personal data; only the account owner can see them.',
+      'authNotConfigured':
+          'Google sign-in is not configured yet. See docs/FIREBASE_SETUP.md.',
       'authCancelled': 'Sign-in cancelled.',
       'authFailed': 'Could not sign in. Check your connection and try again.',
       'authDetails': 'Technical detail',
@@ -503,12 +521,14 @@ class AppStrings {
       'signOut': 'Sign out',
       'signOutConfirm': 'Do you want to sign out?',
       'appTitle': 'Call Assistant',
-      'architectureHint': "Realtime answers faster; Cascade lets you pick each component.",
+      'architectureHint':
+          "Realtime answers faster; Cascade lets you pick each component.",
       'archCascade': "Cascade",
       'archRealtime': "Realtime",
       'architectureSaved': "Saved. It applies to the next call.",
       'welcomeTitle': "Meet your smart call assistant",
-      'welcomeSubtitle': "It answers while you are busy, takes the message and sends you a summary.",
+      'welcomeSubtitle':
+          "It answers while you are busy, takes the message and sends you a summary.",
       'welcomeBadge': "READY",
       'welcomeTagline': "Always By Your Side",
       'welcomeHeadline': "Let the assistant\nanswer your calls.",
@@ -542,7 +562,8 @@ class AppStrings {
       'callHint': 'Speak into the microphone to try the assistant.',
       'callNoServer': 'Enter the server address in Settings first.',
       'callMicDenied': 'Microphone permission was not granted.',
-      'callGenericError': 'Could not reach the server. Check the address and network.',
+      'callGenericError':
+          'Could not reach the server. Check the address and network.',
       'tabCalls': 'Calls',
       'tabUrgent': 'Urgent',
       'tabAppointments': 'Appointments',
@@ -577,11 +598,13 @@ class AppStrings {
       'filterCallback': 'Callback',
       'filterToday': 'Today',
       'emptyCalls': 'No call summaries yet',
-      'emptyCallsHint': 'When the assistant answers a call, its summary appears here.',
+      'emptyCallsHint':
+          'When the assistant answers a call, its summary appears here.',
       'emptyUrgent': 'No urgent calls',
       'emptyUrgentHint': 'Calls marked urgent are collected here.',
       'emptyAppointments': 'No appointments',
-      'emptyAppointmentsHint': 'Appointments booked by the assistant appear here.',
+      'emptyAppointmentsHint':
+          'Appointments booked by the assistant appear here.',
       'urgentBadge': 'URGENT',
       'callbackBadge': 'Callback requested',
       'calledBack': 'Called back',
@@ -598,7 +621,8 @@ class AppStrings {
       'copied': 'Copied',
       'delete': 'Delete',
       'deleteConfirmTitle': 'Delete this call record?',
-      'deleteConfirmBody': 'This record will be permanently deleted and cannot be undone.',
+      'deleteConfirmBody':
+          'This record will be permanently deleted and cannot be undone.',
       'cancel': 'Cancel',
       'deleted': 'Record deleted',
       'serverSection': 'Connection',
@@ -608,8 +632,10 @@ class AppStrings {
       'connected': 'Connected',
       'offlineDemo': 'Showing sample data',
       'offlineCached': 'Server unreachable',
-      'offlineCachedHint': 'Showing the last records fetched. Deleting is unavailable; check the server address.',
-      'offlineDemoHint': 'The server could not be reached. Records below are samples.',
+      'offlineCachedHint':
+          'Showing the last records fetched. Deleting is unavailable; check the server address.',
+      'offlineDemoHint':
+          'The server could not be reached. Records below are samples.',
       'appearance': 'Appearance',
       'themeSystem': 'System',
       'themeLight': 'Light',
@@ -630,7 +656,8 @@ class AppStrings {
       'apiToken': 'Server token',
       'apiTokenHint': 'Must match API_TOKEN in the .env file.',
       'voiceTitle': 'Assistant voice',
-      'voiceHint': 'Gemini Live voice. If one hits a quota limit, switch to another.',
+      'voiceHint':
+          'Gemini Live voice. If one hits a quota limit, switch to another.',
       'voice': 'Voice',
       'refresh': 'Refresh',
       'retry': 'Try again',

@@ -46,7 +46,8 @@ enum AppIcon {
 
 /// Tek bir ikon. Cizgi kalinligi boyutla birlikte orantili buyur.
 class SoftIcon extends StatelessWidget {
-  const SoftIcon(this.icon, {super.key, this.size = 22, this.color, this.solid = false});
+  const SoftIcon(this.icon,
+      {super.key, this.size = 22, this.color, this.solid = false});
 
   final AppIcon icon;
   final double size;
@@ -132,7 +133,8 @@ class SoftIconTile extends StatelessWidget {
 }
 
 class _SoftIconPainter extends CustomPainter {
-  _SoftIconPainter({required this.icon, required this.color, this.solid = false});
+  _SoftIconPainter(
+      {required this.icon, required this.color, this.solid = false});
 
   final AppIcon icon;
   final Color color;
@@ -239,11 +241,14 @@ class _SoftIconPainter extends CustomPainter {
         line(4, 7.5, 20, 7.5);
         line(4, 12, 20, 12);
         line(4, 16.5, 20, 16.5);
-        canvas.drawCircle(const Offset(9, 7.5), 2.6, Paint()..color = color.withValues(alpha: 0.14));
+        canvas.drawCircle(const Offset(9, 7.5), 2.6,
+            Paint()..color = color.withValues(alpha: 0.14));
         canvas.drawCircle(const Offset(9, 7.5), 2.6, stroke);
-        canvas.drawCircle(const Offset(15, 12), 2.6, Paint()..color = color.withValues(alpha: 0.14));
+        canvas.drawCircle(const Offset(15, 12), 2.6,
+            Paint()..color = color.withValues(alpha: 0.14));
         canvas.drawCircle(const Offset(15, 12), 2.6, stroke);
-        canvas.drawCircle(const Offset(10.5, 16.5), 2.6, Paint()..color = color.withValues(alpha: 0.14));
+        canvas.drawCircle(const Offset(10.5, 16.5), 2.6,
+            Paint()..color = color.withValues(alpha: 0.14));
         canvas.drawCircle(const Offset(10.5, 16.5), 2.6, stroke);
       case AppIcon.phone:
         path(Path()

@@ -87,262 +87,266 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           const Positioned.fill(child: _Backdrop()),
           SafeArea(
-        child: ListenableBuilder(
-          listenable: auth,
-          builder: (context, _) {
-            return Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // --- Form karti ---
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(24, 30, 24, 26),
-                        decoration: BoxDecoration(
-                          color: tokens.isDark
-                              ? tokens.glass
-                              : AppPalette.surface,
-                          borderRadius: BorderRadius.circular(26),
-                          border: Border.all(
-                            color: tokens.isDark
-                                ? tokens.glassBorder
-                                : Colors.white,
-                          ),
-                          // Iki katman: genis ve cok yumusak olan derinligi,
-                          // dar olan kenari tanimlar.
-                          boxShadow: tokens.isDark
-                              ? null
-                              : [
-                                  BoxShadow(
-                                    color: AppPalette.ink
-                                        .withValues(alpha: 0.13),
-                                    blurRadius: 48,
-                                    spreadRadius: -6,
-                                    offset: const Offset(0, 26),
+            child: ListenableBuilder(
+              listenable: auth,
+              builder: (context, _) {
+                return Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // --- Form karti ---
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(24, 30, 24, 26),
+                            decoration: BoxDecoration(
+                              color: tokens.isDark
+                                  ? tokens.glass
+                                  : AppPalette.surface,
+                              borderRadius: BorderRadius.circular(26),
+                              border: Border.all(
+                                color: tokens.isDark
+                                    ? tokens.glassBorder
+                                    : Colors.white,
+                              ),
+                              // Iki katman: genis ve cok yumusak olan derinligi,
+                              // dar olan kenari tanimlar.
+                              boxShadow: tokens.isDark
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: AppPalette.ink
+                                            .withValues(alpha: 0.13),
+                                        blurRadius: 48,
+                                        spreadRadius: -6,
+                                        offset: const Offset(0, 26),
+                                      ),
+                                      BoxShadow(
+                                        color: AppPalette.ink
+                                            .withValues(alpha: 0.06),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Center(child: _BrandMark()),
+                                  const SizedBox(height: 18),
+                                  Text(
+                                    _register
+                                        ? t.t('tabSignUp')
+                                        : t.t('tabSignIn'),
+                                    textAlign: TextAlign.center,
+                                    style: text.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.4,
+                                    ),
                                   ),
-                                  BoxShadow(
-                                    color: AppPalette.ink
-                                        .withValues(alpha: 0.06),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    t.t('loginSubtitle'),
+                                    textAlign: TextAlign.center,
+                                    style: text.bodySmall
+                                        ?.copyWith(color: tokens.muted),
                                   ),
-                                ],
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Center(child: _BrandMark()),
-                              const SizedBox(height: 18),
-                              Text(
-                                _register ? t.t('tabSignUp') : t.t('tabSignIn'),
-                                textAlign: TextAlign.center,
-                                style: text.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.4,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                t.t('loginSubtitle'),
-                                textAlign: TextAlign.center,
-                                style: text.bodySmall
-                                    ?.copyWith(color: tokens.muted),
-                              ),
-                              const SizedBox(height: 26),
-                              if (auth.errorKey != null) ...[
-                                _ErrorBanner(auth: auth),
-                                const SizedBox(height: 18),
-                              ],
-                              if (_register) ...[
-                                _Field(
-                                  label: t.t('fieldName'),
-                                  controller: _name,
-                                  icon: Icons.person_outline,
-                                  textInputAction: TextInputAction.next,
-                                ),
-                                const SizedBox(height: 16),
-                              ],
-                              _Field(
-                                label: t.t('fieldEmail'),
-                                controller: _email,
-                                icon: Icons.mail_outline,
-                                hint: 'ornek@eposta.com',
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
-                                autofillHints: const [AutofillHints.email],
-                                validator: (value) {
-                                  final v = (value ?? '').trim();
-                                  return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                                          .hasMatch(v)
-                                      ? null
-                                      : t.t('errEmailRequired');
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              _Field(
-                                label: t.t('fieldPassword'),
-                                controller: _password,
-                                icon: Icons.lock_outline,
-                                hint: '••••••••',
-                                obscure: _obscure,
-                                textInputAction: _register
-                                    ? TextInputAction.next
-                                    : TextInputAction.done,
-                                suffix: IconButton(
-                                  icon: Icon(
-                                    _obscure
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    size: 19,
-                                  ),
-                                  color: tokens.muted,
-                                  onPressed: () =>
-                                      setState(() => _obscure = !_obscure),
-                                ),
-                                validator: (value) {
-                                  final v = value ?? '';
-                                  if (v.isEmpty) return t.t('fieldPassword');
-                                  if (_register &&
-                                      !PasswordPolicy.isValid(v)) {
-                                    return t.t('authWeakPassword');
-                                  }
-                                  return null;
-                                },
-                              ),
-                              if (_register) ...[
-                                const SizedBox(height: 12),
-                                _PasswordMeter(value: _password.text),
-                                const SizedBox(height: 16),
-                                _Field(
-                                  label: t.t('fieldPasswordConfirm'),
-                                  controller: _confirm,
-                                  icon: Icons.lock_outline,
-                                  hint: '••••••••',
-                                  obscure: _obscure,
-                                  textInputAction: TextInputAction.done,
-                                  validator: (value) =>
-                                      (value ?? '') == _password.text
+                                  const SizedBox(height: 26),
+                                  if (auth.errorKey != null) ...[
+                                    _ErrorBanner(auth: auth),
+                                    const SizedBox(height: 18),
+                                  ],
+                                  if (_register) ...[
+                                    _Field(
+                                      label: t.t('fieldName'),
+                                      controller: _name,
+                                      icon: Icons.person_outline,
+                                      textInputAction: TextInputAction.next,
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                  _Field(
+                                    label: t.t('fieldEmail'),
+                                    controller: _email,
+                                    icon: Icons.mail_outline,
+                                    hint: 'ornek@eposta.com',
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [AutofillHints.email],
+                                    validator: (value) {
+                                      final v = (value ?? '').trim();
+                                      return RegExp(
+                                                  r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                                              .hasMatch(v)
                                           ? null
-                                          : t.t('errPasswordMismatch'),
-                                ),
-                              ] else ...[
-                                const SizedBox(height: 10),
-                                Align(
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  child: GestureDetector(
-                                    onTap:
-                                        auth.isBusy ? null : _resetPassword,
-                                    child: Text(
-                                      '${t.t('forgotPassword')}?',
-                                      style: text.labelLarge?.copyWith(
-                                        color: AppPalette.orange,
-                                        fontWeight: FontWeight.w600,
+                                          : t.t('errEmailRequired');
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _Field(
+                                    label: t.t('fieldPassword'),
+                                    controller: _password,
+                                    icon: Icons.lock_outline,
+                                    hint: '••••••••',
+                                    obscure: _obscure,
+                                    textInputAction: _register
+                                        ? TextInputAction.next
+                                        : TextInputAction.done,
+                                    suffix: IconButton(
+                                      icon: Icon(
+                                        _obscure
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        size: 19,
+                                      ),
+                                      color: tokens.muted,
+                                      onPressed: () =>
+                                          setState(() => _obscure = !_obscure),
+                                    ),
+                                    validator: (value) {
+                                      final v = value ?? '';
+                                      if (v.isEmpty)
+                                        return t.t('fieldPassword');
+                                      if (_register &&
+                                          !PasswordPolicy.isValid(v)) {
+                                        return t.t('authWeakPassword');
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  if (_register) ...[
+                                    const SizedBox(height: 12),
+                                    _PasswordMeter(value: _password.text),
+                                    const SizedBox(height: 16),
+                                    _Field(
+                                      label: t.t('fieldPasswordConfirm'),
+                                      controller: _confirm,
+                                      icon: Icons.lock_outline,
+                                      hint: '••••••••',
+                                      obscure: _obscure,
+                                      textInputAction: TextInputAction.done,
+                                      validator: (value) =>
+                                          (value ?? '') == _password.text
+                                              ? null
+                                              : t.t('errPasswordMismatch'),
+                                    ),
+                                  ] else ...[
+                                    const SizedBox(height: 10),
+                                    Align(
+                                      alignment: AlignmentDirectional.centerEnd,
+                                      child: GestureDetector(
+                                        onTap:
+                                            auth.isBusy ? null : _resetPassword,
+                                        child: Text(
+                                          '${t.t('forgotPassword')}?',
+                                          style: text.labelLarge?.copyWith(
+                                            color: AppPalette.orange,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 22),
+                                  SizedBox(
+                                    height: 54,
+                                    child: FilledButton(
+                                      onPressed: auth.isBusy ? null : _submit,
+                                      child: auth.isBusy
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(_register
+                                                    ? t.t('tabSignUp')
+                                                    : t.t('tabSignIn')),
+                                                const SizedBox(width: 10),
+                                                const Icon(
+                                                    Icons.arrow_forward_rounded,
+                                                    size: 18),
+                                              ],
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 22),
+                                  _OrDivider(label: t.t('orContinueWith')),
+                                  const SizedBox(height: 18),
+                                  _GoogleButton(
+                                    busy: auth.isBusy,
+                                    onTap: auth.isBusy
+                                        ? null
+                                        : () => auth.signInWithGoogle(),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    height: 52,
+                                    child: OutlinedButton(
+                                      onPressed: auth.isBusy
+                                          ? null
+                                          : () => setState(() {
+                                                _register = !_register;
+                                                auth.errorKey = null;
+                                              }),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppPalette.ink,
+                                        side: const BorderSide(
+                                            color: AppPalette.ink, width: 1.4),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              AppTheme.radiusSm),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _register
+                                            ? t.t('tabSignIn')
+                                            : t.t('tabSignUp'),
+                                        style: text.labelLarge
+                                            ?.copyWith(fontSize: 15),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                              const SizedBox(height: 22),
-                              SizedBox(
-                                height: 54,
-                                child: FilledButton(
-                                  onPressed: auth.isBusy ? null : _submit,
-                                  child: auth.isBusy
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(_register
-                                                ? t.t('tabSignUp')
-                                                : t.t('tabSignIn')),
-                                            const SizedBox(width: 10),
-                                            const Icon(
-                                                Icons.arrow_forward_rounded,
-                                                size: 18),
-                                          ],
-                                        ),
-                                ),
+                                ],
                               ),
-                              const SizedBox(height: 22),
-                              _OrDivider(label: t.t('orContinueWith')),
-                              const SizedBox(height: 18),
-                              _GoogleButton(
-                                busy: auth.isBusy,
-                                onTap: auth.isBusy
-                                    ? null
-                                    : () => auth.signInWithGoogle(),
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 52,
-                                child: OutlinedButton(
-                                  onPressed: auth.isBusy
-                                      ? null
-                                      : () => setState(() {
-                                            _register = !_register;
-                                            auth.errorKey = null;
-                                          }),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppPalette.ink,
-                                    side: const BorderSide(
-                                        color: AppPalette.ink, width: 1.4),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppTheme.radiusSm),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    _register
-                                        ? t.t('tabSignIn')
-                                        : t.t('tabSignUp'),
-                                    style: text.labelLarge
-                                        ?.copyWith(fontSize: 15),
-                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // --- Kartin altindaki guven satiri ---
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.shield_outlined,
+                                  size: 14, color: tokens.muted),
+                              const SizedBox(width: 7),
+                              Flexible(
+                                child: Text(
+                                  t.t('dataSecure'),
+                                  textAlign: TextAlign.center,
+                                  style: text.labelSmall
+                                      ?.copyWith(color: tokens.muted),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // --- Kartin altindaki guven satiri ---
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.shield_outlined,
-                              size: 14, color: tokens.muted),
-                          const SizedBox(width: 7),
-                          Flexible(
-                            child: Text(
-                              t.t('dataSecure'),
-                              textAlign: TextAlign.center,
-                              style: text.labelSmall
-                                  ?.copyWith(color: tokens.muted),
-                            ),
-                          ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -395,14 +399,34 @@ class _BackdropPainter extends CustomPainter {
   /// Dugumler sabit oranlarla yerlestirilir; her karede ayni gorunur.
   void _network(Canvas canvas, Size size) {
     const points = <Offset>[
-      Offset(0.08, 0.13), Offset(0.26, 0.07), Offset(0.42, 0.17),
-      Offset(0.18, 0.26), Offset(0.34, 0.31), Offset(0.06, 0.37),
-      Offset(0.88, 0.62), Offset(0.72, 0.70), Offset(0.94, 0.78),
-      Offset(0.78, 0.86), Offset(0.60, 0.80), Offset(0.92, 0.92),
+      Offset(0.08, 0.13),
+      Offset(0.26, 0.07),
+      Offset(0.42, 0.17),
+      Offset(0.18, 0.26),
+      Offset(0.34, 0.31),
+      Offset(0.06, 0.37),
+      Offset(0.88, 0.62),
+      Offset(0.72, 0.70),
+      Offset(0.94, 0.78),
+      Offset(0.78, 0.86),
+      Offset(0.60, 0.80),
+      Offset(0.92, 0.92),
     ];
     const links = <List<int>>[
-      [0, 1], [1, 2], [0, 3], [3, 4], [2, 4], [3, 5], [4, 5],
-      [6, 7], [7, 8], [8, 9], [9, 10], [7, 10], [8, 11], [9, 11],
+      [0, 1],
+      [1, 2],
+      [0, 3],
+      [3, 4],
+      [2, 4],
+      [3, 5],
+      [4, 5],
+      [6, 7],
+      [7, 8],
+      [8, 9],
+      [9, 10],
+      [7, 10],
+      [8, 11],
+      [9, 11],
     ];
 
     Offset at(int i) =>

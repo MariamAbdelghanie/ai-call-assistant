@@ -153,7 +153,8 @@ class _RobotPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final phase = still ? 0.0 : t;
-    final float = math.sin(phase * 2 * math.pi) * (_active ? h * 0.018 : h * 0.009);
+    final float =
+        math.sin(phase * 2 * math.pi) * (_active ? h * 0.018 : h * 0.009);
 
     // Govde merkezi biraz asagida; kafa ustte kalsin diye ayri yurutuluyor.
     final headC = Offset(w / 2, h * 0.42 + float);
@@ -177,7 +178,8 @@ class _RobotPainter extends CustomPainter {
         ..color = aura.withValues(alpha: isDark ? 0.30 : 0.24)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
     );
-    if (!still && (mood == RobotMood.speaking || mood == RobotMood.connecting)) {
+    if (!still &&
+        (mood == RobotMood.speaking || mood == RobotMood.connecting)) {
       for (var i = 0; i < 3; i++) {
         final p = (phase * 1.6 + i / 3) % 1.0;
         canvas.drawCircle(
@@ -200,7 +202,8 @@ class _RobotPainter extends CustomPainter {
         height: h * 0.040,
       ),
       Paint()
-        ..color = const Color(0xFF0B0518).withValues(alpha: isDark ? 0.40 : 0.11)
+        ..color =
+            const Color(0xFF0B0518).withValues(alpha: isDark ? 0.40 : 0.11)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 11),
     );
   }
@@ -422,7 +425,6 @@ class _RobotPainter extends CustomPainter {
       Paint()..color = Colors.white.withValues(alpha: 0.06),
     );
     canvas.restore();
-
   }
 
   /// Kafanin ustunde egik duran ince halka.

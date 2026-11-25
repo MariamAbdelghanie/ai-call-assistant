@@ -63,8 +63,9 @@ class WelcomeScreen extends StatelessWidget {
                       SizedBox(
                         height: 50,
                         child: OutlinedButton(
-                          onPressed:
-                              auth.isBusy ? null : () => auth.signInWithGoogle(),
+                          onPressed: auth.isBusy
+                              ? null
+                              : () => auth.signInWithGoogle(),
                           style: OutlinedButton.styleFrom(
                             backgroundColor: tokens.isDark
                                 ? tokens.glass
@@ -87,12 +88,11 @@ class WelcomeScreen extends StatelessWidget {
                                 )
                               else
                                 Icon(Icons.account_circle_outlined,
-                                    size: 21,
-                                    color: context.scheme.onSurface),
+                                    size: 21, color: context.scheme.onSurface),
                               const SizedBox(width: 10),
                               Text(t.t('loginGoogle'),
-                                  style: text.labelLarge
-                                      ?.copyWith(fontSize: 15)),
+                                  style:
+                                      text.labelLarge?.copyWith(fontSize: 15)),
                             ],
                           ),
                         ),
@@ -115,8 +115,7 @@ class WelcomeScreen extends StatelessWidget {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 6),
                               minimumSize: Size.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: Text(t.t('welcomeSignIn')),
                           ),
@@ -216,8 +215,9 @@ class _Hero extends StatelessWidget {
                   style: context.text.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: 3.0,
-                    color:
-                        tokens.isDark ? AppPalette.sageLight : AppPalette.lightText,
+                    color: tokens.isDark
+                        ? AppPalette.sageLight
+                        : AppPalette.lightText,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -226,9 +226,15 @@ class _Hero extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _Pill(icon: Icons.phone_in_talk_outlined, label: t.t('featureAnswer')),
-                    _Pill(icon: Icons.edit_note_outlined, label: t.t('featureNote')),
-                    _Pill(icon: Icons.summarize_outlined, label: t.t('featureSummary')),
+                    _Pill(
+                        icon: Icons.phone_in_talk_outlined,
+                        label: t.t('featureAnswer')),
+                    _Pill(
+                        icon: Icons.edit_note_outlined,
+                        label: t.t('featureNote')),
+                    _Pill(
+                        icon: Icons.summarize_outlined,
+                        label: t.t('featureSummary')),
                   ],
                 ),
               ],

@@ -525,7 +525,8 @@ class _CallRow extends StatelessWidget {
                         : call.summary,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.bodySmall?.copyWith(color: tokens.muted),
+                    style:
+                        context.text.bodySmall?.copyWith(color: tokens.muted),
                   ),
                 ],
               ),

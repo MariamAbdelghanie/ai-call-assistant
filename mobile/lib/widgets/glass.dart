@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -146,7 +145,8 @@ class GradientButton extends StatelessWidget {
     final tokens = context.tokens;
     final enabled = onTap != null && !busy;
 
-    final gradient = useFourColors ? tokens.fourColorGradient : tokens.brandGradient;
+    final gradient =
+        useFourColors ? tokens.fourColorGradient : tokens.brandGradient;
 
     return Opacity(
       opacity: enabled ? 1 : 0.65,

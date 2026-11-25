@@ -43,8 +43,7 @@ class KpiRingRow extends StatelessWidget {
       radius: 20,
       child: Row(
         children: [
-          for (final item in items)
-            Expanded(child: _RingCell(item: item)),
+          for (final item in items) Expanded(child: _RingCell(item: item)),
         ],
       ),
     );
@@ -119,8 +118,8 @@ class _RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = 5.0;
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height)
-        .deflate(stroke / 2 + 1);
+    final rect =
+        Rect.fromLTWH(0, 0, size.width, size.height).deflate(stroke / 2 + 1);
 
     final base = Paint()
       ..style = PaintingStyle.stroke

@@ -73,9 +73,7 @@ class _CallScreenState extends State<CallScreen> {
         ),
       ],
       headerChild: HeaderStatusStrip(
-        label: state.isDemo
-            ? strings.t('offlineDemo')
-            : strings.t('connected'),
+        label: state.isDemo ? strings.t('offlineDemo') : strings.t('connected'),
         hours: state.isDemo ? '-' : host,
         online: !state.isDemo,
       ),
@@ -93,8 +91,8 @@ class _CallScreenState extends State<CallScreen> {
                   VoiceOrb(
                     size: 280,
                     speaking: _call.assistantSpeaking,
-                    listening: active && _call.micEnabled &&
-                        !_call.assistantSpeaking,
+                    listening:
+                        active && _call.micEnabled && !_call.assistantSpeaking,
                     dim: !active,
                   ),
                   const SizedBox(height: 22),
@@ -111,15 +109,12 @@ class _CallScreenState extends State<CallScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    active
-                        ? _duration(_call.elapsed)
-                        : strings.t('callHint'),
+                    active ? _duration(_call.elapsed) : strings.t('callHint'),
                     textAlign: TextAlign.center,
                     style: context.text.bodyMedium?.copyWith(
                       color: tokens.muted,
-                      fontFeatures: active
-                          ? const [FontFeature.tabularFigures()]
-                          : null,
+                      fontFeatures:
+                          active ? const [FontFeature.tabularFigures()] : null,
                     ),
                   ),
                   if (_call.phase == CallPhase.failed) ...[
@@ -128,8 +123,7 @@ class _CallScreenState extends State<CallScreen> {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: tokens.urgentSoft,
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusSm),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                         border: Border.all(
                           color: tokens.urgent.withValues(alpha: 0.4),
                         ),
@@ -174,9 +168,7 @@ class _CallScreenState extends State<CallScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _RoundAction(
-                          icon: _call.micEnabled
-                              ? AppIcon.mic
-                              : AppIcon.micOff,
+                          icon: _call.micEnabled ? AppIcon.mic : AppIcon.micOff,
                           label: strings.t(
                             _call.micEnabled ? 'callMute' : 'callUnmute',
                           ),
@@ -262,8 +254,7 @@ class _CallButton extends StatelessWidget {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : Row(
@@ -319,9 +310,8 @@ class _RoundAction extends StatelessWidget {
           child: Material(
             color: background,
             shape: CircleBorder(
-              side: border == null
-                  ? BorderSide.none
-                  : BorderSide(color: border!),
+              side:
+                  border == null ? BorderSide.none : BorderSide(color: border!),
             ),
             child: InkWell(
               customBorder: const CircleBorder(),
@@ -337,8 +327,7 @@ class _RoundAction extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           label,
-          style: context.text.labelSmall
-              ?.copyWith(color: context.tokens.muted),
+          style: context.text.labelSmall?.copyWith(color: context.tokens.muted),
         ),
       ],
     );

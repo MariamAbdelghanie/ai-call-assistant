@@ -40,8 +40,7 @@ class LiveCallService extends ChangeNotifier {
   bool assistantSpeaking = false;
   Duration elapsed = Duration.zero;
 
-  bool get isBusy =>
-      phase == CallPhase.connecting || phase == CallPhase.ending;
+  bool get isBusy => phase == CallPhase.connecting || phase == CallPhase.ending;
   bool get isActive => phase == CallPhase.connected;
 
   Uri _uri(String baseUrl, String path) {

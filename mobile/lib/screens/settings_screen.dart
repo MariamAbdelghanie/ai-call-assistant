@@ -83,9 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Row(
                 children: [
                   SoftIcon(
-                    state.isDemo
-                        ? AppIcon.cloudOff
-                        : AppIcon.cloud,
+                    state.isDemo ? AppIcon.cloudOff : AppIcon.cloud,
                     size: 18,
                     color: state.isDemo
                         ? context.tokens.pending
@@ -174,7 +172,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  for (final voice in const ['Kore', 'Puck', 'Charon', 'Fenrir'])
+                  for (final voice in const [
+                    'Kore',
+                    'Puck',
+                    'Charon',
+                    'Fenrir'
+                  ])
                     ChoiceChip(
                       label: Text(voice),
                       selected: state.config.realtimeVoice == voice,
@@ -437,5 +440,3 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
-
-

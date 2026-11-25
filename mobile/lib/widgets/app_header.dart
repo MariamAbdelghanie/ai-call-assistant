@@ -53,83 +53,84 @@ class AppHeaderScaffold extends StatelessWidget {
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
-      backgroundColor:
-          tokens.isDark ? AppPalette.darkSurface : const Color(0xFFF7F7F8),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppPalette.accentDeep, AppPalette.orange],
+        backgroundColor:
+            tokens.isDark ? AppPalette.darkSurface : const Color(0xFFF7F7F8),
+        body: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppPalette.accentDeep, AppPalette.orange],
+                ),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(26),
+                ),
               ),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(26),
-              ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(18, 10, 18, overlap > 0 ? 18 + overlap : 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        if (leading != null) ...[
-                          leading!,
-                          const SizedBox(width: 12),
-                        ],
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: context.text.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              if (subtitle != null) ...[
-                                const SizedBox(height: 2),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                      18, 10, 18, overlap > 0 ? 18 + overlap : 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (leading != null) ...[
+                            leading!,
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  subtitle!,
+                                  title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: context.text.bodySmall?.copyWith(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.88),
+                                  style: context.text.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
+                                if (subtitle != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    subtitle!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.text.bodySmall?.copyWith(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.88),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                        if (actions != null) ...actions!,
+                          if (actions != null) ...actions!,
+                        ],
+                      ),
+                      if (headerChild != null) ...[
+                        const SizedBox(height: 16),
+                        headerChild!,
                       ],
-                    ),
-                    if (headerChild != null) ...[
-                      const SizedBox(height: 16),
-                      headerChild!,
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Transform.translate(
-              offset: Offset(0, -overlap),
-              child: body,
+            Expanded(
+              child: Transform.translate(
+                offset: Offset(0, -overlap),
+                child: body,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -261,9 +262,8 @@ class HeaderSegmented extends StatelessWidget {
                   curve: Curves.easeOut,
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
-                    color: index == selected
-                        ? Colors.white
-                        : Colors.transparent,
+                    color:
+                        index == selected ? Colors.white : Colors.transparent,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(
@@ -510,9 +510,8 @@ class HeaderProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = name.trim().isEmpty
-        ? 'C'
-        : name.trim().characters.first.toUpperCase();
+    final initial =
+        name.trim().isEmpty ? 'C' : name.trim().characters.first.toUpperCase();
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -526,8 +525,7 @@ class HeaderProfile extends StatelessWidget {
           CircleAvatar(
             radius: 24,
             backgroundColor: Colors.white.withValues(alpha: 0.26),
-            foregroundImage:
-                photoUrl == null ? null : NetworkImage(photoUrl!),
+            foregroundImage: photoUrl == null ? null : NetworkImage(photoUrl!),
             child: Text(
               initial,
               style: context.text.titleMedium?.copyWith(

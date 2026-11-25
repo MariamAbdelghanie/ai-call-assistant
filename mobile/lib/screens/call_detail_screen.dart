@@ -151,8 +151,7 @@ class CallDetailScreen extends StatelessWidget {
           if (call.callerPurpose.isNotEmpty)
             _Section(
               title: strings.t('callerPurpose'),
-              child: Text(call.callerPurpose,
-                  style: theme.textTheme.bodyLarge),
+              child: Text(call.callerPurpose, style: theme.textTheme.bodyLarge),
             ),
           if (call.hasAppointment)
             _Section(

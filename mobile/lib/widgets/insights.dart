@@ -65,8 +65,7 @@ class WeeklyActivityCard extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: (rising ? tokens.success : tokens.muted)
                       .withValues(alpha: 0.12),
@@ -305,9 +304,7 @@ class PeakHourCard extends StatelessWidget {
       }
     });
 
-    final label = peak == null
-        ? '—'
-        : '${peak.toString().padLeft(2, '0')}:00';
+    final label = peak == null ? '—' : '${peak.toString().padLeft(2, '0')}:00';
 
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),

@@ -242,136 +242,136 @@ class CallCard extends StatelessWidget {
       onTap: onTap,
       padding: const EdgeInsets.all(18),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.14),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.32),
-                        width: 1.4,
-                      ),
-                    ),
-                    child: Text(
-                      Formatters.initials(call.callerName),
-                      style: context.text.titleSmall?.copyWith(
-                        color: accent,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.32),
+                    width: 1.4,
                   ),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          call.callerName.isEmpty
-                              ? strings.t('unnamed')
-                              : call.callerName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          Formatters.friendly(call.timestamp, strings),
-                          style: context.text.bodySmall
-                              ?.copyWith(color: tokens.muted),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (call.isUrgent)
-                    StatusBadge(
-                      label: strings.t('urgentBadge'),
-                      foreground: tokens.urgent,
-                      background: tokens.urgentSoft,
-                      icon: AppIcon.urgent,
-                    ),
-                ],
-              ),
-              if (call.callerPurpose.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Text(
-                  call.callerPurpose,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.labelLarge?.copyWith(
+                ),
+                child: Text(
+                  Formatters.initials(call.callerName),
+                  style: context.text.titleSmall?.copyWith(
                     color: accent,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-              if (call.summary.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  call.summary,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodyMedium
-                      ?.copyWith(color: tokens.muted, height: 1.5),
-                ),
-              ],
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (call.hasAppointment)
-                    StatusBadge(
-                      label: call.appointmentInfo,
-                      foreground: AppPalette.blush,
-                      background: tokens.glass,
-                      icon: AppIcon.calendarOk,
-                    ),
-                  if (call.awaitingCallback)
-                    StatusBadge(
-                      label: strings.t('callbackBadge'),
-                      foreground: tokens.pending,
-                      background: tokens.pendingSoft,
-                      icon: AppIcon.phoneBack,
-                    ),
-                  if (call.calledBack)
-                    StatusBadge(
-                      label: strings.t('calledBack'),
-                      foreground: tokens.success,
-                      background: tokens.successSoft,
-                      icon: AppIcon.check,
-                    ),
-                  StatusBadge(
-                    label: strings.languageName(call.lang),
-                    foreground: tokens.muted,
-                    background: tokens.muted.withValues(alpha: 0.12),
-                    icon: AppIcon.globe,
-                  ),
-                ],
               ),
-              if (call.callbackRequested) ...[
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: call.calledBack
-                      ? OutlinedButton.icon(
-                          onPressed: onToggleCalledBack,
-                          icon: const SoftIcon(AppIcon.undo, size: 18),
-                          label: Text(strings.t('markNotCalledBack')),
-                        )
-                      : FilledButton.icon(
-                          onPressed: onToggleCalledBack,
-                          icon: const SoftIcon(AppIcon.check, size: 18),
-                          label: Text(strings.t('markCalledBack')),
-                        ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      call.callerName.isEmpty
+                          ? strings.t('unnamed')
+                          : call.callerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      Formatters.friendly(call.timestamp, strings),
+                      style:
+                          context.text.bodySmall?.copyWith(color: tokens.muted),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              if (call.isUrgent)
+                StatusBadge(
+                  label: strings.t('urgentBadge'),
+                  foreground: tokens.urgent,
+                  background: tokens.urgentSoft,
+                  icon: AppIcon.urgent,
+                ),
+            ],
+          ),
+          if (call.callerPurpose.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              call.callerPurpose,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.labelLarge?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (call.summary.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              call.summary,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.bodyMedium
+                  ?.copyWith(color: tokens.muted, height: 1.5),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (call.hasAppointment)
+                StatusBadge(
+                  label: call.appointmentInfo,
+                  foreground: AppPalette.blush,
+                  background: tokens.glass,
+                  icon: AppIcon.calendarOk,
+                ),
+              if (call.awaitingCallback)
+                StatusBadge(
+                  label: strings.t('callbackBadge'),
+                  foreground: tokens.pending,
+                  background: tokens.pendingSoft,
+                  icon: AppIcon.phoneBack,
+                ),
+              if (call.calledBack)
+                StatusBadge(
+                  label: strings.t('calledBack'),
+                  foreground: tokens.success,
+                  background: tokens.successSoft,
+                  icon: AppIcon.check,
+                ),
+              StatusBadge(
+                label: strings.languageName(call.lang),
+                foreground: tokens.muted,
+                background: tokens.muted.withValues(alpha: 0.12),
+                icon: AppIcon.globe,
+              ),
+            ],
+          ),
+          if (call.callbackRequested) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: call.calledBack
+                  ? OutlinedButton.icon(
+                      onPressed: onToggleCalledBack,
+                      icon: const SoftIcon(AppIcon.undo, size: 18),
+                      label: Text(strings.t('markNotCalledBack')),
+                    )
+                  : FilledButton.icon(
+                      onPressed: onToggleCalledBack,
+                      icon: const SoftIcon(AppIcon.check, size: 18),
+                      label: Text(strings.t('markCalledBack')),
+                    ),
+            ),
+          ],
         ],
       ),
     );

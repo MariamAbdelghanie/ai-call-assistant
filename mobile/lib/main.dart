@@ -91,7 +91,8 @@ class _CallAssistantAppState extends State<CallAssistantApp> {
           builder: (context, _) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
-              onGenerateTitle: (context) => AppStrings.of(context).t('appTitle'),
+              onGenerateTitle: (context) =>
+                  AppStrings.of(context).t('appTitle'),
               title: 'CALLORA',
               theme: AppTheme.light(),
               darkTheme: AppTheme.dark(),

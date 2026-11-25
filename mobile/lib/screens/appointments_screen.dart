@@ -63,7 +63,6 @@ class AppointmentsScreen extends StatefulWidget {
       return _parse(other.appointmentInfo).when == mine;
     });
   }
-
 }
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
@@ -138,9 +137,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           return when != null && _sameDay(when, day);
         }),
         onSelect: (day) => setState(() {
-          _selected = (_selected != null && _sameDay(_selected!, day))
-              ? null
-              : day;
+          _selected =
+              (_selected != null && _sameDay(_selected!, day)) ? null : day;
         }),
         onPrevWeek: () => setState(() {
           _weekStart = _weekStart.subtract(const Duration(days: 7));
@@ -165,7 +163,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
               const SizedBox(height: 14),
             ],
-
             if (shown.isEmpty)
               EmptyState(
                 icon: AppIcon.calendar,
@@ -183,15 +180,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   isFirst: index == 0,
                   isLast: index == shown.length - 1,
                   // Gun degistiginde tarih basligi gosterilir.
-                  dayLabel:
-                      _dayLabelFor(shown, index, strings),
+                  dayLabel: _dayLabelFor(shown, index, strings),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => CallDetailScreen(callId: call.callId),
                     ),
                   ),
                 ),
-
             if (shown.isNotEmpty) ...[
               const SizedBox(height: 10),
               Center(
@@ -206,7 +201,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       ),
     );
   }
-
 }
 
 /// Onceki ogeden farkli bir gune geciliyorsa gun basligi doner.
@@ -215,10 +209,11 @@ String? _dayLabelFor(
   int index,
   AppStrings strings,
 ) {
-  final current = _parse(items[index].appointmentInfo).when;
+  final current = AppointmentsScreen._parse(items[index].appointmentInfo).when;
   if (current == null) return null;
   if (index == 0) return _humanDay(current, strings);
-  final previous = _parse(items[index - 1].appointmentInfo).when;
+  final previous =
+      AppointmentsScreen._parse(items[index - 1].appointmentInfo).when;
   if (previous == null) return _humanDay(current, strings);
   final sameDay = previous.year == current.year &&
       previous.month == current.month &&
@@ -260,8 +255,7 @@ class _TimelineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final accent = canceled ? tokens.muted : AppPalette.ink;
-    final time =
-        parsed.when == null ? '--:--' : Formatters.time(parsed.when!);
+    final time = parsed.when == null ? '--:--' : Formatters.time(parsed.when!);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,8 +293,7 @@ class _TimelineRow extends StatelessWidget {
                     style: context.text.labelLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: canceled ? tokens.muted : null,
-                      decoration:
-                          canceled ? TextDecoration.lineThrough : null,
+                      decoration: canceled ? TextDecoration.lineThrough : null,
                     ),
                   ),
                 ),
@@ -313,9 +306,7 @@ class _TimelineRow extends StatelessWidget {
                     Container(
                       width: 2,
                       height: 14,
-                      color: isFirst
-                          ? Colors.transparent
-                          : tokens.glassBorder,
+                      color: isFirst ? Colors.transparent : tokens.glassBorder,
                     ),
                     Container(
                       width: 13,
@@ -329,8 +320,7 @@ class _TimelineRow extends StatelessWidget {
                     Expanded(
                       child: Container(
                         width: 2,
-                        color:
-                            isLast ? Colors.transparent : tokens.glassBorder,
+                        color: isLast ? Colors.transparent : tokens.glassBorder,
                       ),
                     ),
                   ],

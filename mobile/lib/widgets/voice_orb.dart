@@ -260,8 +260,7 @@ class _Bar extends StatelessWidget {
     final middle = (count - 1) / 2;
     final distance = (index - middle).abs() / middle;
     final envelope = 1 - distance * 0.7;
-    final wave =
-        math.sin((phase * 2 * math.pi) + index * 0.55).abs();
+    final wave = math.sin((phase * 2 * math.pi) + index * 0.55).abs();
     final height = active ? 5 + 20 * wave * envelope : 4 + 3 * envelope;
 
     return AnimatedContainer(
