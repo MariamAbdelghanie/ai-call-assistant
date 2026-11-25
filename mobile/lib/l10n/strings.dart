@@ -32,6 +32,8 @@ class AppStrings {
     'tr': {
       'greetingHi': 'Merhaba',
       'quickTestCall': 'Test aramasi',
+      'quickSearch': 'Çağrı ara',
+      'recentTitle': 'Son etkileşimler',
       'quickAgenda': 'Bugunun ajandasi',
       'quickUrgent': 'Acil cagrilar',
       'assistantOn': 'Asistan açık',
@@ -248,6 +250,8 @@ class AppStrings {
     'ar': {
       'greetingHi': 'أهلاً',
       'quickTestCall': 'مكالمة تجريبية',
+      'quickSearch': 'بحث في المكالمات',
+      'recentTitle': 'آخر التفاعلات',
       'quickAgenda': 'أجندة اليوم',
       'quickUrgent': 'المكالمات العاجلة',
       'assistantOn': 'المساعد مفعّل',
@@ -460,6 +464,8 @@ class AppStrings {
     'en': {
       'greetingHi': 'Hi',
       'quickTestCall': 'Test call',
+      'quickSearch': 'Search calls',
+      'recentTitle': 'Recent interactions',
       'quickAgenda': "Today's agenda",
       'quickUrgent': 'Urgent calls',
       'assistantOn': 'Assistant on',
