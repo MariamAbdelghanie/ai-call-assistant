@@ -369,6 +369,7 @@ class AuroraStage extends StatefulWidget {
     required this.child,
     this.active = false,
     this.radius = 28,
+    this.light = false,
   });
 
   final Widget child;
@@ -377,6 +378,11 @@ class AuroraStage extends StatefulWidget {
   final bool active;
 
   final double radius;
+
+  /// Acik zemin: krem beyaz uzerinde seftali lekeleri. Arama ekraninda
+  /// kullaniliyor; koyu sahne kurenin altindaki metinleri de koyulastirip
+  /// sayfayi uygulamanin geri kalanindan kopariyordu.
+  final bool light;
 
   @override
   State<AuroraStage> createState() => _AuroraStageState();
@@ -400,11 +406,13 @@ class _AuroraStageState extends State<AuroraStage>
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.radius),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppPalette.indigo, AppPalette.indigoDeep],
+            colors: widget.light
+                ? const [Color(0xFFFFFBF8), Color(0xFFFFF0E4)]
+                : const [AppPalette.indigo, AppPalette.indigoDeep],
           ),
         ),
         child: Stack(
@@ -417,6 +425,7 @@ class _AuroraStageState extends State<AuroraStage>
                     painter: _AuroraPainter(
                       phase: _controller.value,
                       strength: widget.active ? 1.0 : 0.6,
+                      light: widget.light,
                     ),
                   ),
                 ),
@@ -431,16 +440,29 @@ class _AuroraStageState extends State<AuroraStage>
 }
 
 class _AuroraPainter extends CustomPainter {
-  _AuroraPainter({required this.phase, required this.strength});
+  _AuroraPainter({
+    required this.phase,
+    required this.strength,
+    required this.light,
+  });
 
   final double phase;
   final double strength;
+  final bool light;
 
   /// Her leke: renk, yorunge yaricapi, hiz carpani ve baslangic acisi.
-  static const _blobs = <(Color, double, double, double)>[
+  static const _dark = <(Color, double, double, double)>[
     (Color(0xFFFF7A2F), 0.34, 1.0, 0.0),
     (Color(0xFF7A4BD0), 0.30, -0.7, 2.1),
     (Color(0xFF2BB3A3), 0.26, 0.45, 4.2),
+  ];
+
+  /// Acik zeminde ayni lekeler daha sicak ve daha soluk; beyazin uzerinde
+  /// koyu renkler leke gibi duruyordu.
+  static const _lightBlobs = <(Color, double, double, double)>[
+    (Color(0xFFFFB07C), 0.34, 1.0, 0.0),
+    (Color(0xFFFFD2B0), 0.30, -0.7, 2.1),
+    (Color(0xFFFFE0C2), 0.26, 0.45, 4.2),
   ];
 
   @override
@@ -448,7 +470,7 @@ class _AuroraPainter extends CustomPainter {
     final center = size.center(Offset.zero);
     final base = math.min(size.width, size.height);
 
-    for (final (color, orbit, speed, offset) in _blobs) {
+    for (final (color, orbit, speed, offset) in light ? _lightBlobs : _dark) {
       final angle = offset + phase * 2 * math.pi * speed;
       final pos = center +
           Offset(math.cos(angle), math.sin(angle * 0.8)) * (base * orbit);
@@ -459,7 +481,7 @@ class _AuroraPainter extends CustomPainter {
         Paint()
           ..shader = RadialGradient(
             colors: [
-              color.withValues(alpha: 0.30 * strength),
+              color.withValues(alpha: (light ? 0.55 : 0.30) * strength),
               color.withValues(alpha: 0.0),
             ],
           ).createShader(Rect.fromCircle(center: pos, radius: radius)),
@@ -469,5 +491,7 @@ class _AuroraPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_AuroraPainter oldDelegate) =>
-      oldDelegate.phase != phase || oldDelegate.strength != strength;
+      oldDelegate.phase != phase ||
+      oldDelegate.strength != strength ||
+      oldDelegate.light != light;
 }

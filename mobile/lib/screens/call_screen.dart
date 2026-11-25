@@ -72,11 +72,6 @@ class _CallScreenState extends State<CallScreen> {
           tooltip: strings.t('tabSettings'),
         ),
       ],
-      headerChild: HeaderStatusStrip(
-        label: state.isDemo ? strings.t('offlineDemo') : strings.t('connected'),
-        hours: state.isDemo ? '-' : host,
-        online: !state.isDemo,
-      ),
       body: ListenableBuilder(
         listenable: _call,
         builder: (context, _) {
@@ -96,7 +91,7 @@ class _CallScreenState extends State<CallScreen> {
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: AppPalette.indigoDeep.withValues(alpha: 0.28),
+                          color: AppPalette.accentDeep.withValues(alpha: 0.14),
                           blurRadius: 30,
                           offset: const Offset(0, 14),
                         ),
@@ -104,15 +99,27 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                     child: AuroraStage(
                       active: active,
+                      // Acik zemin: koyu sahne sayfayi uygulamanin geri
+                      // kalanindan koparmisti.
+                      light: true,
                       // Stack icindeki govde kendi genisligine sigiyordu;
                       // sahnenin tam genislikte olmasi gerekiyor.
                       child: SizedBox(
                         width: double.infinity,
                         child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 26),
-                        child: Column(
-                      children: [
-                        VoiceOrb(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 26),
+                          child: Column(
+                            children: [
+                              // Sunucu durumu: genis serit yerine sahnenin
+                              // tepesinde kucuk bir kapsul.
+                              _StatusPill(
+                                online: !state.isDemo,
+                                label:
+                                    state.isDemo ? strings.t('offlineDemo') : host,
+                                onTap: widget.onOpenSettings,
+                              ),
+                              const SizedBox(height: 18),
+                              VoiceOrb(
                           size: 240,
                           speaking: _call.assistantSpeaking,
                           listening: active &&
@@ -130,7 +137,7 @@ class _CallScreenState extends State<CallScreen> {
                             key: ValueKey(_statusText(_call, strings)),
                             style: context.text.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: AppPalette.ink,
                             ),
                           ),
                         ),
@@ -141,7 +148,7 @@ class _CallScreenState extends State<CallScreen> {
                               : strings.t('callHint'),
                           textAlign: TextAlign.center,
                           style: context.text.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.72),
+                            color: tokens.muted,
                             fontFeatures: active
                                 ? const [FontFeature.tabularFigures()]
                                 : null,
@@ -366,6 +373,73 @@ class _RoundAction extends StatelessWidget {
           style: context.text.labelSmall?.copyWith(color: context.tokens.muted),
         ),
       ],
+    );
+  }
+}
+
+
+/// Sahnenin tepesindeki sunucu durumu kapsulu.
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
+    required this.online,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool online;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: tokens.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: online ? tokens.success : tokens.pending,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.labelMedium?.copyWith(
+                    color: AppPalette.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
