@@ -112,9 +112,10 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                     child: AuroraStage(
                       active: active,
-                      // Acik zemin: koyu sahne sayfayi uygulamanin geri
-                      // kalanindan koparmisti.
-                      light: true,
+                      // Acik temada krem sahne, koyu temada lacivert:
+                      // koyu sayfanin ortasindaki parlak panel goz
+                      // aliyordu.
+                      light: !tokens.isDark,
                       // Stack icindeki govde kendi genisligine sigiyordu;
                       // sahnenin tam genislikte olmasi gerekiyor.
                       child: SizedBox(
@@ -151,7 +152,9 @@ class _CallScreenState extends State<CallScreen> {
                                   key: ValueKey(_statusText(_call, strings)),
                                   style: context.text.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: AppPalette.ink,
+                                    color: tokens.isDark
+                                        ? Colors.white
+                                        : AppPalette.ink,
                                   ),
                                 ),
                               ),

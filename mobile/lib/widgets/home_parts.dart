@@ -110,13 +110,17 @@ class AssistantCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
       decoration: BoxDecoration(
+        // Koyu temada acik seftali zemin uzerine beyaz yazi geliyordu ve
+        // baslik okunmuyordu; koyuda ayni vurguyu saydam turuncu veriyor.
         color: enabled
-            ? AppPalette.orangeSoft
+            ? (tokens.isDark
+                ? AppPalette.orange.withValues(alpha: 0.16)
+                : AppPalette.orangeSoft)
             : (tokens.isDark ? tokens.glass : AppPalette.surfaceAlt),
         borderRadius: BorderRadius.circular(AppTheme.radius),
         border: Border.all(
           color: enabled
-              ? AppPalette.orange.withValues(alpha: 0.28)
+              ? AppPalette.orange.withValues(alpha: tokens.isDark ? 0.45 : 0.28)
               : tokens.glassBorder,
         ),
       ),

@@ -11,21 +11,25 @@ yazılmış **mobil panel**.
 
 ## Ekran görüntüleri
 
-| Giriş | Hesap oluştur | Ana sayfa |
+| Giriş | Ana sayfa | Çağrı listesi |
 |---|---|---|
-| <img src="docs/screenshots/01-giris.png" width="240"> | <img src="docs/screenshots/02-hesap-olustur.png" width="240"> | <img src="docs/screenshots/03-ana-sayfa.png" width="240"> |
+| <img src="docs/screenshots/01-giris.png" width="240"> | <img src="docs/screenshots/02-ana-sayfa.png" width="240"> | <img src="docs/screenshots/03-cagri-listesi.png" width="240"> |
 
-| Grafikler | Çağrı listesi | Acil çağrılar |
+| Acil çağrılar | Arama | Randevular |
 |---|---|---|
-| <img src="docs/screenshots/04-ana-sayfa-grafikler.png" width="240"> | <img src="docs/screenshots/05-cagri-listesi.png" width="240"> | <img src="docs/screenshots/06-acil-cagrilar.png" width="240"> |
-
-| Arama | Randevular (takvim) | Randevular (liste) |
-|---|---|---|
-| <img src="docs/screenshots/07-arama.png" width="240"> | <img src="docs/screenshots/08-randevular-takvim.png" width="240"> | <img src="docs/screenshots/09-randevular-liste.png" width="240"> |
+| <img src="docs/screenshots/04-acil-cagrilar.png" width="240"> | <img src="docs/screenshots/05-arama.png" width="240"> | <img src="docs/screenshots/06-randevular.png" width="240"> |
 
 | Ayarlar |
 |---|
-| <img src="docs/screenshots/10-ayarlar.png" width="240"> |
+| <img src="docs/screenshots/07-ayarlar.png" width="240"> |
+
+### Koyu tema
+
+Tema sistem ayarını izler; Ayarlar > Görünüm bölümünden elle de seçilebilir.
+
+| Ana sayfa | Çağrı listesi | Arama |
+|---|---|---|
+| <img src="docs/screenshots/dark-03-ana-sayfa.png" width="240"> | <img src="docs/screenshots/dark-02-cagri-listesi.png" width="240"> | <img src="docs/screenshots/dark-01-arama.png" width="240"> |
 
 ---
 
@@ -121,22 +125,89 @@ Cascade kodu yedek olarak projede duruyor (`agent_config.json` içindeki
 
 ---
 
-## Gerçek bir numaraya bağlama
+## Gerçek bir numarayla yayına alma
 
-Proje **bulut numarasına bağlanmaya hazır** durumda. Şu an yerel ortamda
-`web_dialer.py` üzerinden simüle edilen çağrı akışı, gerçek bir numarada
-hiçbir kod değişikliği gerektirmez; yalnızca SIP yapılandırması eklenir.
+Şu an proje tek bir bilgisayarda çalışıyor ve çağrılar `web_dialer.py`
+üzerinden simüle ediliyor. Gerçek bir numarayı asistanın karşılaması için
+sırasıyla şunlar gerekir. Sıra önemli: her adım bir öncekine dayanıyor.
 
-Yapılacaklar:
+### 1. Bulut sunucu
 
-1. Bir SIP sağlayıcısından numara alın (Twilio, Telnyx veya yerel bir operatör).
-2. `setup_sip.py` içindeki trunk bilgilerini sağlayıcınızın değerleriyle doldurun.
-3. LiveKit SIP servisini çalıştırın (`docker-compose.yml` içinde hazır).
-4. Telefonunuzda **koşullu çağrı yönlendirme** tanımlayın: açılmayan çağrılar
-   bu numaraya gitsin.
+Agent, LiveKit ve SIP servisi 7/24 ayakta olmalı; kapalı bilgisayar çağrıyı
+karşılayamaz.
 
-Bu adımdan sonra asistan gerçek çağrıları karşılamaya başlar. Mobil panel,
-takvim ve veritabanı tarafında değişiklik gerekmez.
+- Linux sunucu (2 vCPU / 4 GB başlangıç için yeterli; ses işleme CPU yer).
+- Sunucunun **sabit genel IP adresi** olmalı. LiveKit, ICE adaylarında bu
+  adresi karşı tarafa bildirir (`node_ip`); ev ağındaki NAT'ın çağrıyı
+  düşürmesinin sebebi buydu.
+- Türkiye'den arayanların gecikmesi için sunucu Avrupa'da olmalı
+  (Frankfurt veya İstanbul bölgesi).
+
+### 2. Alan adı ve sertifika
+
+- Bir alan adı alın, sunucunun IP'sine yönlendirin.
+- TLS sertifikası (Let's Encrypt ücretsiz). Panel `https://`, LiveKit
+  `wss://` üzerinden çalışmalı.
+- Mobil uygulamada sunucu adresi bu alan adı olur; `127.0.0.1` ve USB
+  kablosu yalnızca geliştirme içindi.
+
+### 3. Açılması gereken portlar
+
+| Port | Protokol | Ne için |
+|---|---|---|
+| 443 | TCP | Panel ve LiveKit WebSocket (TLS) |
+| 5060 | UDP + TCP | SIP sinyalleşme |
+| 10000-20000 | UDP | RTP ses akışı |
+
+RTP aralığı UDP'dir ve TCP'ye çevrilemez; sağlayıcıya göre aralık değişir.
+
+### 4. SIP numarası (DID)
+
+Bir sağlayıcıdan gelen çağrı alabilen numara kiralanır: Twilio, Telnyx,
+Vonage ya da yerel bir operatör (Netgsm, Verimor gibi).
+
+- **Türkiye numarası için belge istenir.** Sağlayıcılar +90 numaralarda
+  genellikle şirket/vergi kaydı ve adres belgesi ister; bireysel başvuru
+  çoğu zaman kabul edilmez. Stajın bağlı olduğu şirket üzerinden almak en
+  pratik yol. Güncel koşulları sağlayıcıdan teyit edin.
+- Alternatif: test için yurt dışı numarası (ör. +1) almak kolaydır ama
+  arayanlar Türkiye'den uluslararası ücret öder.
+
+### 5. SIP trunk tanımı
+
+- Sağlayıcı panelinde gelen çağrıları sunucunuzun IP'sine yönlendirin.
+- `setup_sip.py` içindeki trunk bilgilerini (host, kullanıcı adı, parola)
+  sağlayıcının değerleriyle doldurup çalıştırın; LiveKit tarafında inbound
+  trunk ve dispatch kuralı oluşur.
+- `docker-compose.yml` içindeki `livekit-sip` servisi bu kuralı kullanır.
+
+### 6. Çağrı yönlendirme
+
+İşletmenin mevcut numarasını değiştirmeye gerek yok: operatörün
+**koşullu çağrı yönlendirme** özelliğiyle açılmayan veya meşgul çağrılar
+asistanın numarasına gider. GSM hatlarında bu, telefondan girilen kısa
+kodlarla da yapılabilir.
+
+### 7. Yayın öncesi kalan işler
+
+Aşağıdaki başlıklar teknik olarak çalışmayı engellemez ama gerçek
+kullanıcıya açmadan önce tamamlanmalıdır; ayrıntıları bir sonraki bölümde:
+veri saklama süresi, silme talebi akışı, yedekleme, istek sınırı ve KVKK
+aydınlatma metni.
+
+### Maliyet kalemleri
+
+Sağlayıcıya ve kullanıma göre değişir; sözleşme yapmadan önce her kalem
+için güncel fiyatı kendi sağlayıcınızdan alın:
+
+- Sunucu: aylık sabit ücret.
+- Numara: aylık kira.
+- Gelen çağrı: dakika başına ücret.
+- Gemini Live: ses girişi ve çıkışı için ayrı ayrı, saniye başına.
+- Firebase ve Google Takvim: bu ölçekte genellikle ücretsiz kotada kalır.
+
+Asistan açık olduğu her saat ücret üretmez; ücret yalnızca gerçek çağrı
+süresince işler.
 
 ---
 
@@ -204,7 +275,7 @@ tamamlanmalıdır.
 
 | Konu | Durum | Yapılacak |
 |---|---|---|
-| **Kimlik doğrulama** | Yok | Panelde kullanıcı girişi; şu an belirteci bilen herkes tüm kayıtları görür |
+| **Kimlik doğrulama** | Var | Firebase ile e-posta/parola ve Google girişi; her hesap yalnızca kendi kayıtlarını görür |
 | **HTTPS** | Yok | Sunucu `http://` üzerinden çalışıyor; sertifika ve alan adı gerekir |
 | **Barındırma** | Yok | Sunucu bir bilgisayarda; bulut sunucuya taşınmalı |
 | **Gizlilik politikası** | Yok | Yazılı metin, saklama süresi ve silme talebi akışı (aşağıya bakınız) |
