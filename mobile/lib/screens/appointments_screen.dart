@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 import '../widgets/app_header.dart';
 import '../widgets/common.dart';
+import '../widgets/week_grid.dart';
 import '../widgets/glass.dart';
 import '../widgets/soft_icon.dart';
 import 'call_detail_screen.dart';
@@ -163,6 +164,46 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
               const SizedBox(height: 14),
             ],
+            // Hafta izgarasi: randevularin gunun neresine dustugunu ve
+            // hangi saatlerin bos oldugunu gosterir.
+            WeekGrid(
+              weekStart: _weekStart,
+              dayLabels: [
+                for (final key in const [
+                  'dayMon',
+                  'dayTue',
+                  'dayWed',
+                  'dayThu',
+                  'dayFri',
+                  'daySat',
+                  'daySun',
+                ])
+                  strings.t(key),
+              ],
+              events: [
+                for (final call in items)
+                  if (AppointmentsScreen._parse(call.appointmentInfo).when
+                      case final startsAt?)
+                    GridEvent(
+                      start: startsAt,
+                      title: call.callerName,
+                      canceled: AppointmentsScreen._isCanceled(
+                              call.appointmentInfo) ||
+                          AppointmentsScreen._canceledLater(items, call),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              CallDetailScreen(callId: call.callId),
+                        ),
+                      ),
+                    ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            SectionTitle(strings.t('appointmentsTitle')),
+            const SizedBox(height: 10),
+
             if (shown.isEmpty)
               EmptyState(
                 icon: AppIcon.calendar,

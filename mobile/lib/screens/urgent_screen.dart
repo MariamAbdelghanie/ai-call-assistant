@@ -6,6 +6,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 import '../widgets/app_header.dart';
+import '../widgets/caller_avatar.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
 import '../widgets/soft_icon.dart';
@@ -148,35 +149,47 @@ class _UrgentCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
+                        CallerAvatar(name: call.callerName, size: 42),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                call.callerName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.text.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '#$rank · '
+                                '${Formatters.friendly(call.timestamp, strings)}',
+                                style: context.text.labelSmall
+                                    ?.copyWith(color: tokens.muted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Durum rozeti: karta bakar bakmaz bu cagrinin
+                        // kapanip kapanmadigi gorulsun.
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
+                              horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: accent.withValues(alpha: 0.13),
-                            borderRadius: BorderRadius.circular(7),
+                            borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            '#$rank',
+                            strings.t(
+                                done ? 'urgentTabDone' : 'urgentTabWaiting'),
                             style: context.text.labelSmall?.copyWith(
                               color: accent,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            call.callerName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.text.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        Text(
-                          Formatters.friendly(call.timestamp, strings),
-                          style: context.text.labelSmall
-                              ?.copyWith(color: tokens.muted),
                         ),
                       ],
                     ),

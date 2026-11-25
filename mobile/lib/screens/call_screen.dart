@@ -88,33 +88,65 @@ class _CallScreenState extends State<CallScreen> {
               child: Column(
                 children: [
                   const Spacer(),
-                  VoiceOrb(
-                    size: 280,
-                    speaking: _call.assistantSpeaking,
-                    listening:
-                        active && _call.micEnabled && !_call.assistantSpeaking,
-                    dim: !active,
-                  ),
-                  const SizedBox(height: 22),
-                  OrbWaveform(active: active),
-                  const SizedBox(height: 14),
-                  AnimatedSwitcher(
-                    duration: AppTheme.normal,
-                    child: Text(
-                      _statusText(_call, strings),
-                      key: ValueKey(_statusText(_call, strings)),
-                      style: context.text.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                  // Orb lacivert bir sahnenin uzerinde duruyor: turuncu
+                  // kure beyaz zeminde soluk kaliyordu, koyu zeminde ise
+                  // isik kaynagi gibi gorunuyor.
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 26),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [AppPalette.indigo, AppPalette.indigoDeep],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppPalette.indigoDeep.withValues(alpha: 0.28),
+                          blurRadius: 30,
+                          offset: const Offset(0, 14),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    active ? _duration(_call.elapsed) : strings.t('callHint'),
-                    textAlign: TextAlign.center,
-                    style: context.text.bodyMedium?.copyWith(
-                      color: tokens.muted,
-                      fontFeatures:
-                          active ? const [FontFeature.tabularFigures()] : null,
+                    child: Column(
+                      children: [
+                        VoiceOrb(
+                          size: 240,
+                          speaking: _call.assistantSpeaking,
+                          listening: active &&
+                              _call.micEnabled &&
+                              !_call.assistantSpeaking,
+                          dim: !active,
+                        ),
+                        const SizedBox(height: 20),
+                        OrbWaveform(active: active),
+                        const SizedBox(height: 16),
+                        AnimatedSwitcher(
+                          duration: AppTheme.normal,
+                          child: Text(
+                            _statusText(_call, strings),
+                            key: ValueKey(_statusText(_call, strings)),
+                            style: context.text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          active
+                              ? _duration(_call.elapsed)
+                              : strings.t('callHint'),
+                          textAlign: TextAlign.center,
+                          style: context.text.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            fontFeatures: active
+                                ? const [FontFeature.tabularFigures()]
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (_call.phase == CallPhase.failed) ...[
