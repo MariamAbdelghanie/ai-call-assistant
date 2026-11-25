@@ -66,7 +66,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Text(
                           auth.displayName.trim().isEmpty
                               ? 'C'
-                              : auth.displayName.trim().characters.first
+                              : auth.displayName
+                                  .trim()
+                                  .characters
+                                  .first
                                   .toUpperCase(),
                           style: context.text.titleSmall?.copyWith(
                             color: AppPalette.accentDeep,
@@ -454,4 +457,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

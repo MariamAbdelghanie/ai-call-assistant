@@ -67,34 +67,34 @@ class _CallScreenState extends State<CallScreen> {
           tokens.isDark ? AppPalette.darkSurface : AppPalette.surface,
       body: SafeArea(
         child: ListenableBuilder(
-        listenable: _call,
-        builder: (context, _) {
-          final active = _call.isActive;
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              children: [
-                // Baslik: turuncu band yerine duz metin, diger
-                // sayfalarla ayni bicimde.
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        strings.t('tabCall'),
-                        style: context.text.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.4,
+          listenable: _call,
+          builder: (context, _) {
+            final active = _call.isActive;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              child: Column(
+                children: [
+                  // Baslik: turuncu band yerine duz metin, diger
+                  // sayfalarla ayni bicimde.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          strings.t('tabCall'),
+                          style: context.text.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.4,
+                          ),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: widget.onOpenSettings,
-                      icon: const Icon(Icons.tune_rounded),
-                      color: tokens.muted,
-                      tooltip: strings.t('tabSettings'),
-                    ),
-                  ],
-                ),
+                      IconButton(
+                        onPressed: widget.onOpenSettings,
+                        icon: const Icon(Icons.tune_rounded),
+                        color: tokens.muted,
+                        tooltip: strings.t('tabSettings'),
+                      ),
+                    ],
+                  ),
                   const Spacer(),
                   // Orb lacivert bir sahnenin uzerinde duruyor: turuncu
                   // kure beyaz zeminde soluk kaliyordu, koyu zeminde ise
@@ -120,56 +120,57 @@ class _CallScreenState extends State<CallScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 26),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 26),
                           child: Column(
                             children: [
                               // Sunucu durumu: genis serit yerine sahnenin
                               // tepesinde kucuk bir kapsul.
                               _StatusPill(
                                 online: !state.isDemo,
-                                label:
-                                    state.isDemo ? strings.t('offlineDemo') : host,
+                                label: state.isDemo
+                                    ? strings.t('offlineDemo')
+                                    : host,
                                 onTap: widget.onOpenSettings,
                               ),
                               const SizedBox(height: 18),
                               VoiceOrb(
-                          size: 240,
-                          speaking: _call.assistantSpeaking,
-                          listening: active &&
-                              _call.micEnabled &&
-                              !_call.assistantSpeaking,
-                          dim: !active,
-                        ),
-                        const SizedBox(height: 20),
-                        OrbWaveform(active: active),
-                        const SizedBox(height: 16),
-                        AnimatedSwitcher(
-                          duration: AppTheme.normal,
-                          child: Text(
-                            _statusText(_call, strings),
-                            key: ValueKey(_statusText(_call, strings)),
-                            style: context.text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppPalette.ink,
-                            ),
+                                size: 240,
+                                speaking: _call.assistantSpeaking,
+                                listening: active &&
+                                    _call.micEnabled &&
+                                    !_call.assistantSpeaking,
+                                dim: !active,
+                              ),
+                              const SizedBox(height: 20),
+                              OrbWaveform(active: active),
+                              const SizedBox(height: 16),
+                              AnimatedSwitcher(
+                                duration: AppTheme.normal,
+                                child: Text(
+                                  _statusText(_call, strings),
+                                  key: ValueKey(_statusText(_call, strings)),
+                                  style: context.text.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppPalette.ink,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                active
+                                    ? _duration(_call.elapsed)
+                                    : strings.t('callHint'),
+                                textAlign: TextAlign.center,
+                                style: context.text.bodyMedium?.copyWith(
+                                  color: tokens.muted,
+                                  fontFeatures: active
+                                      ? const [FontFeature.tabularFigures()]
+                                      : null,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          active
-                              ? _duration(_call.elapsed)
-                              : strings.t('callHint'),
-                          textAlign: TextAlign.center,
-                          style: context.text.bodyMedium?.copyWith(
-                            color: tokens.muted,
-                            fontFeatures: active
-                                ? const [FontFeature.tabularFigures()]
-                                : null,
-                          ),
-                        ),
-                          ],
-                        ),
-                      ),
                       ),
                     ),
                   ),
@@ -259,10 +260,10 @@ class _CallScreenState extends State<CallScreen> {
                               _call.start(state.serverUrl);
                             },
                     ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -389,7 +390,6 @@ class _RoundAction extends StatelessWidget {
     );
   }
 }
-
 
 /// Sahnenin tepesindeki sunucu durumu kapsulu.
 class _StatusPill extends StatelessWidget {

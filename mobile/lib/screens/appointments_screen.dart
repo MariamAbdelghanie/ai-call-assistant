@@ -93,8 +93,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       });
 
     final weekEnd = _weekStart.add(const Duration(days: 7));
-    bool inWeek(DateTime d) =>
-        !d.isBefore(_weekStart) && d.isBefore(weekEnd);
+    bool inWeek(DateTime d) => !d.isBefore(_weekStart) && d.isBefore(weekEnd);
 
     final weekItems = items.where((call) {
       final when = AppointmentsScreen.parse(call.appointmentInfo).when;
@@ -109,7 +108,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           }).toList();
 
     final pending = weekItems
-        .where((c) => AppointmentsScreen.parse(c.appointmentInfo).title
+        .where((c) => AppointmentsScreen.parse(c.appointmentInfo)
+            .title
             .toLowerCase()
             .contains('talep'))
         .length;
@@ -138,7 +138,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           ),
           const SizedBox(height: 14),
         ],
-
         _WeekPicker(
           weekStart: _weekStart,
           selected: _selected,
@@ -162,7 +161,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           }),
         ),
         const SizedBox(height: 22),
-
         if (shown.isEmpty)
           EmptyState(
             icon: AppIcon.calendar,
@@ -178,9 +176,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             for (final call in groups[day]!)
               _AppointmentRow(
                 call: call,
-                canceled:
-                    AppointmentsScreen.isCanceled(call.appointmentInfo) ||
-                        AppointmentsScreen.canceledLater(items, call),
+                canceled: AppointmentsScreen.isCanceled(call.appointmentInfo) ||
+                    AppointmentsScreen.canceledLater(items, call),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => CallDetailScreen(callId: call.callId),
@@ -189,7 +186,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
             const SizedBox(height: 16),
           ],
-
         if (shown.isNotEmpty)
           Center(
             child: Text(
@@ -238,8 +234,8 @@ class _WeekPicker extends StatelessWidget {
           children: [
             Text(
               monthLabel,
-              style:
-                  context.text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: context.text.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const Spacer(),
             IconButton(
@@ -412,9 +408,7 @@ class _AppointmentRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    parsed.title.isEmpty
-                        ? call.callerPurpose
-                        : parsed.title,
+                    parsed.title.isEmpty ? call.callerPurpose : parsed.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.bodySmall?.copyWith(
@@ -425,7 +419,9 @@ class _AppointmentRow extends StatelessWidget {
               ),
             ),
             Icon(
-              canceled ? Icons.event_busy_rounded : Icons.event_available_rounded,
+              canceled
+                  ? Icons.event_busy_rounded
+                  : Icons.event_available_rounded,
               size: 18,
               color: canceled ? tokens.muted : tokens.success,
             ),

@@ -229,8 +229,8 @@ class _UrgentCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            strings.t(
-                                done ? 'urgentTabDone' : 'urgentTabWaiting'),
+                            strings
+                                .t(done ? 'urgentTabDone' : 'urgentTabWaiting'),
                             style: context.text.labelSmall?.copyWith(
                               color: accent,
                               fontWeight: FontWeight.w700,

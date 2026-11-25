@@ -88,317 +88,340 @@ class _LoginScreenState extends State<LoginScreen> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness:
             tokens.isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness:
-            tokens.isDark ? Brightness.dark : Brightness.light,
+        statusBarBrightness: tokens.isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
-      backgroundColor:
-          tokens.isDark ? AppPalette.darkSurface : AppPalette.surfaceAlt,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: ListenableBuilder(
-              listenable: auth,
-              builder: (context, _) {
-                return Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 440),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // --- Form karti ---
-                          Container(
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              color: tokens.isDark
-                                  ? tokens.glass
-                                  : AppPalette.surface,
-                              borderRadius: BorderRadius.circular(26),
-                              border: Border.all(
+        backgroundColor:
+            tokens.isDark ? AppPalette.darkSurface : AppPalette.surfaceAlt,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: ListenableBuilder(
+                listenable: auth,
+                builder: (context, _) {
+                  return Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 440),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // --- Form karti ---
+                            Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
                                 color: tokens.isDark
-                                    ? tokens.glassBorder
-                                    : Colors.white,
-                              ),
-                              // Iki katman: genis ve cok yumusak olan derinligi,
-                              // dar olan kenari tanimlar.
-                              boxShadow: tokens.isDark
-                                  ? null
-                                  : [
-                                      BoxShadow(
-                                        color: AppPalette.ink
-                                            .withValues(alpha: 0.13),
-                                        blurRadius: 48,
-                                        spreadRadius: -6,
-                                        offset: const Offset(0, 26),
-                                      ),
-                                      BoxShadow(
-                                        color: AppPalette.ink
-                                            .withValues(alpha: 0.06),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Marka satiri: buyuk gorsel band yerine
-                                // kucuk bir isaret. Form sayfanin asil
-                                // isi oldugu icin gorsel one gecmemeli.
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 26, 24, 10),
-                                  child: Row(
-                                    children: [
-                                      const _BrandMark(size: 34, radius: 11),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        'CALLORA',
-                                        style: text.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 2.0,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ? tokens.glass
+                                    : AppPalette.surface,
+                                borderRadius: BorderRadius.circular(26),
+                                border: Border.all(
+                                  color: tokens.isDark
+                                      ? tokens.glassBorder
+                                      : Colors.white,
                                 ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 6, 24, 26),
-                                  child: Form(
-                              key: _formKey,
+                                // Iki katman: genis ve cok yumusak olan derinligi,
+                                // dar olan kenari tanimlar.
+                                boxShadow: tokens.isDark
+                                    ? null
+                                    : [
+                                        BoxShadow(
+                                          color: AppPalette.ink
+                                              .withValues(alpha: 0.13),
+                                          blurRadius: 48,
+                                          spreadRadius: -6,
+                                          offset: const Offset(0, 26),
+                                        ),
+                                        BoxShadow(
+                                          color: AppPalette.ink
+                                              .withValues(alpha: 0.06),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Text(
-                                    _register
-                                        ? t.t('tabSignUp')
-                                        : t.t('welcomeBack'),
-                                    style: text.headlineSmall?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -0.4,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    t.t('loginSubtitle'),
-                                    style: text.bodySmall
-                                        ?.copyWith(color: tokens.muted),
-                                  ),
-                                  const SizedBox(height: 26),
-                                  if (auth.errorKey != null) ...[
-                                    _ErrorBanner(auth: auth),
-                                    const SizedBox(height: 18),
-                                  ],
-                                  if (_register) ...[
-                                    _Field(
-                                      label: t.t('fieldName'),
-                                      controller: _name,
-                                      icon: Icons.person_outline,
-                                      textInputAction: TextInputAction.next,
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                  _Field(
-                                    label: t.t('fieldEmail'),
-                                    controller: _email,
-                                    icon: Icons.mail_outline,
-                                    hint: 'ornek@eposta.com',
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    autofillHints: const [AutofillHints.email],
-                                    validator: (value) {
-                                      final v = (value ?? '').trim();
-                                      return RegExp(
-                                                  r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                                              .hasMatch(v)
-                                          ? null
-                                          : t.t('errEmailRequired');
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _Field(
-                                    label: t.t('fieldPassword'),
-                                    controller: _password,
-                                    icon: Icons.lock_outline,
-                                    hint: '••••••••',
-                                    obscure: _obscure,
-                                    textInputAction: _register
-                                        ? TextInputAction.next
-                                        : TextInputAction.done,
-                                    suffix: IconButton(
-                                      icon: Icon(
-                                        _obscure
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                        size: 19,
-                                      ),
-                                      color: tokens.muted,
-                                      onPressed: () =>
-                                          setState(() => _obscure = !_obscure),
-                                    ),
-                                    validator: (value) {
-                                      final v = value ?? '';
-                                      if (v.isEmpty)
-                                        return t.t('fieldPassword');
-                                      if (_register &&
-                                          !PasswordPolicy.isValid(v)) {
-                                        return t.t('authWeakPassword');
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  if (_register) ...[
-                                    const SizedBox(height: 12),
-                                    _PasswordMeter(value: _password.text),
-                                    const SizedBox(height: 16),
-                                    _Field(
-                                      label: t.t('fieldPasswordConfirm'),
-                                      controller: _confirm,
-                                      icon: Icons.lock_outline,
-                                      hint: '••••••••',
-                                      obscure: _obscure,
-                                      textInputAction: TextInputAction.done,
-                                      validator: (value) =>
-                                          (value ?? '') == _password.text
-                                              ? null
-                                              : t.t('errPasswordMismatch'),
-                                    ),
-                                  ] else ...[
-                                    const SizedBox(height: 10),
-                                    Align(
-                                      alignment: AlignmentDirectional.centerEnd,
-                                      child: GestureDetector(
-                                        onTap:
-                                            auth.isBusy ? null : _resetPassword,
-                                        child: Text(
-                                          '${t.t('forgotPassword')}?',
-                                          style: text.labelLarge?.copyWith(
-                                            color: AppPalette.orange,
-                                            fontWeight: FontWeight.w600,
+                                  // Marka satiri: buyuk gorsel band yerine
+                                  // kucuk bir isaret. Form sayfanin asil
+                                  // isi oldugu icin gorsel one gecmemeli.
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        24, 26, 24, 10),
+                                    child: Row(
+                                      children: [
+                                        const _BrandMark(size: 34, radius: 11),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'CALLORA',
+                                          style: text.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 2.0,
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                  const SizedBox(height: 22),
-                                  SizedBox(
-                                    height: 54,
-                                    child: FilledButton(
-                                      onPressed: auth.isBusy ? null : _submit,
-                                      child: auth.isBusy
-                                          ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(_register
-                                                    ? t.t('tabSignUp')
-                                                    : t.t('tabSignIn')),
-                                                const SizedBox(width: 10),
-                                                const Icon(
-                                                    Icons.arrow_forward_rounded,
-                                                    size: 18),
-                                              ],
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        24, 6, 24, 26),
+                                    child: Form(
+                                      key: _formKey,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Text(
+                                            _register
+                                                ? t.t('tabSignUp')
+                                                : t.t('welcomeBack'),
+                                            style: text.headlineSmall?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: -0.4,
                                             ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 22),
-                                  _OrDivider(label: t.t('orContinueWith')),
-                                  const SizedBox(height: 18),
-                                  _GoogleButton(
-                                    busy: auth.isBusy,
-                                    onTap: auth.isBusy
-                                        ? null
-                                        : () => auth.signInWithGoogle(),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  // Kayit/giris gecisi ikinci derece bir
-                                  // eylem: dugme degil, metin baglantisi.
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        _register
-                                            ? t.t('welcomeHaveAccount')
-                                            : t.t('noAccountYet'),
-                                        style: text.bodySmall
-                                            ?.copyWith(color: tokens.muted),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      GestureDetector(
-                                        onTap: auth.isBusy
-                                            ? null
-                                            : () => setState(() {
-                                                  _register = !_register;
-                                                  auth.errorKey = null;
-                                                }),
-                                        child: Text(
-                                          _register
-                                              ? t.t('tabSignIn')
-                                              : t.t('tabSignUp'),
-                                          style: text.bodySmall?.copyWith(
-                                            color: AppPalette.orange,
-                                            fontWeight: FontWeight.w700,
                                           ),
-                                        ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            t.t('loginSubtitle'),
+                                            style: text.bodySmall
+                                                ?.copyWith(color: tokens.muted),
+                                          ),
+                                          const SizedBox(height: 26),
+                                          if (auth.errorKey != null) ...[
+                                            _ErrorBanner(auth: auth),
+                                            const SizedBox(height: 18),
+                                          ],
+                                          if (_register) ...[
+                                            _Field(
+                                              label: t.t('fieldName'),
+                                              controller: _name,
+                                              icon: Icons.person_outline,
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                            ),
+                                            const SizedBox(height: 16),
+                                          ],
+                                          _Field(
+                                            label: t.t('fieldEmail'),
+                                            controller: _email,
+                                            icon: Icons.mail_outline,
+                                            hint: 'ornek@eposta.com',
+                                            keyboardType:
+                                                TextInputType.emailAddress,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            autofillHints: const [
+                                              AutofillHints.email
+                                            ],
+                                            validator: (value) {
+                                              final v = (value ?? '').trim();
+                                              return RegExp(
+                                                          r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                                                      .hasMatch(v)
+                                                  ? null
+                                                  : t.t('errEmailRequired');
+                                            },
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _Field(
+                                            label: t.t('fieldPassword'),
+                                            controller: _password,
+                                            icon: Icons.lock_outline,
+                                            hint: '••••••••',
+                                            obscure: _obscure,
+                                            textInputAction: _register
+                                                ? TextInputAction.next
+                                                : TextInputAction.done,
+                                            suffix: IconButton(
+                                              icon: Icon(
+                                                _obscure
+                                                    ? Icons
+                                                        .visibility_off_outlined
+                                                    : Icons.visibility_outlined,
+                                                size: 19,
+                                              ),
+                                              color: tokens.muted,
+                                              onPressed: () => setState(
+                                                  () => _obscure = !_obscure),
+                                            ),
+                                            validator: (value) {
+                                              final v = value ?? '';
+                                              if (v.isEmpty)
+                                                return t.t('fieldPassword');
+                                              if (_register &&
+                                                  !PasswordPolicy.isValid(v)) {
+                                                return t.t('authWeakPassword');
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                          if (_register) ...[
+                                            const SizedBox(height: 12),
+                                            _PasswordMeter(
+                                                value: _password.text),
+                                            const SizedBox(height: 16),
+                                            _Field(
+                                              label:
+                                                  t.t('fieldPasswordConfirm'),
+                                              controller: _confirm,
+                                              icon: Icons.lock_outline,
+                                              hint: '••••••••',
+                                              obscure: _obscure,
+                                              textInputAction:
+                                                  TextInputAction.done,
+                                              validator: (value) => (value ??
+                                                          '') ==
+                                                      _password.text
+                                                  ? null
+                                                  : t.t('errPasswordMismatch'),
+                                            ),
+                                          ] else ...[
+                                            const SizedBox(height: 10),
+                                            Align(
+                                              alignment: AlignmentDirectional
+                                                  .centerEnd,
+                                              child: GestureDetector(
+                                                onTap: auth.isBusy
+                                                    ? null
+                                                    : _resetPassword,
+                                                child: Text(
+                                                  '${t.t('forgotPassword')}?',
+                                                  style:
+                                                      text.labelLarge?.copyWith(
+                                                    color: AppPalette.orange,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                          const SizedBox(height: 22),
+                                          SizedBox(
+                                            height: 54,
+                                            child: FilledButton(
+                                              onPressed:
+                                                  auth.isBusy ? null : _submit,
+                                              child: auth.isBusy
+                                                  ? const SizedBox(
+                                                      width: 20,
+                                                      height: 20,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: Colors.white,
+                                                      ),
+                                                    )
+                                                  : Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(_register
+                                                            ? t.t('tabSignUp')
+                                                            : t.t('tabSignIn')),
+                                                        const SizedBox(
+                                                            width: 10),
+                                                        const Icon(
+                                                            Icons
+                                                                .arrow_forward_rounded,
+                                                            size: 18),
+                                                      ],
+                                                    ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 22),
+                                          _OrDivider(
+                                              label: t.t('orContinueWith')),
+                                          const SizedBox(height: 18),
+                                          _GoogleButton(
+                                            busy: auth.isBusy,
+                                            onTap: auth.isBusy
+                                                ? null
+                                                : () => auth.signInWithGoogle(),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          // Kayit/giris gecisi ikinci derece bir
+                                          // eylem: dugme degil, metin baglantisi.
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                _register
+                                                    ? t.t('welcomeHaveAccount')
+                                                    : t.t('noAccountYet'),
+                                                style: text.bodySmall?.copyWith(
+                                                    color: tokens.muted),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              GestureDetector(
+                                                onTap: auth.isBusy
+                                                    ? null
+                                                    : () => setState(() {
+                                                          _register =
+                                                              !_register;
+                                                          auth.errorKey = null;
+                                                        }),
+                                                child: Text(
+                                                  _register
+                                                      ? t.t('tabSignIn')
+                                                      : t.t('tabSignUp'),
+                                                  style:
+                                                      text.bodySmall?.copyWith(
+                                                    color: AppPalette.orange,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),
+                            ),
+                            const SizedBox(height: 20),
+                            // --- Kartin altindaki guven satiri ---
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Zemin turuncu oldugu icin bu satir beyaz;
+                                // gri ton okunmuyordu.
+                                Icon(
+                                  Icons.shield_outlined,
+                                  size: 14,
+                                  color: tokens.muted,
+                                ),
+                                const SizedBox(width: 7),
+                                Flexible(
+                                  child: Text(
+                                    t.t('dataSecure'),
+                                    textAlign: TextAlign.center,
+                                    style: text.labelSmall
+                                        ?.copyWith(color: tokens.muted),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          // --- Kartin altindaki guven satiri ---
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Zemin turuncu oldugu icin bu satir beyaz;
-                              // gri ton okunmuyordu.
-                              Icon(
-                                Icons.shield_outlined,
-                                size: 14,
-                                color: tokens.muted,
-                              ),
-                              const SizedBox(width: 7),
-                              Flexible(
-                                child: Text(
-                                  t.t('dataSecure'),
-                                  textAlign: TextAlign.center,
-                                  style: text.labelSmall
-                                      ?.copyWith(color: tokens.muted),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
-}/// Marka isareti: lacivert kare icinde turuncu ses dalgasi.
+}
+
+/// Marka isareti: lacivert kare icinde turuncu ses dalgasi.
 class _BrandMark extends StatelessWidget {
   const _BrandMark({this.size = 70, this.radius = 21});
 

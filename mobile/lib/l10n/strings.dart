@@ -29,18 +29,33 @@ class AppStrings {
     switch (locale.languageCode) {
       case 'ar':
         return const [
-          'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
-          'الجمعة', 'السبت', 'الأحد',
+          'الإثنين',
+          'الثلاثاء',
+          'الأربعاء',
+          'الخميس',
+          'الجمعة',
+          'السبت',
+          'الأحد',
         ];
       case 'en':
         return const [
-          'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-          'Friday', 'Saturday', 'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
         ];
       default:
         return const [
-          'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe',
-          'Cuma', 'Cumartesi', 'Pazar',
+          'Pazartesi',
+          'Salı',
+          'Çarşamba',
+          'Perşembe',
+          'Cuma',
+          'Cumartesi',
+          'Pazar',
         ];
     }
   }
@@ -50,18 +65,48 @@ class AppStrings {
     switch (locale.languageCode) {
       case 'ar':
         return const [
-          'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-          'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+          'يناير',
+          'فبراير',
+          'مارس',
+          'أبريل',
+          'مايو',
+          'يونيو',
+          'يوليو',
+          'أغسطس',
+          'سبتمبر',
+          'أكتوبر',
+          'نوفمبر',
+          'ديسمبر',
         ];
       case 'en':
         return const [
-          'January', 'February', 'March', 'April', 'May', 'June',
-          'July', 'August', 'September', 'October', 'November', 'December',
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
         ];
       default:
         return const [
-          'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-          'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+          'Ocak',
+          'Şubat',
+          'Mart',
+          'Nisan',
+          'Mayıs',
+          'Haziran',
+          'Temmuz',
+          'Ağustos',
+          'Eylül',
+          'Ekim',
+          'Kasım',
+          'Aralık',
         ];
     }
   }

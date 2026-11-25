@@ -102,11 +102,8 @@ class CallerAvatar extends StatelessWidget {
 
   /// Ilk iki kelimenin bas harfi. Arapca ve Turkce adlarda da calisir.
   static String _initials(String value) {
-    final parts = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
+    final parts =
+        value.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
     if (parts.length == 1) {
       final word = parts.first;

@@ -200,8 +200,8 @@ class StatStrip extends StatelessWidget {
                       item.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          context.text.labelSmall?.copyWith(color: tokens.muted),
+                      style: context.text.labelSmall
+                          ?.copyWith(color: tokens.muted),
                     ),
                   ],
                 ),
@@ -291,7 +291,7 @@ class WeekBars extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           SizedBox(
-            height: 76,
+            height: 94,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -345,7 +345,7 @@ class _Bar extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Container(
-          height: 6 + ratio * 36,
+          height: 6 + ratio * 34,
           margin: const EdgeInsets.symmetric(horizontal: 5),
           decoration: BoxDecoration(
             color: color,
@@ -353,13 +353,15 @@ class _Bar extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: context.text.labelSmall?.copyWith(
-            color: highlight ? AppPalette.orange : tokens.muted,
-            fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: context.text.labelSmall?.copyWith(
+              color: highlight ? AppPalette.orange : tokens.muted,
+              fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
         ),
       ],

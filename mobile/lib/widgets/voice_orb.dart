@@ -35,8 +35,7 @@ class VoiceOrb extends StatefulWidget {
   State<VoiceOrb> createState() => _VoiceOrbState();
 }
 
-class _VoiceOrbState extends State<VoiceOrb>
-    with TickerProviderStateMixin {
+class _VoiceOrbState extends State<VoiceOrb> with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 4),
@@ -201,8 +200,7 @@ class _OrbPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2
-          ..color = _tone(hueShift, offset: i * 0.05)
-              .withValues(alpha: fade),
+          ..color = _tone(hueShift, offset: i * 0.05).withValues(alpha: fade),
       );
     }
 

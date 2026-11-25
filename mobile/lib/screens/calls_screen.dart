@@ -114,14 +114,12 @@ class _CallsScreenState extends State<CallsScreen> {
           ),
           const SizedBox(height: 14),
         ],
-
         AssistantCard(
           enabled: state.config.enabled,
           hours: '${state.config.workStart} - ${state.config.workEnd}',
           onChanged: (value) => _toggleAssistant(state, value),
         ),
         const SizedBox(height: 18),
-
         StatStrip(
           items: [
             (
@@ -151,10 +149,8 @@ class _CallsScreenState extends State<CallsScreen> {
           ],
         ),
         const SizedBox(height: 18),
-
         WeekBars(calls: state.calls),
         const SizedBox(height: 22),
-
         SectionLabel(
           searching ? strings.t('callsTitle') : strings.t('recentCalls'),
           trailing: (searching || matched.length <= 5)
@@ -170,7 +166,6 @@ class _CallsScreenState extends State<CallsScreen> {
                   ),
                 ),
         ),
-
         if (state.status == LoadStatus.loading)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 48),
