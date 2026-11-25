@@ -11,17 +11,21 @@ yazılmış **mobil panel**.
 
 ## Ekran görüntüleri
 
-| Karşılama | Panel | Görüşme |
+| Giriş | Hesap oluştur | Ana sayfa |
 |---|---|---|
-| <img src="docs/screenshots/01-welcome.png" width="240"> | <img src="docs/screenshots/02-dashboard.png" width="240"> | <img src="docs/screenshots/03-call.png" width="240"> |
+| <img src="docs/screenshots/01-giris.png" width="240"> | <img src="docs/screenshots/02-hesap-olustur.png" width="240"> | <img src="docs/screenshots/03-ana-sayfa.png" width="240"> |
 
-| Çağrı detayı | Randevular | Acil çağrılar |
+| Grafikler | Çağrı listesi | Acil çağrılar |
 |---|---|---|
-| <img src="docs/screenshots/04-call-detail.png" width="240"> | <img src="docs/screenshots/05-appointments.png" width="240"> | <img src="docs/screenshots/06-urgent.png" width="240"> |
+| <img src="docs/screenshots/04-ana-sayfa-grafikler.png" width="240"> | <img src="docs/screenshots/05-cagri-listesi.png" width="240"> | <img src="docs/screenshots/06-acil-cagrilar.png" width="240"> |
 
-| Çağrı özetleri | Ayarlar |
-|---|---|
-| <img src="docs/screenshots/07-call-list.jpg" width="240"> | <img src="docs/screenshots/08-settings.jpg" width="240"> |
+| Arama | Randevular (takvim) | Randevular (liste) |
+|---|---|---|
+| <img src="docs/screenshots/07-arama.png" width="240"> | <img src="docs/screenshots/08-randevular-takvim.png" width="240"> | <img src="docs/screenshots/09-randevular-liste.png" width="240"> |
+
+| Ayarlar |
+|---|
+| <img src="docs/screenshots/10-ayarlar.png" width="240"> |
 
 ---
 
