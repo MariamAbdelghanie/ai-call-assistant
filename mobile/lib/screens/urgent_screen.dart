@@ -71,11 +71,18 @@ class _UrgentScreenState extends State<UrgentScreen> {
               const SizedBox(height: 14),
             ],
 
+            // Filtre yuzunden bosalan liste ile gercekten acil cagri
+            // olmamasi ayri seyler; ikisine ayni "harika, acil yok"
+            // mesajini basmak yanlis bilgi veriyordu.
             if (items.isEmpty)
               EmptyState(
-                icon: AppIcon.check,
-                title: strings.t('emptyUrgent'),
-                message: strings.t('emptyUrgentHint'),
+                icon: _tab == 0 ? AppIcon.check : AppIcon.inbox,
+                title: _tab == 0
+                    ? strings.t('emptyUrgent')
+                    : strings.t('emptyFiltered'),
+                message: _tab == 0
+                    ? strings.t('emptyUrgentHint')
+                    : strings.t('emptyFilteredHint'),
               )
             else
               for (final (index, call) in items.indexed)
