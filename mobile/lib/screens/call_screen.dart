@@ -5,7 +5,6 @@ import '../main.dart';
 import '../services/live_call_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_header.dart';
 import '../widgets/voice_orb.dart';
 import '../widgets/soft_icon.dart';
 
@@ -63,25 +62,39 @@ class _CallScreenState extends State<CallScreen> {
     // Sunucu adresinin sadece ana kismi: tam URL basliga sigmiyor.
     final host = Uri.tryParse(state.serverUrl)?.host ?? state.serverUrl;
 
-    return AppHeaderScaffold(
-      title: strings.t('tabCall'),
-      actions: [
-        HeaderIconButton(
-          icon: Icons.tune_rounded,
-          onTap: widget.onOpenSettings,
-          tooltip: strings.t('tabSettings'),
-        ),
-      ],
-      body: ListenableBuilder(
+    return Scaffold(
+      backgroundColor:
+          tokens.isDark ? AppPalette.darkSurface : AppPalette.surface,
+      body: SafeArea(
+        child: ListenableBuilder(
         listenable: _call,
         builder: (context, _) {
           final active = _call.isActive;
-          return SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                children: [
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              children: [
+                // Baslik: turuncu band yerine duz metin, diger
+                // sayfalarla ayni bicimde.
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        strings.t('tabCall'),
+                        style: context.text.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: widget.onOpenSettings,
+                      icon: const Icon(Icons.tune_rounded),
+                      color: tokens.muted,
+                      tooltip: strings.t('tabSettings'),
+                    ),
+                  ],
+                ),
                   const Spacer(),
                   // Orb lacivert bir sahnenin uzerinde duruyor: turuncu
                   // kure beyaz zeminde soluk kaliyordu, koyu zeminde ise
@@ -246,11 +259,11 @@ class _CallScreenState extends State<CallScreen> {
                               _call.start(state.serverUrl);
                             },
                     ),
-                ],
-              ),
+              ],
             ),
           );
         },
+        ),
       ),
     );
   }

@@ -5,7 +5,7 @@ import '../l10n/strings.dart';
 import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_header.dart';
+import '../widgets/page_scaffold.dart';
 import '../utils/formatters.dart';
 import '../widgets/common.dart';
 import '../widgets/soft_icon.dart';
@@ -24,42 +24,40 @@ class CallDetailScreen extends StatelessWidget {
 
     final matches = state.calls.where((c) => c.callId == callId);
     if (matches.isEmpty) {
-      return AppHeaderScaffold(
+      return PageScaffold(
         title: strings.t('detailTitle'),
-        leading: HeaderIconButton(
-          icon: Icons.arrow_back_rounded,
-          onTap: () => Navigator.of(context).maybePop(),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back_rounded),
           tooltip: strings.t('back'),
         ),
-        body: EmptyState(
-          icon: AppIcon.inbox,
-          title: strings.t('emptyCalls'),
-          message: strings.t('emptyCallsHint'),
-        ),
+        children: [
+          EmptyState(
+            icon: AppIcon.inbox,
+            title: strings.t('emptyCalls'),
+            message: strings.t('emptyCallsHint'),
+          ),
+        ],
       );
     }
     final call = matches.first;
 
-    return AppHeaderScaffold(
+    return PageScaffold(
       title: strings.t('detailTitle'),
-      subtitle: call.callerName,
-      leading: HeaderIconButton(
-        icon: Icons.arrow_back_rounded,
-        onTap: () => Navigator.of(context).maybePop(),
+      leading: IconButton(
+        onPressed: () => Navigator.of(context).maybePop(),
+        icon: const Icon(Icons.arrow_back_rounded),
         tooltip: strings.t('back'),
       ),
       actions: [
-        HeaderIconButton(
-          icon: Icons.delete_outline_rounded,
-          onTap: () => _confirmDelete(context, state, call),
+        IconButton(
+          onPressed: () => _confirmDelete(context, state, call),
+          icon: Icon(Icons.delete_outline_rounded, color: tokens.urgent),
           tooltip: strings.t('delete'),
         ),
       ],
-      // Bu sayfa bandin altinda buyuk bir ad satiriyla basliyor; govdeyi
-      // banda bindirince ad bandin icine giriyordu.
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 40),
-        children: [
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 40),
+      children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -216,7 +214,6 @@ class CallDetailScreen extends StatelessWidget {
                     ),
             ),
         ],
-      ),
     );
   }
 

@@ -24,6 +24,48 @@ class AppStrings {
     }
   }
 
+  /// Tam gun adlari (pazartesiden pazara).
+  List<String> weekdayNames() {
+    switch (locale.languageCode) {
+      case 'ar':
+        return const [
+          'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
+          'الجمعة', 'السبت', 'الأحد',
+        ];
+      case 'en':
+        return const [
+          'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+          'Friday', 'Saturday', 'Sunday',
+        ];
+      default:
+        return const [
+          'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe',
+          'Cuma', 'Cumartesi', 'Pazar',
+        ];
+    }
+  }
+
+  /// Ay adlari (ocaktan aralIga).
+  List<String> monthNames() {
+    switch (locale.languageCode) {
+      case 'ar':
+        return const [
+          'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+          'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+        ];
+      case 'en':
+        return const [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December',
+        ];
+      default:
+        return const [
+          'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+          'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+        ];
+    }
+  }
+
   static AppStrings of(BuildContext context) =>
       Localizations.of<AppStrings>(context, AppStrings) ??
       AppStrings(const Locale('tr'));
@@ -31,6 +73,26 @@ class AppStrings {
   static const Map<String, Map<String, String>> _values = {
     'tr': {
       'greetingHi': 'Merhaba',
+      'seeAll': 'Tümünü gör',
+      'searchCalls': 'Çağrılarda ara',
+      'recentCalls': 'Son çağrılar',
+      'answeringNow': 'Şu an yanıtlıyor',
+      'answeringOff': 'Şu an kapalı',
+      'statAppointment': 'Randevu',
+      'weeklyBusiest': 'en yoğun saat',
+      'weeklyCalls': 'çağrı',
+      'appointmentsThisWeek': 'Bu hafta',
+      'awaitingApproval': 'onay bekliyor',
+      'spokenLanguages': 'Konuşma dilleri',
+      'spokenLanguagesValue': 'Türkçe, Arapça, İngilizce',
+      'serverConnection': 'Sunucu bağlantısı',
+      'notConnected': 'Bağlı değil',
+      'sectionApp': 'Uygulama',
+      'sectionAdvanced': 'Gelişmiş',
+      'assistantSubtitle': 'Çağrıları sizin yerinize yanıtlar',
+      'welcomeBack': 'Tekrar hoş geldiniz',
+      'noAccountYet': 'Hesabınız yok mu?',
+      'minutesShort': 'dk',
       'quickTestCall': 'Test aramasi',
       'quickSearch': 'Çağrı ara',
       'recentTitle': 'Son etkileşimler',
@@ -249,6 +311,26 @@ class AppStrings {
     },
     'ar': {
       'greetingHi': 'أهلاً',
+      'seeAll': 'عرض الكل',
+      'searchCalls': 'ابحث في المكالمات',
+      'recentCalls': 'آخر المكالمات',
+      'answeringNow': 'يردّ الآن',
+      'answeringOff': 'متوقف حالياً',
+      'statAppointment': 'موعد',
+      'weeklyBusiest': 'أكثر ساعة ازدحاماً',
+      'weeklyCalls': 'مكالمة',
+      'appointmentsThisWeek': 'هذا الأسبوع',
+      'awaitingApproval': 'بانتظار التأكيد',
+      'spokenLanguages': 'لغات المحادثة',
+      'spokenLanguagesValue': 'التركية، العربية، الإنجليزية',
+      'serverConnection': 'الاتصال بالخادم',
+      'notConnected': 'غير متصل',
+      'sectionApp': 'التطبيق',
+      'sectionAdvanced': 'متقدم',
+      'assistantSubtitle': 'يردّ على المكالمات بدلاً عنك',
+      'welcomeBack': 'أهلاً بعودتك',
+      'noAccountYet': 'ليس لديك حساب؟',
+      'minutesShort': 'د',
       'quickTestCall': 'مكالمة تجريبية',
       'quickSearch': 'بحث في المكالمات',
       'recentTitle': 'آخر التفاعلات',
@@ -463,6 +545,26 @@ class AppStrings {
     },
     'en': {
       'greetingHi': 'Hi',
+      'seeAll': 'See all',
+      'searchCalls': 'Search calls',
+      'recentCalls': 'Recent calls',
+      'answeringNow': 'Answering now',
+      'answeringOff': 'Currently off',
+      'statAppointment': 'Appointments',
+      'weeklyBusiest': 'busiest hour',
+      'weeklyCalls': 'calls',
+      'appointmentsThisWeek': 'This week',
+      'awaitingApproval': 'awaiting approval',
+      'spokenLanguages': 'Spoken languages',
+      'spokenLanguagesValue': 'Turkish, Arabic, English',
+      'serverConnection': 'Server connection',
+      'notConnected': 'Not connected',
+      'sectionApp': 'App',
+      'sectionAdvanced': 'Advanced',
+      'assistantSubtitle': 'Answers calls on your behalf',
+      'welcomeBack': 'Welcome back',
+      'noAccountYet': "Don't have an account?",
+      'minutesShort': 'min',
       'quickTestCall': 'Test call',
       'quickSearch': 'Search calls',
       'recentTitle': 'Recent interactions',

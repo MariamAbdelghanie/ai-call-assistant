@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
@@ -9,22 +7,16 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 import '../widgets/common.dart';
-import '../widgets/glass.dart';
-import '../widgets/app_header.dart';
-import '../widgets/caller_avatar.dart';
-import '../widgets/insights.dart';
-import '../widgets/kpi_ring.dart';
+import '../widgets/home_parts.dart';
+import '../widgets/page_scaffold.dart';
 import '../widgets/soft_icon.dart';
 import 'call_detail_screen.dart';
 
-enum CallFilter { all, urgent, callback, today }
-
 /// Ana sayfa.
 ///
-/// Duzen yukaridan asagiya tek bir oncelik sirasi izler: kim oldugun (selam),
-/// sistem calisiyor mu (durum seridi), simdi ne yapabilirsin (eylem karti),
-/// sayilar (tek satir ozet), sonra liste. Her blok farkli bir bicimde
-/// oldugundan goz blok sinirlarini kolayca ayirir.
+/// Sira sabit: kim oldugun (selam), asistan calisiyor mu, bugunun sayilari,
+/// haftanin grafigi, sonra son cagrilar. Arama kutusu en uste alindi;
+/// listede bir ad aramak en sik yapilan is.
 class CallsScreen extends StatefulWidget {
   const CallsScreen({
     super.key,
@@ -45,31 +37,24 @@ class CallsScreen extends StatefulWidget {
 
 class _CallsScreenState extends State<CallsScreen> {
   final TextEditingController _search = TextEditingController();
-  final FocusNode _searchFocus = FocusNode();
-  CallFilter _filter = CallFilter.all;
+
+  /// Arama yapilmadiginda liste kisa tutulur; tamami "Tumunu gor" ile acilir.
+  bool _showAll = false;
 
   @override
   void dispose() {
     _search.dispose();
-    _searchFocus.dispose();
     super.dispose();
   }
 
   List<CallSummary> _apply(List<CallSummary> source) {
     final query = _search.text.trim().toLowerCase();
+    if (query.isEmpty) return source;
     return source.where((call) {
-      final matchesFilter = switch (_filter) {
-        CallFilter.all => true,
-        CallFilter.urgent => call.isUrgent,
-        CallFilter.callback => call.awaitingCallback,
-        CallFilter.today => Formatters.isToday(call.timestamp),
-      };
-      if (!matchesFilter) return false;
-      if (query.isEmpty) return true;
       return call.callerName.toLowerCase().contains(query) ||
           call.summary.toLowerCase().contains(query) ||
           call.callerPurpose.toLowerCase().contains(query);
-    }).toList(growable: false);
+    }).toList();
   }
 
   void _openDetail(CallSummary call) {
@@ -80,698 +65,131 @@ class _CallsScreenState extends State<CallsScreen> {
     );
   }
 
+  Future<void> _toggleAssistant(AppState state, bool value) async {
+    final strings = AppStrings.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await state.saveConfig(state.config.copyWith(enabled: value));
+    messenger.showSnackBar(
+      SnackBar(content: Text(strings.t(ok ? 'saved' : 'loadError'))),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final strings = AppStrings.of(context);
-    final visible = _apply(state.calls);
-
+    final tokens = context.tokens;
     final auth = AuthScope.of(context);
+
     final full = auth.displayName.trim();
     final first = full.isEmpty ? '' : full.split(RegExp(r'\s+')).first;
-    final photo = auth.photoUrl;
-    final total = state.calls.length;
+    final searching = _search.text.trim().isNotEmpty;
+    final matched = _apply(state.calls);
+    final visible =
+        (searching || _showAll) ? matched : matched.take(5).toList();
 
-    return AppHeaderScaffold(
+    return PageScaffold(
       title: first.isEmpty
           ? strings.t('greetingTitle')
-          : '${strings.t('greetingHi')}, $first!',
-      subtitle: strings.t('greetingSubtitle'),
-      leading: CircleAvatar(
-        radius: 22,
-        backgroundColor: Colors.white.withValues(alpha: 0.22),
-        foregroundImage: photo == null ? null : NetworkImage(photo),
-        child: Text(
-          first.isEmpty ? 'C' : first.characters.first.toUpperCase(),
-          style: context.text.titleMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
+          : '${strings.t('greetingHi')}, $first',
+      subtitle: Formatters.longDate(DateTime.now(), strings),
+      onRefresh: state.refresh,
+      topBar: HomeSearchBar(
+        controller: _search,
+        onChanged: () => setState(() {}),
+        initials: first.isEmpty ? 'C' : first.characters.first.toUpperCase(),
+        photoUrl: auth.photoUrl,
+        onProfile: widget.onOpenSettings,
+      ),
+      floating: ActionPillButton(
+        icon: Icons.call_rounded,
+        label: strings.t('quickTestCall'),
+        onTap: widget.onStartCall,
+      ),
+      children: [
+        if (state.isDemo || state.isOffline) ...[
+          DemoBanner(
+            onOpenSettings: widget.onOpenSettings,
+            offline: state.isOffline,
           ),
+          const SizedBox(height: 14),
+        ],
+
+        AssistantCard(
+          enabled: state.config.enabled,
+          hours: '${state.config.workStart} - ${state.config.workEnd}',
+          onChanged: (value) => _toggleAssistant(state, value),
         ),
-      ),
-      actions: [
-        HeaderIconButton(
-          icon: Icons.tune_rounded,
-          onTap: widget.onOpenSettings,
-          tooltip: strings.t('tabSettings'),
-        ),
-      ],
-      headerChild: HeaderStatusStrip(
-        label: strings.t(state.config.enabled ? 'assistantOn' : 'assistantOff'),
-        hours: '${state.config.workStart} - ${state.config.workEnd}',
-        online: state.config.enabled,
-      ),
-      // Ozet halkalari bandin uzerine biniyor; kaydirma listesinin
-      // disinda oldugu icin liste kayarken bandin altindan gecmiyor.
-      overlapChild: KpiRingRow(
-              items: [
-                KpiRing(
-                  value: total,
-                  total: total,
-                  label: strings.t('statTotal'),
-                  color: AppPalette.orange,
-                ),
-                KpiRing(
-                  value: state.urgentCount,
-                  total: total,
-                  label: strings.t('statUrgent'),
-                  color: AppPalette.urgent,
-                  onTap: widget.onOpenUrgent,
-                ),
-                KpiRing(
-                  value: state.appointments.length,
-                  total: total,
-                  label: strings.t('tabAppointments'),
-                  color: AppPalette.scheduled,
-                  onTap: widget.onOpenAppointments,
-                ),
-                KpiRing(
-                  value: state.awaitingCount,
-                  total: total,
-                  label: strings.t('filterCallback'),
-                  color: AppPalette.pending,
-                  onTap: () => setState(() => _filter = CallFilter.callback),
-                ),
-              ],
+        const SizedBox(height: 18),
+
+        StatStrip(
+          items: [
+            (
+              value: state.calls.length,
+              label: strings.t('statTotal'),
+              color: tokens.isDark ? AppPalette.darkText : AppPalette.ink,
+              onTap: null
             ),
-      overlap: 30,
-      body: RefreshIndicator(
-        onRefresh: state.refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(18, 0, 18, 112),
-          children: [
-
-            // Dort hizli eylem: yatay kaydirilan serit yerine izgara,
-            // cunku kaydirmali seritte sagdaki iki eylem hic gorulmuyordu.
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickAction(
-                    icon: Icons.call_rounded,
-                    label: strings.t('quickTestCall'),
-                    filled: true,
-                    onTap: widget.onStartCall,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickAction(
-                    icon: Icons.search_rounded,
-                    label: strings.t('quickSearch'),
-                    onTap: () => _searchFocus.requestFocus(),
-                  ),
-                ),
-              ],
+            (
+              value: state.urgentCount,
+              label: strings.t('statUrgent'),
+              color: tokens.urgent,
+              onTap: widget.onOpenUrgent
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickAction(
-                    icon: Icons.event_rounded,
-                    label: strings.t('quickAgenda'),
-                    onTap: widget.onOpenAppointments,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickAction(
-                    icon: Icons.bolt_rounded,
-                    label: strings.t('quickUrgent'),
-                    danger: true,
-                    onTap: widget.onOpenUrgent,
-                  ),
-                ),
-              ],
+            (
+              value: state.appointments.length,
+              label: strings.t('statAppointment'),
+              color: AppPalette.scheduled,
+              onTap: widget.onOpenAppointments
             ),
-            const SizedBox(height: 18),
-
-            // Son etkilesimler: yatay kart seridi. Listenin tamamini
-            // kaydirmadan en son kimin aradigi gorulsun diye.
-            if (state.calls.isNotEmpty) ...[
-              SectionTitle(strings.t('recentTitle')),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 132,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
-                  itemCount: math.min(state.calls.length, 8),
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) => _RecentCard(
-                    call: state.calls[index],
-                    onTap: () => _openDetail(state.calls[index]),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-            ],
-
-            if (state.isDemo || state.isOffline) ...[
-              DemoBanner(
-                onOpenSettings: widget.onOpenSettings,
-                offline: state.isOffline,
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            _ActionCard(onStartCall: widget.onStartCall),
-            const SizedBox(height: 14),
-
-            WeeklyActivityCard(calls: state.calls),
-            const SizedBox(height: 12),
-
-            // Ikili satir: solda oranlar, sagda tek buyuk rakam. Farkli
-            // yukseklikte iki kart yan yana durunca sayfanin ritmi kirilir.
-            // Halka ve kadran dar sutunda sikisiyordu; iki kart artik
-            // esit genislikte ve ayni yukseklikte.
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: LanguageMixCard(calls: state.calls)),
-                  const SizedBox(width: 12),
-                  Expanded(child: PeakHourCard(calls: state.calls)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            SectionTitle(strings.t('callsTitle')),
-            const SizedBox(height: 4),
-            _SearchField(
-              controller: _search,
-              focusNode: _searchFocus,
-              hint: strings.t('search'),
-              onChanged: () => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final entry in <(CallFilter, String)>[
-                    (CallFilter.all, 'filterAll'),
-                    (CallFilter.urgent, 'filterUrgent'),
-                    (CallFilter.callback, 'filterCallback'),
-                    (CallFilter.today, 'filterToday'),
-                  ])
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 8),
-                      child: _Pill(
-                        label: strings.t(entry.$2),
-                        selected: _filter == entry.$1,
-                        onTap: () => setState(() => _filter = entry.$1),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            if (state.status == LoadStatus.loading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (visible.isEmpty)
-              EmptyState(
-                icon: AppIcon.inbox,
-                title: strings.t('emptyCalls'),
-                message: strings.t('emptyCallsHint'),
-              )
-            else
-              // Tum satirlar tek bir beyaz yuzeyde: liste bir butun gibi
-              // okunur, kart yigini gibi parcalanmaz.
-              GlassCard(
-                padding: EdgeInsets.zero,
-                radius: 20,
-                child: Column(
-                  children: [
-                    for (final (index, call) in visible.indexed) ...[
-                      if (index > 0)
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          indent: 72,
-                          color: context.tokens.glassBorder,
-                        ),
-                      AnimatedEntrance(
-                        index: index,
-                        child: _CallRow(
-                          call: call,
-                          onTap: () => _openDetail(call),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Test aramasini baslatan one cikan kart.
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({required this.onStartCall});
-
-  final VoidCallback onStartCall;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onStartCall,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radius),
-            // Sayfanin ustu turuncu oldugu icin bu kart lacivert: iki
-            // buyuk turuncu blok alt alta gelince ikisi de vurgusunu
-            // kaybediyordu.
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppPalette.indigoDeep, AppPalette.indigo],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppPalette.indigo.withValues(alpha: 0.30),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.t('heroCta'),
-                      style: context.text.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      strings.t('heroTitle'),
-                      style: context.text.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.92),
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.phone_in_talk_rounded,
-                    color: AppPalette.orange, size: 24),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.hint,
-    required this.onChanged,
-    this.focusNode,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final VoidCallback onChanged;
-  final FocusNode? focusNode;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      onChanged: (_) => onChanged(),
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(Icons.search_rounded, size: 20, color: tokens.muted),
-        suffixIcon: controller.text.isEmpty
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.close_rounded, size: 18),
-                color: tokens.muted,
-                onPressed: () {
-                  controller.clear();
-                  onChanged();
-                },
-              ),
-        filled: true,
-        fillColor: tokens.isDark ? tokens.glass : AppPalette.surface,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: AnimatedContainer(
-          duration: AppTheme.fast,
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppPalette.orange
-                : (tokens.isDark ? tokens.glass : AppPalette.surface),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected ? AppPalette.orange : tokens.glassBorder,
-            ),
-          ),
-          child: Text(
-            label,
-            style: context.text.labelLarge?.copyWith(
-              color: selected ? Colors.white : tokens.muted,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CallRow extends StatelessWidget {
-  const _CallRow({required this.call, required this.onTap});
-
-  final CallSummary call;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-    final tokens = context.tokens;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        child: Row(
-          children: [
-            CallerAvatar(
-              name: call.callerName,
-              size: 46,
-              statusColor: call.isUrgent
-                  ? tokens.urgent
-                  : call.awaitingCallback
-                      ? tokens.pending
-                      : null,
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          call.callerName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      if (call.isUrgent) ...[
-                        const SizedBox(width: 6),
-                        Icon(Icons.bolt_rounded,
-                            size: 15, color: tokens.urgent),
-                      ],
-                      if (call.hasAppointment) ...[
-                        const SizedBox(width: 4),
-                        Icon(Icons.event_available_rounded,
-                            size: 14, color: tokens.success),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    call.summary.trim().isEmpty
-                        ? call.callerPurpose
-                        : call.summary,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        context.text.bodySmall?.copyWith(color: tokens.muted),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  Formatters.friendly(call.timestamp, strings),
-                  style: context.text.labelSmall?.copyWith(color: tokens.muted),
-                ),
-                const SizedBox(height: 7),
-                if (call.awaitingCallback)
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: tokens.pending,
-                      shape: BoxShape.circle,
-                    ),
-                  )
-                else
-                  Icon(Icons.chevron_right_rounded,
-                      size: 18, color: tokens.glassBorder),
-              ],
+            (
+              value: state.awaitingCount,
+              label: strings.t('filterCallback'),
+              color: tokens.pending,
+              onTap: null
             ),
           ],
         ),
-      ),
-    );
-  }
-}
+        const SizedBox(height: 18),
 
+        WeekBars(calls: state.calls),
+        const SizedBox(height: 22),
 
-/// Hizli eylem dugmesi: dolu (ana eylem), cerceveli (ikincil) ya da
-/// kirmizi (acil) olabilir.
-class _QuickAction extends StatelessWidget {
-  const _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.filled = false,
-    this.danger = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool filled;
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    final tint = danger ? tokens.urgent : AppPalette.orange;
-
-    return Material(
-      color: filled
-          ? tint
-          : (tokens.isDark ? tokens.glass : AppPalette.surface),
-      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-            border: Border.all(
-              color: filled ? tint : tint.withValues(alpha: 0.35),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 18, color: filled ? Colors.white : tint),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleSmall?.copyWith(
-                    color: filled ? Colors.white : tint,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Son etkilesimler seridindeki tek kart.
-class _RecentCard extends StatelessWidget {
-  const _RecentCard({required this.call, required this.onTap});
-
-  final CallSummary call;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-    final tokens = context.tokens;
-
-    return SizedBox(
-      width: 168,
-      child: Material(
-        color: tokens.glass,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radius),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radius),
-              border: Border.all(color: tokens.glassBorder),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CallerAvatar(
-                      name: call.callerName,
-                      size: 38,
-                      statusColor: call.isUrgent ? tokens.urgent : null,
-                    ),
-                    const Spacer(),
-                    if (call.isUrgent)
-                      _MiniTag(
-                        label: strings.t('filterUrgent'),
-                        color: tokens.urgent,
-                      )
-                    else if (call.hasAppointment)
-                      _MiniTag(
-                        label: strings.t('tabAppointments'),
-                        color: AppPalette.scheduled,
-                      )
-                    else if (call.awaitingCallback)
-                      _MiniTag(
-                        label: strings.t('filterCallback'),
-                        color: tokens.pending,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  call.callerName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 2),
-                Expanded(
+        SectionLabel(
+          searching ? strings.t('callsTitle') : strings.t('recentCalls'),
+          trailing: (searching || matched.length <= 5)
+              ? null
+              : GestureDetector(
+                  onTap: () => setState(() => _showAll = !_showAll),
                   child: Text(
-                    call.summary.trim().isEmpty
-                        ? call.callerPurpose
-                        : call.summary,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.bodySmall
-                        ?.copyWith(color: tokens.muted, height: 1.35),
+                    _showAll ? strings.t('filterAll') : strings.t('seeAll'),
+                    style: context.text.labelMedium?.copyWith(
+                      color: tokens.muted,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                Text(
-                  Formatters.friendly(call.timestamp, strings),
-                  style:
-                      context.text.labelSmall?.copyWith(color: tokens.muted),
-                ),
-              ],
-            ),
+        ),
+
+        if (state.status == LoadStatus.loading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 48),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (visible.isEmpty)
+          EmptyState(
+            icon: AppIcon.inbox,
+            title: strings.t('emptyCalls'),
+            message: strings.t('emptyCallsHint'),
+          )
+        else
+          CardGroup(
+            children: [
+              for (final call in visible)
+                CallRow(call: call, onTap: () => _openDetail(call)),
+            ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Kartin kosesindeki kucuk durum etiketi.
-class _MiniTag extends StatelessWidget {
-  const _MiniTag({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: context.text.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      ],
     );
   }
 }

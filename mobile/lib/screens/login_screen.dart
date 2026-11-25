@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -86,17 +84,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Turuncu zeminde koyu saat/pil simgeleri okunmuyor.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness:
+            tokens.isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness:
+            tokens.isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
       backgroundColor:
-          tokens.isDark ? AppPalette.darkSurface : AppPalette.accentDeep,
+          tokens.isDark ? AppPalette.darkSurface : AppPalette.surfaceAlt,
       body: Stack(
         children: [
-          const Positioned.fill(child: _Backdrop()),
           SafeArea(
             child: ListenableBuilder(
               listenable: auth,
@@ -145,14 +144,29 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // Kartin ustunde yapay zekayi anlatan
-                                // lacivert gorsel band: referanstaki
-                                // "form + gorsel" ikilisinin telefon
-                                // genisligine sigan hali.
-                                const _AiShowcase(),
+                                // Marka satiri: buyuk gorsel band yerine
+                                // kucuk bir isaret. Form sayfanin asil
+                                // isi oldugu icin gorsel one gecmemeli.
                                 Padding(
                                   padding:
-                                      const EdgeInsets.fromLTRB(24, 26, 24, 26),
+                                      const EdgeInsets.fromLTRB(24, 26, 24, 10),
+                                  child: Row(
+                                    children: [
+                                      const _BrandMark(size: 34, radius: 11),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'CALLORA',
+                                        style: text.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 2.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(24, 6, 24, 26),
                                   child: Form(
                               key: _formKey,
                               child: Column(
@@ -161,8 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Text(
                                     _register
                                         ? t.t('tabSignUp')
-                                        : t.t('tabSignIn'),
-                                    textAlign: TextAlign.center,
+                                        : t.t('welcomeBack'),
                                     style: text.headlineSmall?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: -0.4,
@@ -171,7 +184,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(height: 6),
                                   Text(
                                     t.t('loginSubtitle'),
-                                    textAlign: TextAlign.center,
                                     style: text.bodySmall
                                         ?.copyWith(color: tokens.muted),
                                   ),
@@ -309,33 +321,39 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ? null
                                         : () => auth.signInWithGoogle(),
                                   ),
-                                  const SizedBox(height: 12),
-                                  SizedBox(
-                                    height: 52,
-                                    child: OutlinedButton(
-                                      onPressed: auth.isBusy
-                                          ? null
-                                          : () => setState(() {
-                                                _register = !_register;
-                                                auth.errorKey = null;
-                                              }),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppPalette.ink,
-                                        side: const BorderSide(
-                                            color: AppPalette.ink, width: 1.4),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              AppTheme.radiusSm),
+                                  const SizedBox(height: 20),
+                                  // Kayit/giris gecisi ikinci derece bir
+                                  // eylem: dugme degil, metin baglantisi.
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _register
+                                            ? t.t('welcomeHaveAccount')
+                                            : t.t('noAccountYet'),
+                                        style: text.bodySmall
+                                            ?.copyWith(color: tokens.muted),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      GestureDetector(
+                                        onTap: auth.isBusy
+                                            ? null
+                                            : () => setState(() {
+                                                  _register = !_register;
+                                                  auth.errorKey = null;
+                                                }),
+                                        child: Text(
+                                          _register
+                                              ? t.t('tabSignIn')
+                                              : t.t('tabSignUp'),
+                                          style: text.bodySmall?.copyWith(
+                                            color: AppPalette.orange,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
-                                      child: Text(
-                                        _register
-                                            ? t.t('tabSignIn')
-                                            : t.t('tabSignUp'),
-                                        style: text.labelLarge
-                                            ?.copyWith(fontSize: 15),
-                                      ),
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -354,20 +372,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               Icon(
                                 Icons.shield_outlined,
                                 size: 14,
-                                color: tokens.isDark
-                                    ? tokens.muted
-                                    : Colors.white.withValues(alpha: 0.9),
+                                color: tokens.muted,
                               ),
                               const SizedBox(width: 7),
                               Flexible(
                                 child: Text(
                                   t.t('dataSecure'),
                                   textAlign: TextAlign.center,
-                                  style: text.labelSmall?.copyWith(
-                                    color: tokens.isDark
-                                        ? tokens.muted
-                                        : Colors.white.withValues(alpha: 0.9),
-                                  ),
+                                  style: text.labelSmall
+                                      ?.copyWith(color: tokens.muted),
                                 ),
                               ),
                             ],
@@ -385,269 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-/// Kartin ust bandi: lacivert zemin uzerinde sesin yapay zekaya
-/// donusmesini anlatan bir cizim.
-///
-/// Fotograf yerine cizim kullaniyorum: fotograf hem telifli oluyor hem de
-/// her ekran boyutunda bozuluyor; cizim vektorel oldugu icin her cozunurlukte
-/// net kaliyor ve uygulamanin renkleriyle birebir uyuyor.
-class _AiShowcase extends StatefulWidget {
-  const _AiShowcase();
-
-  @override
-  State<_AiShowcase> createState() => _AiShowcaseState();
-}
-
-class _AiShowcaseState extends State<_AiShowcase>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 12),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppStrings.of(context);
-
-    return SizedBox(
-      height: 172,
-      width: double.infinity,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppPalette.indigoDeep, AppPalette.indigo],
-              ),
-            ),
-          ),
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) => CustomPaint(
-              painter: _AiScenePainter(progress: _controller.value),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    _BrandMark(size: 38, radius: 12),
-                    const SizedBox(width: 11),
-                    Text(
-                      'CALLORA',
-                      style: context.text.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2.2,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  t.t('welcomeTagline'),
-                  style: context.text.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.82),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Lacivert bandin uzerindeki cizim: sagda bir ses dalgasindan cikip
-/// dugumlere yayilan bir ag. Yavasca nefes alir, dikkat dagitmaz.
-class _AiScenePainter extends CustomPainter {
-  _AiScenePainter({required this.progress});
-
-  /// 0..1 arasi donen sayac.
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.78, size.height * 0.52);
-    final pulse = 0.5 + 0.5 * math.sin(progress * 2 * math.pi);
-
-    // Es merkezli halkalar: sesin yayilmasi.
-    for (var i = 0; i < 4; i++) {
-      final radius = 26.0 + i * 20 + pulse * 5;
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = Colors.white.withValues(alpha: 0.07 + 0.05 * (3 - i) / 3),
-      );
-    }
-
-    // Turuncu cekirdek.
-    canvas.drawCircle(
-      center,
-      20 + pulse * 2,
-      Paint()
-        ..shader = const RadialGradient(
-          colors: [AppPalette.orange, AppPalette.accentDeep],
-        ).createShader(Rect.fromCircle(center: center, radius: 24)),
-    );
-    canvas.drawCircle(
-      center,
-      34 + pulse * 3,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6
-        ..color = AppPalette.orange.withValues(alpha: 0.35),
-    );
-
-    // Cekirdegin icindeki ses cubuklari.
-    const bars = [0.42, 0.74, 1.0, 0.66, 0.38];
-    for (var i = 0; i < bars.length; i++) {
-      final wobble =
-          0.75 + 0.25 * math.sin(progress * 2 * math.pi * 2 + i * 0.9);
-      final height = 16 * bars[i] * wobble;
-      final x = center.dx - 12 + i * 6.0;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(x, center.dy), width: 2.6, height: height),
-          const Radius.circular(2),
-        ),
-        Paint()..color = Colors.white.withValues(alpha: 0.92),
-      );
-    }
-
-    // Soldaki dugum agi: sesin veriye donusmesi.
-    final nodes = <Offset>[
-      Offset(size.width * 0.10, size.height * 0.30),
-      Offset(size.width * 0.20, size.height * 0.62),
-      Offset(size.width * 0.33, size.height * 0.24),
-      Offset(size.width * 0.38, size.height * 0.72),
-      Offset(size.width * 0.50, size.height * 0.44),
-    ];
-    final link = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = Colors.white.withValues(alpha: 0.16);
-    for (var i = 0; i < nodes.length; i++) {
-      for (var j = i + 1; j < nodes.length; j++) {
-        if ((nodes[i] - nodes[j]).distance > size.width * 0.26) continue;
-        canvas.drawLine(nodes[i], nodes[j], link);
-      }
-      canvas.drawLine(nodes[i], center, link);
-    }
-    for (var i = 0; i < nodes.length; i++) {
-      final glow = 0.5 + 0.5 * math.sin(progress * 2 * math.pi + i * 1.3);
-      canvas.drawCircle(
-        nodes[i],
-        3 + glow * 1.4,
-        Paint()
-          ..color = (i.isEven ? AppPalette.orange : Colors.white)
-              .withValues(alpha: 0.55 + 0.35 * glow),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_AiScenePainter oldDelegate) =>
-      oldDelegate.progress != progress;
-}
-
-/// Zemin: cok yumusak iki leke, turuncu ve lacivert. Dikkat dagitmaz,
-/// yuzeyin duz gri gorunmesini engeller.
-/// Zemin: sicak turuncu bir gradyan uzerinde cok yumusak lekeler.
-///
-/// Kart beyaz oldugu icin zeminin de beyaz olmasi sayfayi bos gosteriyordu;
-/// renkli zemin kartin havada durmasini saglar.
-class _Backdrop extends StatelessWidget {
-  const _Backdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    if (tokens.isDark) return const SizedBox.shrink();
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFF57A33),
-            AppPalette.orange,
-            AppPalette.accentDeep,
-          ],
-          stops: [0.0, 0.45, 1.0],
-        ),
-      ),
-      child: CustomPaint(painter: _BackdropPainter()),
-    );
-  }
-}
-
-class _BackdropPainter extends CustomPainter {
-  const _BackdropPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Iki genis isik lekesi: duz gradyanin plastik gorunmesini engeller.
-    canvas.drawCircle(
-      Offset(size.width * 0.18, size.height * 0.12),
-      size.width * 0.55,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.18),
-            Colors.white.withValues(alpha: 0.0),
-          ],
-        ).createShader(
-          Rect.fromCircle(
-            center: Offset(size.width * 0.18, size.height * 0.12),
-            radius: size.width * 0.55,
-          ),
-        ),
-    );
-
-    // Alt kosede lacivert bir golge: ucuncu renk burada da var, boylece
-    // sayfa yalniz turuncu-beyazdan ibaret kalmiyor.
-    canvas.drawCircle(
-      Offset(size.width * 0.9, size.height * 0.96),
-      size.width * 0.7,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            AppPalette.indigoDeep.withValues(alpha: 0.38),
-            AppPalette.indigoDeep.withValues(alpha: 0.0),
-          ],
-        ).createShader(
-          Rect.fromCircle(
-            center: Offset(size.width * 0.9, size.height * 0.96),
-            radius: size.width * 0.7,
-          ),
-        ),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_BackdropPainter oldDelegate) => false;
-}
-
-/// Marka isareti: lacivert kare icinde turuncu ses dalgasi.
+}/// Marka isareti: lacivert kare icinde turuncu ses dalgasi.
 class _BrandMark extends StatelessWidget {
   const _BrandMark({this.size = 70, this.radius = 21});
 

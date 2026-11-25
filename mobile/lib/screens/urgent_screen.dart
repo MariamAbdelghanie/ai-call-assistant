@@ -5,7 +5,7 @@ import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
-import '../widgets/app_header.dart';
+import '../widgets/page_scaffold.dart';
 import '../widgets/caller_avatar.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
@@ -43,68 +43,115 @@ class _UrgentScreenState extends State<UrgentScreen> {
       _ => all,
     };
 
-    return AppHeaderScaffold(
+    return PageScaffold(
       title: strings.t('urgentTitle'),
       subtitle: all.isEmpty
           ? strings.t('urgentCalm')
           : '$waiting ${strings.t('urgentWaiting')}',
-      headerChild: HeaderSegmented(
-        labels: [
-          strings.t('filterAll'),
-          strings.t('urgentTabWaiting'),
-          strings.t('urgentTabDone'),
+      onRefresh: state.refresh,
+      children: [
+        if (state.isDemo || state.isOffline) ...[
+          DemoBanner(
+            onOpenSettings: widget.onOpenSettings,
+            offline: state.isOffline,
+          ),
+          const SizedBox(height: 14),
         ],
-        selected: _tab,
-        onChanged: (value) => setState(() => _tab = value),
-      ),
-      body: RefreshIndicator(
-        onRefresh: state.refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
-          children: [
-            if (state.isDemo || state.isOffline) ...[
-              DemoBanner(
-                onOpenSettings: widget.onOpenSettings,
-                offline: state.isOffline,
-              ),
-              const SizedBox(height: 14),
-            ],
 
-            // Filtre yuzunden bosalan liste ile gercekten acil cagri
-            // olmamasi ayri seyler; ikisine ayni "harika, acil yok"
-            // mesajini basmak yanlis bilgi veriyordu.
-            if (items.isEmpty)
-              EmptyState(
-                icon: _tab == 0 ? AppIcon.check : AppIcon.inbox,
-                title: _tab == 0
-                    ? strings.t('emptyUrgent')
-                    : strings.t('emptyFiltered'),
-                message: _tab == 0
-                    ? strings.t('emptyUrgentHint')
-                    : strings.t('emptyFilteredHint'),
-              )
-            else
-              for (final (index, call) in items.indexed)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: AnimatedEntrance(
-                    index: index,
-                    child: _UrgentCard(
-                      call: call,
-                      rank: index + 1,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => CallDetailScreen(callId: call.callId),
-                        ),
-                      ),
-                      onToggle: () => state.toggleCalledBack(call),
+        // Durum sekmeleri: liste bu secime gore filtreleniyor.
+        _Segmented(
+          labels: [
+            strings.t('filterAll'),
+            strings.t('urgentTabWaiting'),
+            strings.t('urgentTabDone'),
+          ],
+          selected: _tab,
+          onChanged: (value) => setState(() => _tab = value),
+        ),
+        const SizedBox(height: 18),
+
+        if (items.isEmpty)
+          EmptyState(
+            icon: _tab == 0 ? AppIcon.check : AppIcon.inbox,
+            title: _tab == 0
+                ? strings.t('emptyUrgent')
+                : strings.t('emptyFiltered'),
+            message: _tab == 0
+                ? strings.t('emptyUrgentHint')
+                : strings.t('emptyFilteredHint'),
+          )
+        else
+          for (final (index, call) in items.indexed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: AnimatedEntrance(
+                index: index,
+                child: _UrgentCard(
+                  call: call,
+                  rank: index + 1,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => CallDetailScreen(callId: call.callId),
                     ),
                   ),
+                  onToggle: () => state.toggleCalledBack(call),
                 ),
-          ],
-        ),
-      ),
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+/// Sade durum sekmeleri: secili olan turuncu dolu, digerleri cerceveli.
+class _Segmented extends StatelessWidget {
+  const _Segmented({
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+
+    return Row(
+      children: [
+        for (final (index, label) in labels.indexed)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: GestureDetector(
+              onTap: () => onChanged(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                decoration: BoxDecoration(
+                  color: index == selected
+                      ? AppPalette.orange
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: index == selected
+                        ? AppPalette.orange
+                        : tokens.glassBorder,
+                  ),
+                ),
+                child: Text(
+                  label,
+                  style: context.text.titleSmall?.copyWith(
+                    color: index == selected ? Colors.white : tokens.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

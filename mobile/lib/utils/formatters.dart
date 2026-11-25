@@ -10,6 +10,21 @@ class Formatters {
   static String date(DateTime value) =>
       '${_two(value.day)}.${_two(value.month)}.${value.year}';
 
+  /// "25 Kasım, Çarşamba" — ana sayfadaki tarih satiri.
+  static String longDate(DateTime value, AppStrings strings) {
+    final month = strings.monthNames()[value.month - 1];
+    final day = strings.weekdayNames()[value.weekday - 1];
+    return '${value.day} $month, $day';
+  }
+
+  /// "Kasım 2026" — takvim basligi.
+  static String monthYear(DateTime value, AppStrings strings) =>
+      '${strings.monthNames()[value.month - 1]} ${value.year}';
+
+  /// "27 Kasım" — gun basligi.
+  static String dayMonth(DateTime value, AppStrings strings) =>
+      '${value.day} ${strings.monthNames()[value.month - 1]}';
+
   /// "Bugün 14:32", "Dün 09:05" veya "12.11.2026 09:05".
   static String friendly(DateTime? value, AppStrings strings) {
     if (value == null) return '—';

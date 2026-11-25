@@ -5,28 +5,23 @@ import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
-import '../widgets/app_header.dart';
 import '../widgets/common.dart';
-import '../widgets/week_grid.dart';
-import '../widgets/glass.dart';
+import '../widgets/page_scaffold.dart';
 import '../widgets/soft_icon.dart';
 import 'call_detail_screen.dart';
 
 /// Randevular ekrani.
 ///
-/// Liste yerine dikey bir zaman cizgisi kullanilir: solda saat, ortada
-/// cizgi ve nokta, sagda kart. Boylece randevular bir takvim gibi okunur ve
-/// ekran diger sayfalarin tekrari olmaktan cikar.
+/// Ustte ay ve hafta seridi, altinda randevular gune gore grupluyor. Saat
+/// solda, ad ve sebep sagda; boylece gun icinde gozun takip edecegi tek bir
+/// dikey cizgi oluyor.
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key, required this.onOpenSettings});
 
   final VoidCallback onOpenSettings;
 
-  @override
-  State<AppointmentsScreen> createState() => _AppointmentsScreenState();
-
   /// `2026-11-19 17:00 (Sebep)` bicimindeki metni parcalara ayirir.
-  static ({DateTime? when, String title}) _parse(String info) {
+  static ({DateTime? when, String title}) parse(String info) {
     final match =
         RegExp(r'(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})').firstMatch(info);
     DateTime? when;
@@ -43,34 +38,35 @@ class AppointmentsScreen extends StatefulWidget {
     return (when: when, title: (paren?.group(1) ?? '').trim());
   }
 
-  static bool _isCanceled(String info) {
+  static bool isCanceled(String info) {
     final lower = info.toLowerCase();
     return lower.contains('iptal') || lower.contains('i̇ptal');
   }
 
   /// Ayni kisi ve ayni saat icin sonradan bir iptal kaydi varsa, randevunun
-  /// alindigi kayit da iptal sayilir. Aksi halde listede ayni randevu hem
-  /// aktif hem iptal gorunuyor ve hangisinin gecerli oldugu anlasilmiyordu.
-  static bool _canceledLater(List<CallSummary> all, CallSummary call) {
-    final mine = _parse(call.appointmentInfo).when;
+  /// alindigi kayit da iptal sayilir.
+  static bool canceledLater(List<CallSummary> all, CallSummary call) {
+    final mine = parse(call.appointmentInfo).when;
     if (mine == null) return false;
     return all.any((other) {
       if (other.callId == call.callId) return false;
-      if (!_isCanceled(other.appointmentInfo)) return false;
+      if (!isCanceled(other.appointmentInfo)) return false;
       if (other.callerName.trim().toLowerCase() !=
           call.callerName.trim().toLowerCase()) {
         return false;
       }
-      return _parse(other.appointmentInfo).when == mine;
+      return parse(other.appointmentInfo).when == mine;
     });
   }
+
+  @override
+  State<AppointmentsScreen> createState() => _AppointmentsScreenState();
 }
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
-  /// Gosterilen haftanin pazartesisi.
   DateTime _weekStart = _mondayOf(DateTime.now());
 
-  /// Secili gun; null ise tum randevular listelenir.
+  /// Secili gun; null ise haftanin tamami listelenir.
   DateTime? _selected;
 
   static DateTime _mondayOf(DateTime value) {
@@ -87,343 +83,355 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     final strings = AppStrings.of(context);
     final tokens = context.tokens;
 
-    // Zaman sirasina diz; tarihi okunamayanlar sona alinir.
     final items = [...state.appointments]..sort((a, b) {
-        final x = AppointmentsScreen._parse(a.appointmentInfo).when;
-        final y = AppointmentsScreen._parse(b.appointmentInfo).when;
+        final x = AppointmentsScreen.parse(a.appointmentInfo).when;
+        final y = AppointmentsScreen.parse(b.appointmentInfo).when;
         if (x == null && y == null) return 0;
         if (x == null) return 1;
         if (y == null) return -1;
         return x.compareTo(y);
       });
 
+    final weekEnd = _weekStart.add(const Duration(days: 7));
+    bool inWeek(DateTime d) =>
+        !d.isBefore(_weekStart) && d.isBefore(weekEnd);
+
+    final weekItems = items.where((call) {
+      final when = AppointmentsScreen.parse(call.appointmentInfo).when;
+      return when != null && inWeek(when);
+    }).toList();
+
     final shown = _selected == null
-        ? items
-        : items.where((call) {
-            final when = AppointmentsScreen._parse(call.appointmentInfo).when;
+        ? weekItems
+        : weekItems.where((call) {
+            final when = AppointmentsScreen.parse(call.appointmentInfo).when;
             return when != null && _sameDay(when, _selected!);
           }).toList();
 
-    final weekEnd = _weekStart.add(const Duration(days: 6));
+    final pending = weekItems
+        .where((c) => AppointmentsScreen.parse(c.appointmentInfo).title
+            .toLowerCase()
+            .contains('talep'))
+        .length;
 
-    return AppHeaderScaffold(
+    // Gune gore gruplama: her gun bir baslik, altinda o gunun satirlari.
+    final groups = <DateTime, List<CallSummary>>{};
+    for (final call in shown) {
+      final when = AppointmentsScreen.parse(call.appointmentInfo).when;
+      if (when == null) continue;
+      final key = DateTime(when.year, when.month, when.day);
+      groups.putIfAbsent(key, () => []).add(call);
+    }
+    final days = groups.keys.toList()..sort();
+
+    return PageScaffold(
       title: strings.t('appointmentsTitle'),
-      subtitle: '${items.length} ${strings.t('appointmentsCount')} · '
-          '${state.config.workStart} - ${state.config.workEnd}',
-      actions: [
-        if (_selected != null)
-          HeaderIconButton(
-            icon: Icons.close_rounded,
-            onTap: () => setState(() => _selected = null),
-            tooltip: strings.t('filterAll'),
+      subtitle: '${strings.t('appointmentsThisWeek')} ${weekItems.length} '
+          '${strings.t('appointmentsCount')}'
+          '${pending > 0 ? ' · $pending ${strings.t('awaitingApproval')}' : ''}',
+      onRefresh: state.refresh,
+      children: [
+        if (state.isDemo || state.isOffline) ...[
+          DemoBanner(
+            onOpenSettings: widget.onOpenSettings,
+            offline: state.isOffline,
           ),
-      ],
-      headerChild: HeaderWeekStrip(
-        weekStart: _weekStart,
-        selected: _selected,
-        dayLabels: [
-          for (final key in const [
-            'dayMon',
-            'dayTue',
-            'dayWed',
-            'dayThu',
-            'dayFri',
-            'daySat',
-            'daySun',
-          ])
-            strings.t(key),
+          const SizedBox(height: 14),
         ],
-        hasItems: (day) => items.any((call) {
-          final when = AppointmentsScreen._parse(call.appointmentInfo).when;
-          return when != null && _sameDay(when, day);
-        }),
-        onSelect: (day) => setState(() {
-          _selected =
-              (_selected != null && _sameDay(_selected!, day)) ? null : day;
-        }),
-        onPrevWeek: () => setState(() {
-          _weekStart = _weekStart.subtract(const Duration(days: 7));
-        }),
-        onNextWeek: () => setState(() {
-          _weekStart = _weekStart.add(const Duration(days: 7));
-        }),
-        rangeLabel:
-            '${Formatters.date(_weekStart)} - ${Formatters.date(weekEnd)}',
-      ),
-      body: RefreshIndicator(
-        onRefresh: state.refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
-          children: [
-            if (state.isDemo || state.isOffline) ...[
-              DemoBanner(
-                onOpenSettings: widget.onOpenSettings,
-                offline: state.isOffline,
-              ),
-              const SizedBox(height: 14),
-            ],
-            // Hafta izgarasi: randevularin gunun neresine dustugunu ve
-            // hangi saatlerin bos oldugunu gosterir.
-            WeekGrid(
-              weekStart: _weekStart,
-              dayLabels: [
-                for (final key in const [
-                  'dayMon',
-                  'dayTue',
-                  'dayWed',
-                  'dayThu',
-                  'dayFri',
-                  'daySat',
-                  'daySun',
-                ])
-                  strings.t(key),
-              ],
-              events: [
-                for (final call in items)
-                  if (AppointmentsScreen._parse(call.appointmentInfo).when
-                      case final startsAt?)
-                    GridEvent(
-                      start: startsAt,
-                      title: call.callerName,
-                      canceled: AppointmentsScreen._isCanceled(
-                              call.appointmentInfo) ||
-                          AppointmentsScreen._canceledLater(items, call),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              CallDetailScreen(callId: call.callId),
-                        ),
-                      ),
-                    ),
-              ],
+
+        _WeekPicker(
+          weekStart: _weekStart,
+          selected: _selected,
+          monthLabel: Formatters.monthYear(_weekStart, strings),
+          dayLabels: strings.weekdayInitials(),
+          hasItems: (day) => items.any((call) {
+            final when = AppointmentsScreen.parse(call.appointmentInfo).when;
+            return when != null && _sameDay(when, day);
+          }),
+          onSelect: (day) => setState(() {
+            _selected =
+                (_selected != null && _sameDay(_selected!, day)) ? null : day;
+          }),
+          onPrev: () => setState(() {
+            _weekStart = _weekStart.subtract(const Duration(days: 7));
+            _selected = null;
+          }),
+          onNext: () => setState(() {
+            _weekStart = _weekStart.add(const Duration(days: 7));
+            _selected = null;
+          }),
+        ),
+        const SizedBox(height: 22),
+
+        if (shown.isEmpty)
+          EmptyState(
+            icon: AppIcon.calendar,
+            title: strings.t('emptyAppointments'),
+            message: strings.t('emptyAppointmentsHint'),
+          )
+        else
+          for (final day in days) ...[
+            SectionLabel(
+              '${strings.weekdayNames()[day.weekday - 1]}, '
+              '${Formatters.dayMonth(day, strings)}',
             ),
-            const SizedBox(height: 20),
-
-            SectionTitle(strings.t('appointmentsTitle')),
-            const SizedBox(height: 10),
-
-            if (shown.isEmpty)
-              EmptyState(
-                icon: AppIcon.calendar,
-                title: strings.t('emptyAppointments'),
-                message: strings.t('emptyAppointmentsHint'),
-              )
-            else
-              for (final (index, call) in shown.indexed)
-                _TimelineRow(
-                  call: call,
-                  parsed: AppointmentsScreen._parse(call.appointmentInfo),
-                  canceled:
-                      AppointmentsScreen._isCanceled(call.appointmentInfo) ||
-                          AppointmentsScreen._canceledLater(items, call),
-                  isFirst: index == 0,
-                  isLast: index == shown.length - 1,
-                  // Gun degistiginde tarih basligi gosterilir.
-                  dayLabel: _dayLabelFor(shown, index, strings),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => CallDetailScreen(callId: call.callId),
-                    ),
+            for (final call in groups[day]!)
+              _AppointmentRow(
+                call: call,
+                canceled:
+                    AppointmentsScreen.isCanceled(call.appointmentInfo) ||
+                        AppointmentsScreen.canceledLater(items, call),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CallDetailScreen(callId: call.callId),
                   ),
                 ),
-            if (shown.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Center(
-                child: Text(
-                  strings.t('timelineEnd'),
-                  style: context.text.labelSmall?.copyWith(color: tokens.muted),
-                ),
               ),
-            ],
+            const SizedBox(height: 16),
           ],
-        ),
-      ),
+
+        if (shown.isNotEmpty)
+          Center(
+            child: Text(
+              strings.t('timelineEnd'),
+              style: context.text.labelSmall?.copyWith(color: tokens.muted),
+            ),
+          ),
+      ],
     );
   }
 }
 
-/// Onceki ogeden farkli bir gune geciliyorsa gun basligi doner.
-String? _dayLabelFor(
-  List<CallSummary> items,
-  int index,
-  AppStrings strings,
-) {
-  final current = AppointmentsScreen._parse(items[index].appointmentInfo).when;
-  if (current == null) return null;
-  if (index == 0) return _humanDay(current, strings);
-  final previous =
-      AppointmentsScreen._parse(items[index - 1].appointmentInfo).when;
-  if (previous == null) return _humanDay(current, strings);
-  final sameDay = previous.year == current.year &&
-      previous.month == current.month &&
-      previous.day == current.day;
-  return sameDay ? null : _humanDay(current, strings);
+/// Ay basligi, oklar ve yedi gunluk serit.
+class _WeekPicker extends StatelessWidget {
+  const _WeekPicker({
+    required this.weekStart,
+    required this.selected,
+    required this.monthLabel,
+    required this.dayLabels,
+    required this.hasItems,
+    required this.onSelect,
+    required this.onPrev,
+    required this.onNext,
+  });
+
+  final DateTime weekStart;
+  final DateTime? selected;
+  final String monthLabel;
+  final List<String> dayLabels;
+  final bool Function(DateTime) hasItems;
+  final ValueChanged<DateTime> onSelect;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
+
+  bool _same(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final today = DateTime.now();
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              monthLabel,
+              style:
+                  context.text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: onPrev,
+              icon: const Icon(Icons.chevron_left_rounded),
+              color: tokens.muted,
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              onPressed: onNext,
+              icon: const Icon(Icons.chevron_right_rounded),
+              color: tokens.muted,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            for (var i = 0; i < 7; i++)
+              Expanded(
+                child: _DayCell(
+                  day: weekStart.add(Duration(days: i)),
+                  label: dayLabels[i % dayLabels.length],
+                  selected: selected != null &&
+                      _same(selected!, weekStart.add(Duration(days: i))),
+                  isToday: _same(today, weekStart.add(Duration(days: i))),
+                  marked: hasItems(weekStart.add(Duration(days: i))),
+                  onTap: () => onSelect(weekStart.add(Duration(days: i))),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
-String _humanDay(DateTime value, AppStrings strings) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final day = DateTime(value.year, value.month, value.day);
-  final diff = day.difference(today).inDays;
-  if (diff == 0) return strings.t('today');
-  if (diff == 1) return strings.t('tomorrow');
-  return Formatters.date(value);
-}
-
-/// Zaman cizgisinin tek bir satiri.
-class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({
-    required this.call,
-    required this.parsed,
-    required this.canceled,
-    required this.isFirst,
-    required this.isLast,
-    required this.dayLabel,
+class _DayCell extends StatelessWidget {
+  const _DayCell({
+    required this.day,
+    required this.label,
+    required this.selected,
+    required this.isToday,
+    required this.marked,
     required this.onTap,
   });
 
-  final CallSummary call;
-  final ({DateTime? when, String title}) parsed;
-  final bool canceled;
-  final bool isFirst;
-  final bool isLast;
-  final String? dayLabel;
+  final DateTime day;
+  final String label;
+  final bool selected;
+  final bool isToday;
+  final bool marked;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    final accent = canceled ? tokens.muted : AppPalette.ink;
-    final time = parsed.when == null ? '--:--' : Formatters.time(parsed.when!);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (dayLabel != null)
-          Padding(
-            padding: EdgeInsets.only(top: isFirst ? 0 : 14, bottom: 10),
-            child: Row(
-              children: [
-                Text(
-                  dayLabel!,
-                  style: context.text.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: tokens.muted,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Divider(height: 1, color: tokens.glassBorder),
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: context.text.labelSmall?.copyWith(color: tokens.muted),
+          ),
+          const SizedBox(height: 6),
+          // Secili gun dolu turuncu, bugun yalnizca cerceveli: ikisi ayni
+          // anda gorunur ama birbirine karismaz.
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? AppPalette.orange : Colors.transparent,
+              shape: BoxShape.circle,
+              border: (!selected && isToday)
+                  ? Border.all(color: AppPalette.orange, width: 1.6)
+                  : null,
+            ),
+            child: Text(
+              '${day.day}',
+              style: context.text.titleSmall?.copyWith(
+                color: selected
+                    ? Colors.white
+                    : (isToday ? AppPalette.orange : null),
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Saat sutunu
-              SizedBox(
-                width: 46,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 14),
-                  child: Text(
-                    time,
-                    style: context.text.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: canceled ? tokens.muted : null,
+          const SizedBox(height: 5),
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: marked ? AppPalette.orange : Colors.transparent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tek randevu satiri: solda saat, sagda ad ve durum.
+class _AppointmentRow extends StatelessWidget {
+  const _AppointmentRow({
+    required this.call,
+    required this.canceled,
+    required this.onTap,
+  });
+
+  final CallSummary call;
+  final bool canceled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
+    final tokens = context.tokens;
+    final parsed = AppointmentsScreen.parse(call.appointmentInfo);
+    final when = parsed.when;
+    final color = canceled ? tokens.muted : AppPalette.scheduled;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 58,
+              child: Text(
+                when == null ? '—' : Formatters.time(when),
+                style: context.text.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: canceled ? tokens.muted : null,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  decoration: canceled ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+            Container(
+              width: 3,
+              height: 38,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    call.callerName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                       decoration: canceled ? TextDecoration.lineThrough : null,
                     ),
                   ),
-                ),
-              ),
-              // Cizgi ve nokta
-              SizedBox(
-                width: 26,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 2,
-                      height: 14,
-                      color: isFirst ? Colors.transparent : tokens.glassBorder,
-                    ),
-                    Container(
-                      width: 13,
-                      height: 13,
-                      decoration: BoxDecoration(
-                        color: canceled ? Colors.transparent : accent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: accent, width: 2.2),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        width: 2,
-                        color: isLast ? Colors.transparent : tokens.glassBorder,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Kart
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GlassCard(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                    radius: 16,
-                    onTap: onTap,
-                    borderColor:
-                        canceled ? null : accent.withValues(alpha: 0.30),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                call.callerName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: context.text.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  decoration: canceled
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: canceled ? tokens.muted : null,
-                                ),
-                              ),
-                            ),
-                            SoftIcon(
-                              canceled
-                                  ? AppIcon.calendarOff
-                                  : AppIcon.calendarOk,
-                              size: 16,
-                              color: accent,
-                              solid: true,
-                            ),
-                          ],
-                        ),
-                        if (parsed.title.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            parsed.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.text.bodySmall
-                                ?.copyWith(color: tokens.muted, height: 1.35),
-                          ),
-                        ],
-                      ],
+                  const SizedBox(height: 2),
+                  Text(
+                    parsed.title.isEmpty
+                        ? call.callerPurpose
+                        : parsed.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.bodySmall?.copyWith(
+                      color: canceled ? tokens.muted : color,
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Icon(
+              canceled ? Icons.event_busy_rounded : Icons.event_available_rounded,
+              size: 18,
+              color: canceled ? tokens.muted : tokens.success,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

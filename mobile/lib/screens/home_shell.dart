@@ -172,12 +172,24 @@ class _Tab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Badge.count(
-              count: badge,
-              isLabelVisible: badge > 0,
-              backgroundColor: tokens.urgent,
-              textColor: Colors.white,
-              child: Icon(icon, size: 24, color: color),
+            // Secili sekmenin ikonu yumusak turuncu bir kapsulun icinde:
+            // rengi ayirt edemeyen biri icin de hangi sekmede oldugu
+            // belli oluyor.
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              decoration: BoxDecoration(
+                color: selected ? AppPalette.orangeSoft : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Badge.count(
+                count: badge,
+                isLabelVisible: badge > 0,
+                backgroundColor: tokens.urgent,
+                textColor: Colors.white,
+                child: Icon(icon, size: 23, color: color),
+              ),
             ),
             const SizedBox(height: 3),
             Text(

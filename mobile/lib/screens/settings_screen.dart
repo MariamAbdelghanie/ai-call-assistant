@@ -5,7 +5,8 @@ import '../main.dart';
 import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_header.dart';
+import '../widgets/home_parts.dart';
+import '../widgets/page_scaffold.dart';
 import '../widgets/settings_row.dart';
 
 /// Ayarlar ekrani.
@@ -42,126 +43,157 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ThemeMode.dark: strings.t('themeDark'),
     };
 
-    return AppHeaderScaffold(
+    return PageScaffold(
       title: strings.t('settingsTitle'),
-      subtitle: strings.t('settingsSubtitle'),
-      // Hesap karti bandin uzerine biniyor ama kaydirma listesinin
-      // disinda duruyor; liste kaydiginda bandin altindan gecmiyor.
-      overlapChild: user == null
-          ? null
-          : _ProfileCard(
-              name: auth.displayName,
-              email: user.email ?? '',
-              photoUrl: auth.photoUrl,
-            ),
-      overlap: 34,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
-        children: [
-          SettingsGroup(
-            title: strings.t('serverSection'),
-            rows: [
-              SettingsRow(
-                icon: Icons.dns_outlined,
-                label: strings.t('serverUrl'),
-                value: state.serverUrl,
-                onTap: () => _openServerSheet(context, state),
-              ),
-              SettingsRow(
-                icon: state.isDemo
-                    ? Icons.cloud_off_rounded
-                    : Icons.cloud_done_rounded,
-                label: strings.t('apiToken'),
-                value: state.isDemo
-                    ? strings.t('offlineDemo')
-                    : strings.t('connected'),
-                valueColor: state.isDemo ? tokens.pending : tokens.success,
-                onTap: () => _openServerSheet(context, state),
-              ),
-            ],
-          ),
-
-          SettingsGroup(
-            title: strings.t('assistantSection'),
-            rows: [
-              SettingsRow(
-                icon: Icons.support_agent_rounded,
-                label: strings.t('assistantEnabled'),
-                trailing: Switch.adaptive(
-                  value: state.config.enabled,
-                  onChanged: (value) => _saveConfig(
-                    context,
-                    state,
-                    state.config.copyWith(enabled: value),
+      children: [
+        // Hesap: ayri bir basliga gerek yok, listenin ilk satiri.
+        if (user != null) ...[
+          CardGroup(
+            dividerIndent: 0,
+            children: [
+              InkWell(
+                onTap: () => _confirmSignOut(context),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: AppPalette.orangeSoft,
+                        foregroundImage: auth.photoUrl == null
+                            ? null
+                            : NetworkImage(auth.photoUrl!),
+                        child: Text(
+                          auth.displayName.trim().isEmpty
+                              ? 'C'
+                              : auth.displayName.trim().characters.first
+                                  .toUpperCase(),
+                          style: context.text.titleSmall?.copyWith(
+                            color: AppPalette.accentDeep,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              auth.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.text.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              user.email ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.text.bodySmall
+                                  ?.copyWith(color: tokens.muted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded,
+                          size: 20, color: tokens.muted),
+                    ],
                   ),
                 ),
               ),
-              SettingsRow(
-                icon: Icons.graphic_eq_rounded,
-                label: strings.t('voiceTitle'),
-                value: state.config.realtimeVoice,
-                onTap: () => _openVoiceSheet(context, state),
-              ),
-              SettingsRow(
-                icon: Icons.schedule_rounded,
-                label: strings.t('workHours'),
-                value: '${state.config.workStart} - ${state.config.workEnd}',
-              ),
             ],
           ),
+          const SizedBox(height: 22),
+        ],
 
-          SettingsGroup(
-            title: strings.t('appearance'),
-            rows: [
-              SettingsRow(
-                icon: Icons.contrast_rounded,
-                label: strings.t('appearance'),
-                value: themeNames[state.themeMode],
-                onTap: () => _openThemeSheet(context, state, themeNames),
-              ),
-              SettingsRow(
-                icon: Icons.translate_rounded,
-                label: strings.t('appLanguage'),
-                value: languageNames[state.locale.languageCode],
-                onTap: () => _openLanguageSheet(context, state, languageNames),
-              ),
-            ],
-          ),
-
-          SettingsGroup(
-            title: strings.t('privacy'),
-            rows: [
-              SettingsRow(
-                icon: Icons.delete_outline_rounded,
-                label: strings.t('deleteAll'),
-                danger: true,
-                onTap: () => _confirmDeleteAll(context, state),
-              ),
-            ],
-          ),
-
-          // Cikis en altta ve gruplardan ayri: yanlislikla basilmasi zor
-          // olsun diye hem uzakta hem farkli bicimde.
-          const SizedBox(height: 4),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: tokens.urgent,
-                side: BorderSide(color: tokens.urgent.withValues(alpha: 0.45)),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius),
+        SectionLabel(strings.t('assistantSection')),
+        CardGroup(
+          dividerIndent: 48,
+          children: [
+            AppRow(
+              icon: Icons.graphic_eq_rounded,
+              title: strings.t('assistantEnabled'),
+              subtitle: strings.t('assistantSubtitle'),
+              trailing: Switch.adaptive(
+                value: state.config.enabled,
+                onChanged: (value) => _saveConfig(
+                  context,
+                  state,
+                  state.config.copyWith(enabled: value),
                 ),
               ),
-              onPressed: auth.isBusy ? null : () => _confirmSignOut(context),
-              icon: const Icon(Icons.logout_rounded, size: 19),
-              label: Text(strings.t('signOut')),
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
-      ),
+            AppRow(
+              icon: Icons.schedule_rounded,
+              title: strings.t('workHours'),
+              value: '${state.config.workStart} - ${state.config.workEnd}',
+            ),
+            AppRow(
+              icon: Icons.mic_none_rounded,
+              title: strings.t('voiceTitle'),
+              value: state.config.realtimeVoice,
+              onTap: () => _openVoiceSheet(context, state),
+            ),
+            // Ajanin konusabildigi diller: ayar degil, bilgi satiri.
+            AppRow(
+              icon: Icons.translate_rounded,
+              title: strings.t('spokenLanguages'),
+              subtitle: strings.t('spokenLanguagesValue'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+
+        SectionLabel(strings.t('sectionApp')),
+        CardGroup(
+          dividerIndent: 48,
+          children: [
+            AppRow(
+              icon: Icons.contrast_rounded,
+              title: strings.t('appearance'),
+              value: themeNames[state.themeMode],
+              onTap: () => _openThemeSheet(context, state, themeNames),
+            ),
+            AppRow(
+              icon: Icons.language_rounded,
+              title: strings.t('appLanguage'),
+              value: languageNames[state.locale.languageCode],
+              onTap: () => _openLanguageSheet(context, state, languageNames),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+
+        SectionLabel(strings.t('sectionAdvanced')),
+        CardGroup(
+          dividerIndent: 48,
+          children: [
+            AppRow(
+              icon: Icons.dns_outlined,
+              title: strings.t('serverConnection'),
+              subtitle: state.isDemo
+                  ? strings.t('notConnected')
+                  : '${strings.t('connected')} · ${state.serverUrl}',
+              onTap: () => _openServerSheet(context, state),
+            ),
+            AppRow(
+              icon: Icons.delete_outline_rounded,
+              title: strings.t('deleteAll'),
+              danger: true,
+              onTap: () => _confirmDeleteAll(context, state),
+            ),
+            AppRow(
+              icon: Icons.logout_rounded,
+              title: strings.t('signOut'),
+              danger: true,
+              onTap: auth.isBusy ? null : () => _confirmSignOut(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -423,84 +455,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// Turuncu bandin uzerine binen beyaz hesap karti.
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({
-    required this.name,
-    required this.email,
-    this.photoUrl,
-  });
-
-  final String name;
-  final String email;
-  final String? photoUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    final initial =
-        name.trim().isEmpty ? 'C' : name.trim().characters.first.toUpperCase();
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
-      decoration: BoxDecoration(
-        color: tokens.glass,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
-        border: Border.all(color: tokens.glassBorder),
-        boxShadow: tokens.cardShadow,
-      ),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 34,
-                backgroundColor: AppPalette.indigoSoft,
-                foregroundImage:
-                    photoUrl == null ? null : NetworkImage(photoUrl!),
-                child: Text(
-                  initial,
-                  style: context.text.headlineSmall?.copyWith(
-                    color: AppPalette.indigo,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              // Oturumun acik oldugunu gosteren nokta.
-              Positioned(
-                right: 2,
-                bottom: 2,
-                child: Container(
-                  width: 15,
-                  height: 15,
-                  decoration: BoxDecoration(
-                    color: tokens.success,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: tokens.glass, width: 2.5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.text.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          if (email.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            Text(
-              email,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.text.bodySmall?.copyWith(color: tokens.muted),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
