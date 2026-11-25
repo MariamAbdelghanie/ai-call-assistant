@@ -5,6 +5,7 @@ import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../widgets/app_header.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
 import '../widgets/soft_icon.dart';
@@ -15,10 +16,13 @@ import 'call_detail_screen.dart';
 /// Liste yerine dikey bir zaman cizgisi kullanilir: solda saat, ortada
 /// cizgi ve nokta, sagda kart. Boylece randevular bir takvim gibi okunur ve
 /// ekran diger sayfalarin tekrari olmaktan cikar.
-class AppointmentsScreen extends StatelessWidget {
+class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key, required this.onOpenSettings});
 
   final VoidCallback onOpenSettings;
+
+  @override
+  State<AppointmentsScreen> createState() => _AppointmentsScreenState();
 
   /// `2026-11-19 17:00 (Sebep)` bicimindeki metni parcalara ayirir.
   static ({DateTime? when, String title}) _parse(String info) {
@@ -60,6 +64,23 @@ class AppointmentsScreen extends StatelessWidget {
     });
   }
 
+}
+
+class _AppointmentsScreenState extends State<AppointmentsScreen> {
+  /// Gosterilen haftanin pazartesisi.
+  DateTime _weekStart = _mondayOf(DateTime.now());
+
+  /// Secili gun; null ise tum randevular listelenir.
+  DateTime? _selected;
+
+  static DateTime _mondayOf(DateTime value) {
+    final day = DateTime(value.year, value.month, value.day);
+    return day.subtract(Duration(days: day.weekday - 1));
+  }
+
+  static bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
@@ -68,51 +89,102 @@ class AppointmentsScreen extends StatelessWidget {
 
     // Zaman sirasina diz; tarihi okunamayanlar sona alinir.
     final items = [...state.appointments]..sort((a, b) {
-        final x = _parse(a.appointmentInfo).when;
-        final y = _parse(b.appointmentInfo).when;
+        final x = AppointmentsScreen._parse(a.appointmentInfo).when;
+        final y = AppointmentsScreen._parse(b.appointmentInfo).when;
         if (x == null && y == null) return 0;
         if (x == null) return 1;
         if (y == null) return -1;
         return x.compareTo(y);
       });
 
-    return GlassScaffold(
+    final shown = _selected == null
+        ? items
+        : items.where((call) {
+            final when = AppointmentsScreen._parse(call.appointmentInfo).when;
+            return when != null && _sameDay(when, _selected!);
+          }).toList();
+
+    final weekEnd = _weekStart.add(const Duration(days: 6));
+
+    return AppHeaderScaffold(
       title: strings.t('appointmentsTitle'),
+      subtitle: '${items.length} ${strings.t('appointmentsCount')} · '
+          '${state.config.workStart} - ${state.config.workEnd}',
+      actions: [
+        if (_selected != null)
+          HeaderIconButton(
+            icon: Icons.close_rounded,
+            onTap: () => setState(() => _selected = null),
+            tooltip: strings.t('filterAll'),
+          ),
+      ],
+      headerChild: HeaderWeekStrip(
+        weekStart: _weekStart,
+        selected: _selected,
+        dayLabels: [
+          for (final key in const [
+            'dayMon',
+            'dayTue',
+            'dayWed',
+            'dayThu',
+            'dayFri',
+            'daySat',
+            'daySun',
+          ])
+            strings.t(key),
+        ],
+        hasItems: (day) => items.any((call) {
+          final when = AppointmentsScreen._parse(call.appointmentInfo).when;
+          return when != null && _sameDay(when, day);
+        }),
+        onSelect: (day) => setState(() {
+          _selected = (_selected != null && _sameDay(_selected!, day))
+              ? null
+              : day;
+        }),
+        onPrevWeek: () => setState(() {
+          _weekStart = _weekStart.subtract(const Duration(days: 7));
+        }),
+        onNextWeek: () => setState(() {
+          _weekStart = _weekStart.add(const Duration(days: 7));
+        }),
+        rangeLabel:
+            '${Formatters.date(_weekStart)} - ${Formatters.date(weekEnd)}',
+      ),
+      overlap: 22,
       body: RefreshIndicator(
         onRefresh: state.refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(18, 4, 18, 110),
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
           children: [
-            if (state.isDemo || state.isOffline)
+            if (state.isDemo || state.isOffline) ...[
               DemoBanner(
-                onOpenSettings: onOpenSettings,
+                onOpenSettings: widget.onOpenSettings,
                 offline: state.isOffline,
               ),
+              const SizedBox(height: 14),
+            ],
 
-            _WorkHoursHeader(
-              hours: '${state.config.workStart} - ${state.config.workEnd}',
-              count: items.length,
-            ),
-            const SizedBox(height: 20),
-
-            if (items.isEmpty)
+            if (shown.isEmpty)
               EmptyState(
                 icon: AppIcon.calendar,
                 title: strings.t('emptyAppointments'),
                 message: strings.t('emptyAppointmentsHint'),
               )
             else
-              for (final (index, call) in items.indexed)
+              for (final (index, call) in shown.indexed)
                 _TimelineRow(
                   call: call,
-                  parsed: _parse(call.appointmentInfo),
-                  canceled: _isCanceled(call.appointmentInfo) ||
-                      _canceledLater(items, call),
+                  parsed: AppointmentsScreen._parse(call.appointmentInfo),
+                  canceled:
+                      AppointmentsScreen._isCanceled(call.appointmentInfo) ||
+                          AppointmentsScreen._canceledLater(items, call),
                   isFirst: index == 0,
-                  isLast: index == items.length - 1,
+                  isLast: index == shown.length - 1,
                   // Gun degistiginde tarih basligi gosterilir.
-                  dayLabel: _dayLabelFor(items, index, strings),
+                  dayLabel:
+                      _dayLabelFor(shown, index, strings),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => CallDetailScreen(callId: call.callId),
@@ -120,7 +192,7 @@ class AppointmentsScreen extends StatelessWidget {
                   ),
                 ),
 
-            if (items.isNotEmpty) ...[
+            if (shown.isNotEmpty) ...[
               const SizedBox(height: 10),
               Center(
                 child: Text(
@@ -135,110 +207,33 @@ class AppointmentsScreen extends StatelessWidget {
     );
   }
 
-  /// Onceki ogeden farkli bir gune geciliyorsa gun basligi doner.
-  static String? _dayLabelFor(
-    List<CallSummary> items,
-    int index,
-    AppStrings strings,
-  ) {
-    final current = _parse(items[index].appointmentInfo).when;
-    if (current == null) return null;
-    if (index == 0) return _humanDay(current, strings);
-    final previous = _parse(items[index - 1].appointmentInfo).when;
-    if (previous == null) return _humanDay(current, strings);
-    final sameDay = previous.year == current.year &&
-        previous.month == current.month &&
-        previous.day == current.day;
-    return sameDay ? null : _humanDay(current, strings);
-  }
-
-  static String _humanDay(DateTime value, AppStrings strings) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final day = DateTime(value.year, value.month, value.day);
-    final diff = day.difference(today).inDays;
-    if (diff == 0) return strings.t('today');
-    if (diff == 1) return strings.t('tomorrow');
-    return Formatters.date(value);
-  }
 }
 
-/// Ust bilgi seridi: mesai araligi ve toplam randevu sayisi.
-class _WorkHoursHeader extends StatelessWidget {
-  const _WorkHoursHeader({required this.hours, required this.count});
+/// Onceki ogeden farkli bir gune geciliyorsa gun basligi doner.
+String? _dayLabelFor(
+  List<CallSummary> items,
+  int index,
+  AppStrings strings,
+) {
+  final current = _parse(items[index].appointmentInfo).when;
+  if (current == null) return null;
+  if (index == 0) return _humanDay(current, strings);
+  final previous = _parse(items[index - 1].appointmentInfo).when;
+  if (previous == null) return _humanDay(current, strings);
+  final sameDay = previous.year == current.year &&
+      previous.month == current.month &&
+      previous.day == current.day;
+  return sameDay ? null : _humanDay(current, strings);
+}
 
-  final String hours;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF8B7FF0), Color(0xFF6C5CE0)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppPalette.violet.withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 9),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$count',
-                style: context.text.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                strings.t('appointmentsTitle'),
-                style: context.text.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SoftIcon(AppIcon.clock, size: 14, color: Colors.white),
-                const SizedBox(width: 7),
-                Text(
-                  hours,
-                  style: context.text.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+String _humanDay(DateTime value, AppStrings strings) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final day = DateTime(value.year, value.month, value.day);
+  final diff = day.difference(today).inDays;
+  if (diff == 0) return strings.t('today');
+  if (diff == 1) return strings.t('tomorrow');
+  return Formatters.date(value);
 }
 
 /// Zaman cizgisinin tek bir satiri.
@@ -264,7 +259,7 @@ class _TimelineRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    final accent = canceled ? tokens.muted : AppPalette.violet;
+    final accent = canceled ? tokens.muted : AppPalette.ink;
     final time =
         parsed.when == null ? '--:--' : Formatters.time(parsed.when!);
 

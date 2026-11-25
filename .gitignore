@@ -59,3 +59,18 @@ check*.ps1
 
 rabia*.txt
 scr.ps1
+tani.ps1
+baslat.ps1
+wsl-ayna.ps1
+docker-bul.ps1
+lk-kontrol.ps1
+fw-tani.ps1
+fw-duzelt.ps1
+udp_test.py
+usb.ps1
+
+# Firebase (projeye ozel, her gelistirici kendi kopyasini indirir)
+mobile/android/app/google-services.json
+an.ps1
+analiz.txt
+owner.json

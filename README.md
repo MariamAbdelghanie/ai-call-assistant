@@ -208,6 +208,38 @@ tamamlanmalıdır.
 | **İstek sınırı** | Yok | Uç noktalarda hız sınırı yok |
 | **Yedekleme** | Yok | Firestore ve yapılandırma için düzenli yedek |
 
+### Hesap ve erişim denetimi
+
+Mobil uygulamada **gerçek oturum açma** vardır: Google ile giriş veya
+e-posta + parola (Firebase Authentication). Parola hiçbir zaman bu projenin
+veritabanına yazılmaz; Firebase onu kendi tarafında özetleyerek saklar.
+
+Önemli olan kısım sunucu tarafıdır. Daha önce doğru `API_TOKEN` ile gelen
+**herkes tüm çağrı kayıtlarını** okuyabiliyordu; hangi hesapla giriş
+yapıldığının bir önemi yoktu. Artık:
+
+| Uç nokta | Davranış |
+|---|---|
+| `GET /logs` | Yalnızca isteği yapan kullanıcıya ait kayıtlar döner |
+| `POST /logs/delete` | Kayıt başkasına aitse `403` |
+| `POST /logs/returned` | Kayıt başkasına aitse `403` |
+
+Nasıl çalışır (`user_access.py`):
+
+1. Uygulama her isteğe `Authorization: Bearer <Firebase ID token>` ekler.
+2. Sunucu bu belirteci `firebase_admin` ile doğrular ve `uid` çıkarır.
+   Belirteç Firebase tarafından imzalandığı için taklit edilemez.
+3. Her çağrı kaydı `owner_uid` alanı ile saklanır.
+4. İlk giriş yapan hesap asistanı sahiplenir ve `owner.json` dosyasına
+   yazılır. Sonradan giren başka bir hesap kendi (boş) listesini görür.
+
+`owner.json` depoya eklenmez. Sahipliği devretmek için dosyayı silmek ve
+yeni sahiple giriş yapmak yeterlidir. `owner_uid` taşımayan eski kayıtlar
+kurulumun sahibine sayılır, böylece geçişte veri kaybolmaz.
+
+`API_TOKEN` hâlâ geçerlidir ama artık yalnızca yerel yönetim panelinin
+(tarayıcıdaki `web_dialer`) erişimi içindir.
+
 ### Gizlilik ve KVKK
 
 Asistan **telefon görüşmelerini kaydedip metne çeviriyor**; bu, üçüncü
@@ -229,7 +261,8 @@ Eksikler:
 
 Bu üçü tamamlanmadan hizmet gerçek çağrı almamalıdır.
 
-Tamamlanan madde: **kayıt reddi hakkı**. Arayan kaydedilmek istemediğini
+Tamamlanan maddeler: **kayıt reddi hakkı** ve **hesap bazlı erişim**
+(bkz. *Hesap ve erişim denetimi*). Arayan kaydedilmek istemediğini
 söylediğinde görüşme içeriği artık hiç saklanmıyor (bkz. *Asistan ne
 yapıyor → Kayıt izni*); yalnızca geri arama talebi tutuluyor. Böylece
 bilgilendirme tek yönlü bir duyuru olmaktan çıkıp arayanın gerçekten

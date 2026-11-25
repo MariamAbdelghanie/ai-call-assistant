@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import uuid
@@ -9,6 +10,14 @@ from livekit import api
 load_dotenv()
 
 CALL_LOGS_FILE = Path(__file__).parent / "call_logs.json"
+
+from user_access import (  # noqa: E402  (yol kurulduktan sonra alinir)
+    Caller,
+    claim_owner,
+    owner_uid,
+    verify_firebase_token,
+    visible_to,
+)
 CONFIG_FILE = Path(__file__).parent / "agent_config.json"
 
 DEFAULT_CONFIG = {
@@ -666,13 +675,23 @@ async def mark_returned_endpoint(request: web.Request):
         body = await request.json()
         call_id = body.get("call_id", "")
         called_back = bool(body.get("called_back", True))
-        if CALL_LOGS_FILE.exists():
-            logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            for item in logs:
-                if item.get("call_id") == call_id:
-                    item["called_back"] = called_back
-                    break
-            CALL_LOGS_FILE.write_text(json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8")
+        caller = request.get("caller")
+        if caller is None:
+            return web.json_response({"ok": False, "error": "unauthorized"}, status=401)
+        owner = await asyncio.to_thread(owner_uid)
+        logs = _load_logs()
+        found = False
+        for item in logs:
+            if item.get("call_id") == call_id:
+                if not visible_to(item, caller, owner):
+                    return web.json_response(
+                        {"ok": False, "error": "forbidden"}, status=403
+                    )
+                item["called_back"] = called_back
+                found = True
+                break
+        if found:
+            _save_logs(logs)
         return web.json_response({"ok": True})
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)}, status=400)
@@ -682,10 +701,18 @@ async def delete_log_endpoint(request: web.Request):
     try:
         body = await request.json()
         call_id = body.get("call_id", "")
-        if CALL_LOGS_FILE.exists():
-            logs = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            logs = [item for item in logs if item.get("call_id") != call_id]
-            CALL_LOGS_FILE.write_text(json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8")
+        caller = request.get("caller")
+        if caller is None:
+            return web.json_response({"ok": False, "error": "unauthorized"}, status=401)
+        owner = await asyncio.to_thread(owner_uid)
+        logs = _load_logs()
+        target = next((i for i in logs if i.get("call_id") == call_id), None)
+        if target is not None:
+            if not visible_to(target, caller, owner):
+                return web.json_response(
+                    {"ok": False, "error": "forbidden"}, status=403
+                )
+            _save_logs([i for i in logs if i.get("call_id") != call_id])
         return web.json_response({"ok": True})
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)}, status=400)
@@ -717,14 +744,29 @@ async def token_endpoint(request: web.Request):
     return web.json_response({"token": token, "ws_url": ws_url, "room": room_name})
 
 
+def _load_logs() -> list:
+    if not CALL_LOGS_FILE.exists():
+        return []
+    try:
+        data = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def _save_logs(logs: list) -> None:
+    CALL_LOGS_FILE.write_text(
+        json.dumps(logs, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
 async def logs_endpoint(request: web.Request):
-    if CALL_LOGS_FILE.exists():
-        try:
-            data = json.loads(CALL_LOGS_FILE.read_text(encoding="utf-8"))
-            return web.json_response(data)
-        except Exception:
-            pass
-    return web.json_response([])
+    caller = request.get("caller")
+    if caller is None:
+        return web.json_response([])
+    owner = await asyncio.to_thread(owner_uid)
+    data = [r for r in _load_logs() if visible_to(r, caller, owner)]
+    return web.json_response(data)
 
 
 API_TOKEN = os.getenv("API_TOKEN", "").strip()
@@ -746,19 +788,36 @@ def _token_of(request: web.Request) -> str:
 
 @web.middleware
 async def auth_middleware(request: web.Request, handler):
-    """Korunan uc noktalara yalnizca dogru belirtecle erisilir.
+    """Korunan uc noktalarda istegi yapani belirler.
 
-    API_TOKEN bos birakilirsa koruma devre disi kalir; bu yalnizca yerel
-    gelistirme icindir ve acilista uyari basilir.
+    Iki kimlik kabul edilir:
+      1. Firebase kimlik belirteci  -> gercek kullanici (uid + e-posta)
+      2. API_TOKEN                  -> yerel panel / yonetim erisimi
+
+    Dogrulanan kimlik request['caller'] icine konur; uc noktalar kayitlari
+    buna gore filtreler. Boylece dogru belirtece sahip olmak artik TUM
+    kayitlari gormek anlamina gelmez.
     """
-    if not API_TOKEN or request.method == "OPTIONS":
+    if request.method == "OPTIONS":
         return await handler(request)
+
+    presented = _token_of(request)
+    caller = None
+    if presented:
+        caller = await asyncio.to_thread(verify_firebase_token, presented)
+        if caller is None and API_TOKEN and presented == API_TOKEN:
+            caller = Caller(uid="__api_token__", email="")
+    request["caller"] = caller
+
     if request.path.startswith(PROTECTED_PREFIXES):
-        if _token_of(request) != API_TOKEN:
-            return web.json_response(
-                {"error": "unauthorized"},
-                status=401,
-            )
+        if caller is None:
+            # API_TOKEN hic ayarlanmamissa yalnizca yerel gelistirme icin
+            # koruma devre disi kalir; bu durumda da kimlik yoktur.
+            if not API_TOKEN:
+                request["caller"] = Caller(uid="__api_token__", email="")
+                return await handler(request)
+            return web.json_response({"error": "unauthorized"}, status=401)
+        await asyncio.to_thread(claim_owner, caller)
     return await handler(request)
 
 

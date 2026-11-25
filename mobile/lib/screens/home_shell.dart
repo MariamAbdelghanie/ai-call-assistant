@@ -1,17 +1,19 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import '../widgets/soft_icon.dart';
 import 'appointments_screen.dart';
 import 'call_screen.dart';
 import 'calls_screen.dart';
 import 'settings_screen.dart';
 import 'urgent_screen.dart';
 
+/// Uygulamanin kabugu: alt gezinme ve sayfalar.
+///
+/// Alt cubuk duz beyazdir (bulanik cam degil): acik temada cam efekti
+/// okunabilirligi dusuruyordu. Secili sekme hem renk hem de dolu ikonla
+/// belirtilir, boylece ayrim yalnizca renge dayanmaz.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -44,8 +46,7 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     return Scaffold(
-      extendBody: true,
-      backgroundColor: tokens.mesh.first,
+      backgroundColor: tokens.isDark ? AppPalette.darkSurface : const Color(0xFFF7F7F8),
       body: AnimatedSwitcher(
         duration: AppTheme.normal,
         switchInCurve: Curves.easeOutCubic,
@@ -54,7 +55,7 @@ class _HomeShellState extends State<HomeShell> {
           opacity: animation,
           child: SlideTransition(
             position: Tween<Offset>(
-              begin: const Offset(0, 0.015),
+              begin: const Offset(0, 0.012),
               end: Offset.zero,
             ).animate(animation),
             child: child,
@@ -62,55 +63,77 @@ class _HomeShellState extends State<HomeShell> {
         ),
         child: KeyedSubtree(key: ValueKey<int>(_index), child: pages[_index]),
       ),
-      bottomNavigationBar: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: tokens.glassStrong,
-              border: Border(top: BorderSide(color: tokens.glassBorder)),
-            ),
-            child: NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: _goTo,
-              destinations: [
-                NavigationDestination(
-                  icon: SoftIcon(AppIcon.home, size: 24, color: tokens.muted, solid: true),
-                  selectedIcon: SoftIcon(AppIcon.home, size: 24, color: AppPalette.brand, solid: true),
-                  label: strings.t('tabCalls'),
-                ),
-                NavigationDestination(
-                  icon: Badge.count(
-                    count: state.urgentCount,
-                    isLabelVisible: state.urgentCount > 0,
-                    backgroundColor: tokens.urgent,
-                    child: SoftIcon(AppIcon.urgent, size: 24, color: tokens.muted, solid: true),
+      bottomNavigationBar: _BottomBar(
+        index: _index,
+        onChanged: _goTo,
+        urgentCount: state.urgentCount,
+        labels: [
+          strings.t('tabCalls'),
+          strings.t('tabUrgent'),
+          strings.t('tabCall'),
+          strings.t('tabAppointments'),
+          strings.t('tabSettings'),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.index,
+    required this.onChanged,
+    required this.urgentCount,
+    required this.labels,
+  });
+
+  final int index;
+  final ValueChanged<int> onChanged;
+  final int urgentCount;
+  final List<String> labels;
+
+  static const _icons = <IconData>[
+    Icons.home_outlined,
+    Icons.bolt_outlined,
+    Icons.phone_in_talk_outlined,
+    Icons.calendar_today_outlined,
+    Icons.tune_outlined,
+  ];
+
+  static const _activeIcons = <IconData>[
+    Icons.home_rounded,
+    Icons.bolt_rounded,
+    Icons.phone_in_talk_rounded,
+    Icons.calendar_month_rounded,
+    Icons.tune_rounded,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.isDark ? AppPalette.darkCard : AppPalette.surface,
+        border: Border(top: BorderSide(color: tokens.glassBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            children: [
+              for (var i = 0; i < labels.length; i++)
+                Expanded(
+                  child: _Tab(
+                    label: labels[i],
+                    icon: index == i ? _activeIcons[i] : _icons[i],
+                    selected: index == i,
+                    badge: i == 1 ? urgentCount : 0,
+                    onTap: () => onChanged(i),
                   ),
-                  selectedIcon: Badge.count(
-                    count: state.urgentCount,
-                    isLabelVisible: state.urgentCount > 0,
-                    backgroundColor: tokens.urgent,
-                    child: SoftIcon(AppIcon.urgent, size: 24, color: AppPalette.brand, solid: true),
-                  ),
-                  label: strings.t('tabUrgent'),
                 ),
-                NavigationDestination(
-                  icon: _CallTabIcon(active: _index == 2),
-                  label: strings.t('tabCall'),
-                ),
-                NavigationDestination(
-                  icon: SoftIcon(AppIcon.calendar, size: 24, color: tokens.muted, solid: true),
-                  selectedIcon: SoftIcon(AppIcon.calendar, size: 24, color: AppPalette.brand, solid: true),
-                  label: strings.t('tabAppointments'),
-                ),
-                NavigationDestination(
-                  icon: SoftIcon(AppIcon.settings, size: 24, color: tokens.muted, solid: true),
-                  selectedIcon: SoftIcon(AppIcon.settings, size: 24, color: AppPalette.brand, solid: true),
-                  label: strings.t('tabSettings'),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -118,45 +141,55 @@ class _HomeShellState extends State<HomeShell> {
   }
 }
 
-/// Arama sekmesi, degradeli yuvarlak bir dugme olarak one cikar.
-class _CallTabIcon extends StatelessWidget {
-  const _CallTabIcon({required this.active});
+class _Tab extends StatelessWidget {
+  const _Tab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.badge,
+    required this.onTap,
+  });
 
-  final bool active;
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final int badge;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    return SizedBox(
-      width: 52,
-      height: 40,
-      child: Center(
-        child: Transform.rotate(
-          angle: 0.785398, // 45 derece: kare baklava sekline doner
-          child: AnimatedContainer(
-            duration: AppTheme.fast,
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              gradient: tokens.brandGradient,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppPalette.brand
-                      .withValues(alpha: active ? 0.48 : 0.26),
-                  blurRadius: active ? 18 : 11,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+    final color = selected ? AppPalette.orange : tokens.muted;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        // Dokunma alani tum sutunu kaplar: 44x44 kuralinin ustunde kalir.
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Badge.count(
+              count: badge,
+              isLabelVisible: badge > 0,
+              backgroundColor: tokens.urgent,
+              textColor: Colors.white,
+              child: Icon(icon, size: 24, color: color),
             ),
-            child: Transform.rotate(
-              angle: -0.785398,
-              child: const Center(
-                child: SoftIcon(AppIcon.phone,
-                    size: 19, color: Colors.white, solid: true),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.labelSmall?.copyWith(
+                color: color,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 11,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

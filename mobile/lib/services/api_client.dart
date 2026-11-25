@@ -22,6 +22,13 @@ class ApiClient {
   /// gonderilmez; sunucu da korumasizsa istekler yine calisir.
   String token = '';
 
+  /// Oturum acan kullanicinin Firebase kimlik belirtecini uretir.
+  ///
+  /// Sunucu bu belirtecten kullanicinin kim oldugunu cikarir ve yalnizca
+  /// ona ait kayitlari dondurur. Saglanmazsa yalnizca API_TOKEN gonderilir
+  /// ve sunucu istegi yonetim erisimi olarak degerlendirir.
+  Future<String> Function()? idTokenProvider;
+
   Uri _uri(String baseUrl, String path) {
     final normalized = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     final withScheme =
@@ -33,13 +40,23 @@ class ApiClient {
     Uri uri, {
     String method = 'GET',
     Map<String, dynamic>? body,
-  }) =>
-      _http.send(
-        uri,
-        method: method,
-        body: body,
-        headers: token.isEmpty ? null : {'X-API-Token': token},
-      );
+  }) async {
+    final headers = <String, String>{};
+    // Kimlik belirteci varsa oncelik onundur: sunucu kullaniciyi bundan
+    // tanir. API_TOKEN yalnizca sunucuya ulasma izni saglar.
+    final idToken = await idTokenProvider?.call() ?? '';
+    if (idToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $idToken';
+    } else if (token.isNotEmpty) {
+      headers['X-API-Token'] = token;
+    }
+    return _http.send(
+      uri,
+      method: method,
+      body: body,
+      headers: headers.isEmpty ? null : headers,
+    );
+  }
 
   Future<List<CallSummary>> fetchCalls(String baseUrl) async {
     final text = await _send(_uri(baseUrl, '/logs'));

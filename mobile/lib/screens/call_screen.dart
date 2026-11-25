@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
+import '../main.dart';
 import '../services/live_call_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import '../widgets/glass.dart';
+import '../widgets/app_header.dart';
 import '../widgets/voice_orb.dart';
 import '../widgets/soft_icon.dart';
 
@@ -59,24 +60,35 @@ class _CallScreenState extends State<CallScreen> {
     final strings = AppStrings.of(context);
     final tokens = context.tokens;
 
-    return GlassScaffold(
+    // Sunucu adresinin sadece ana kismi: tam URL basliga sigmiyor.
+    final host = Uri.tryParse(state.serverUrl)?.host ?? state.serverUrl;
+
+    return AppHeaderScaffold(
       title: strings.t('tabCall'),
+      actions: [
+        HeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: widget.onOpenSettings,
+          tooltip: strings.t('tabSettings'),
+        ),
+      ],
+      headerChild: HeaderStatusStrip(
+        label: state.isDemo
+            ? strings.t('offlineDemo')
+            : strings.t('connected'),
+        hours: state.isDemo ? '-' : host,
+        online: !state.isDemo,
+      ),
       body: ListenableBuilder(
         listenable: _call,
         builder: (context, _) {
           final active = _call.isActive;
           return SafeArea(
+            top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: Column(
                 children: [
-                  _ConnectionPill(
-                    connected: !state.isDemo,
-                    label: state.isDemo
-                        ? strings.t('offlineDemo')
-                        : state.serverUrl,
-                    onTap: widget.onOpenSettings,
-                  ),
                   const Spacer(),
                   VoiceOrb(
                     size: 280,
@@ -194,6 +206,8 @@ class _CallScreenState extends State<CallScreen> {
                               // Belirtec cagri aninda ayarlardan alinir;
                               // kullanici ayarda degistirirse hemen gecerli olur.
                               _call.apiToken = state.apiToken;
+                              _call.idTokenProvider =
+                                  AuthScope.of(context).idToken;
                               _call.start(state.serverUrl);
                             },
                     ),
@@ -202,62 +216,6 @@ class _CallScreenState extends State<CallScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _ConnectionPill extends StatelessWidget {
-  const _ConnectionPill({
-    required this.connected,
-    required this.label,
-    required this.onTap,
-  });
-
-  final bool connected;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    final color = connected ? tokens.success : tokens.pending;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            color: tokens.glass,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: tokens.glassBorder),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 9),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 240),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.labelMedium?.copyWith(
-                    color: tokens.muted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

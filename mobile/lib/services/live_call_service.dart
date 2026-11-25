@@ -25,6 +25,9 @@ class LiveCallService extends ChangeNotifier {
   /// Istek icindeki yerel "token" degiskeni LiveKit belirtecidir, bu degil.
   String apiToken = '';
 
+  /// Oturum acan kullanicinin Firebase kimlik belirtecini uretir.
+  Future<String> Function()? idTokenProvider;
+
   lk.Room? _room;
   lk.EventsListener<lk.RoomEvent>? _listener;
   Timer? _ticker;
@@ -76,9 +79,18 @@ class LiveCallService extends ChangeNotifier {
         return;
       }
 
+      // Kimlik belirteci varsa oncelik onundur; sunucu kullaniciyi
+      // bundan tanir (bkz. user_access.py).
+      final idToken = await idTokenProvider?.call() ?? '';
+      final headers = <String, String>{};
+      if (idToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $idToken';
+      } else if (apiToken.isNotEmpty) {
+        headers['X-API-Token'] = apiToken;
+      }
       final raw = await _http.send(
         _uri(baseUrl, '/token'),
-        headers: apiToken.isEmpty ? null : {'X-API-Token': apiToken},
+        headers: headers.isEmpty ? null : headers,
       );
       final data = jsonDecode(raw);
       if (data is! Map<String, dynamic>) {
@@ -112,6 +124,11 @@ class LiveCallService extends ChangeNotifier {
       // gorusme hoparloru acik baslasin ki asistan duyulsun.
       if (!kIsWeb) {
         try {
+          // livekit_client 2.13'te bu uye kullanimdan kaldirildi; yerine
+          // AudioManager.instance.setSpeakerOutputPreferred geliyor. Gecis
+          // ses yolunu dogrudan etkiledigi icin cihazda test edilerek
+          // yapilmali; o zamana kadar calisan API korunuyor.
+          // ignore: deprecated_member_use
           await lk.Hardware.instance.setSpeakerphoneOn(true);
         } catch (_) {
           // Bazi cihazlarda desteklenmeyebilir; cagri yine de devam eder.

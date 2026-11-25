@@ -1,60 +1,93 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Gorsel kimlik: yumusak pastel tonlar, lila-pembe-gok mavisi ucgeni.
+/// CALLORA gorsel kimligi: acik, sakin ve profesyonel bir SaaS yuzeyi.
 ///
-/// Amac gozu yormayan, sakin ve "yazilim araci" gibi degil arkadas canlisi
-/// duran bir yuzey. Renk adlari kodun geri kalaniyla uyumlu kalsin diye
-/// korundu; yalnizca degerleri pastel paletle degistirildi.
+/// Varsayilan gorunum ACIK moddur. Turuncu vurgu yalnizca onemli eylemler,
+/// aktif durumlar ve kritik gostergeler icin kullanilir; genis yuzeylerde
+/// kullanilmaz. Renk adlari kodun geri kalaniyla uyumlu kalsin diye korundu,
+/// yalnizca degerleri yeni palete gore degistirildi.
 class AppPalette {
-  // Koyu mor zemin uzerinde neon mor-macenta vurgu.
-  static const Color sage = Color(0xFFA855F7); // ana mor
-  static const Color mistBlue = Color(0xFFC4A6FF); // acik mor
-  static const Color deepSlate = Color(0xFF120A24); // koyu zemin
-  static const Color mistWhite = Color(0xFFF5F3FF); // acik metin
-  static const Color blush = Color(0xFFE879F9); // macenta vurgu
+  // --- Marka: beyaz zemin + turuncu vurgu ---
+  static const Color orange = Color(0xFFF26B21); // birincil
+  static const Color orangeSoft = Color(0xFFFFF1E8); // cok acik turuncu
+  static const Color orangeTint = Color(0xFFFDE4D3); // kenarlik/rozet
+  // Ucuncu renk: turuncuyu kiran koyu lacivert. Ikincil dugmeler, marka
+  // isareti ve basliklarda kullanilir.
+  static const Color ink = Color(0xFF16202E);
+  static const Color inkSoft = Color(0xFFEDF1F6);
 
-  // Kategori renkleri
-  static const Color mint = Color(0xFF34D399);
-  static const Color peach = Color(0xFFFBBF4A);
-  static const Color violet = Color(0xFF8B5CF6);
-  static const Color neonCyan = Color(0xFF67E8F9);
+  static const Color accent = orange;
+  static const Color accentDeep = Color(0xFFD4551A);
+  static const Color accentSoft = orangeSoft;
 
-  // Anlamsal esleme
-  static const Color brand = Color(0xFFA855F7);
-  static const Color brandLight = Color(0xFFC4A6FF);
-  static const Color brandDeep = Color(0xFF6D28D9);
-  static const Color cyan = Color(0xFF67E8F9);
-  static const Color lilac = Color(0xFF8B5CF6);
+  // --- Notr yuzeyler (acik tema) ---
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceAlt = Color(0xFFF7F7F8);
+  static const Color border = Color(0xFFECECEE);
 
-  // Status colors that harmonise with the serene palette
-  static const Color urgent = Color(0xFFFB5E7E);
-  static const Color pending = Color(0xFFFBBF4A);
-  static const Color success = Color(0xFF34D399);
+  // --- Notr yuzeyler (koyu tema) ---
+  static const Color darkSurface = Color(0xFF141416);
+  static const Color darkCard = Color(0xFF1C1C1F);
+  static const Color darkBorder = Color(0xFF2A2A2E);
 
-  // Light theme background stops (serene misty landscape)
+  // --- Metin ---
+  static const Color lightText = Color(0xFF1A1A1A);
+  static const Color lightMuted = Color(0xFF8A8A8E);
+  static const Color darkText = Color(0xFFF2F2F3);
+  static const Color darkMuted = Color(0xFF9A9AA0);
+
+  // --- Durum renkleri ---
+  static const Color urgent = Color(0xFFE5484D);
+  static const Color pending = Color(0xFFE0890B);
+  static const Color success = Color(0xFF2FA86A);
+  static const Color info = Color(0xFF3B82F6);
+  /// Randevu/ajanda icin yumusak indigo: turuncuyla carpismayan tek
+  /// soguk ton, boylece takvim ogeleri listede kendiliginden ayrisiyor.
+  static const Color scheduled = Color(0xFF5B6CD9);
+
+  // --- Geriye donuk uyumluluk ---
+  static const Color brand = orange;
+  static const Color brandLight = Color(0xFFFF9459);
+  static const Color brandDeep = accentDeep;
+  static const Color navy = ink;
+  static const Color navyDeep = Color(0xFF0E0E0F);
+  static const Color navyLight = Color(0xFFFF9459);
+  static const Color clay = pending;
+  static const Color clayLight = orangeTint;
+  static const Color beige = orangeSoft;
+  static const Color paper = surfaceAlt;
+  static const Color forest = accentDeep;
+  static const Color sage = orange;
+  static const Color sageMid = Color(0xFFFF9459);
+  static const Color sageLight = orangeTint;
+  static const Color mistBlue = Color(0xFFFF9459);
+  static const Color deepSlate = darkSurface;
+  static const Color mistWhite = surface;
+  static const Color blush = Color(0xFFFF9459);
+  static const Color mint = success;
+  static const Color peach = pending;
+  static const Color violet = info;
+  static const Color neonCyan = info;
+  static const Color cyan = info;
+  static const Color lilac = orangeTint;
+
   static const List<Color> lightMesh = [
-    Color(0xFFFBFAFF),
-    Color(0xFFF6F3FD),
-    Color(0xFFF9F6FE),
-    Color(0xFFFDFCFF),
+    Color(0xFFFFFFFF),
+    Color(0xFFFFFFFF),
+    Color(0xFFFCFCFD),
+    Color(0xFFFFFFFF),
   ];
 
-  // Dark theme background stops (deep pine forest twilight)
   static const List<Color> darkMesh = [
-    Color(0xFF050309),
-    Color(0xFF07040D),
-    Color(0xFF0A0612),
-    Color(0xFF030106),
+    darkSurface,
+    Color(0xFF171719),
+    darkSurface,
+    Color(0xFF111113),
   ];
-
-  static const Color lightText = Color(0xFF1E1333);
-  static const Color lightMuted = Color(0xFF756B8C);
-  static const Color darkText = Color(0xFFF5F3FF);
-  static const Color darkMuted = Color(0xFFA99CC9);
 }
 
-/// Theme extension for glass surfaces, gradients, and status tokens.
+/// Yuzey, kenarlik, golge ve durum renkleri icin tema uzantisi.
 class AppTokens extends ThemeExtension<AppTokens> {
   const AppTokens({
     required this.mesh,
@@ -72,10 +105,18 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.isDark,
   });
 
+  /// Zemin gecisleri.
   final List<Color> mesh;
+
+  /// Kart zemini. (Ad gecmisten geliyor; artik cam degil duz yuzey.)
   final Color glass;
+
+  /// One cikan kart zemini.
   final Color glassStrong;
+
+  /// Kenarlik rengi.
   final Color glassBorder;
+
   final Color muted;
   final Color urgent;
   final Color urgentSoft;
@@ -88,69 +129,72 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static const AppTokens light = AppTokens(
     mesh: AppPalette.lightMesh,
-    glass: Color(0xFFFFFFFF),
-    glassStrong: Color(0xFFFFFFFF),
-    glassBorder: Color(0x1FA855F7),
+    glass: AppPalette.surface,
+    glassStrong: AppPalette.surfaceAlt,
+    glassBorder: AppPalette.border,
     muted: AppPalette.lightMuted,
     urgent: AppPalette.urgent,
-    urgentSoft: Color(0x1FF2545B),
+    urgentSoft: Color(0xFFFDEAEA),
     pending: AppPalette.pending,
-    pendingSoft: Color(0x1FF5A623),
+    pendingSoft: Color(0xFFFDF0DC),
     success: AppPalette.success,
-    successSoft: Color(0x2034B88A),
-    shadow: Color(0x142F3E46),
+    successSoft: Color(0xFFE6F6EE),
+    shadow: Color(0x12101828),
     isDark: false,
   );
 
   static const AppTokens dark = AppTokens(
     mesh: AppPalette.darkMesh,
-    glass: Color(0xF00E0A18),
-    glassStrong: Color(0xF5141026),
-    glassBorder: Color(0x1FFFFFFF),
+    glass: AppPalette.darkCard,
+    glassStrong: Color(0xFF28282C),
+    glassBorder: AppPalette.darkBorder,
     muted: AppPalette.darkMuted,
-    urgent: Color(0xFFE87A8E),
-    urgentSoft: Color(0x33E87A8E),
-    pending: Color(0xFFDDB86A),
-    pendingSoft: Color(0x33DDB86A),
-    success: Color(0xFF5EE7C0),
-    successSoft: Color(0x335EE7C0),
-    shadow: Color(0x66000000),
+    urgent: Color(0xFFF87171),
+    urgentSoft: Color(0xFF3B1D1D),
+    pending: Color(0xFFFBBF24),
+    pendingSoft: Color(0xFF3A2D12),
+    success: Color(0xFF6FBF8E),
+    successSoft: Color(0xFF14261D),
+    shadow: Color(0x4D000000),
     isDark: true,
   );
 
-  /// 4-Color blended gradient combining the top 4 palette colors:
-  /// #5E887E (Sage), #A7C7E7 (Mist Blue), #2F3E46 (Deep Slate), #F1F5F4 (Mist White)
+  /// Yumusak turuncu gecis: yalnizca kucuk vurgu yuzeylerinde kullanilir.
   LinearGradient get fourColorGradient => const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0xFFC084FC),
-          Color(0xFFA855F7),
-          Color(0xFF7C3AED),
+          AppPalette.sageMid,
+          AppPalette.accent,
+          AppPalette.forest,
         ],
         stops: [0.0, 0.55, 1.0],
       );
 
-  /// Brand gradient for buttons and active states.
-  LinearGradient get brandGradient => LinearGradient(
+  /// Birincil dugmeler ve aktif durumlar icin marka gecisi.
+  LinearGradient get brandGradient => const LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-        colors: isDark
-            ? const [Color(0xFF7C3AED), Color(0xFFB36CF8)]
-            : const [Color(0xFF9F5BF0), Color(0xFFC084FC)],
+        colors: [AppPalette.accent, AppPalette.sageMid],
       );
 
-  /// Soft ethereal multi-color gradient for cards and hero panels.
+  /// Kart ve panellerde cok hafif zemin tonu.
   LinearGradient get softGradient => LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          AppPalette.sage.withValues(alpha: isDark ? 0.20 : 0.07),
-          AppPalette.mistBlue.withValues(alpha: isDark ? 0.16 : 0.06),
-          AppPalette.blush.withValues(alpha: isDark ? 0.13 : 0.06),
-        ],
-        stops: const [0.0, 0.55, 1.0],
+        colors: isDark
+            ? const [AppPalette.darkCard, Color(0xFF161D19)]
+            : const [Color(0xFFFFFFFF), AppPalette.paper],
       );
+
+  /// Kartlarda kullanilan olculu golge.
+  List<BoxShadow> get cardShadow => [
+        BoxShadow(
+          color: shadow,
+          blurRadius: 12,
+          offset: const Offset(0, 2),
+        ),
+      ];
 
   @override
   AppTokens copyWith() => this;
@@ -168,10 +212,14 @@ extension AppTokensX on BuildContext {
 }
 
 class AppTheme {
-  static const double radius = 28;
-  static const double radiusSm = 18;
-  static const Duration fast = Duration(milliseconds: 180);
-  static const Duration normal = Duration(milliseconds: 280);
+  /// Kart ve buyuk yuzeyler icin kose yaricapi.
+  static const double radius = 16;
+
+  /// Dugme, alan ve kucuk bilesenler icin kose yaricapi.
+  static const double radiusSm = 12;
+
+  static const Duration fast = Duration(milliseconds: 150);
+  static const Duration normal = Duration(milliseconds: 240);
 
   static ThemeData light() => _build(
         brightness: Brightness.light,
@@ -190,19 +238,21 @@ class AppTheme {
     required Color onSurface,
     required AppTokens tokens,
   }) {
+    final isDark = brightness == Brightness.dark;
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppPalette.sage,
+      seedColor: AppPalette.accent,
       brightness: brightness,
     ).copyWith(
-      primary: brightness == Brightness.dark
-          ? AppPalette.mistBlue
-          : AppPalette.sage,
-      onPrimary: Colors.white,
-      secondary: AppPalette.blush,
+      primary: isDark ? AppPalette.sageLight : AppPalette.accent,
+      onPrimary: isDark ? AppPalette.forest : Colors.white,
+      secondary: isDark ? AppPalette.sageLight : AppPalette.accent,
+      onSecondary: Colors.white,
       surface: Colors.transparent,
       onSurface: onSurface,
+      surfaceContainerHighest: tokens.glassStrong,
       error: tokens.urgent,
       onError: Colors.white,
+      outline: tokens.glassBorder,
       outlineVariant: tokens.glassBorder,
     );
 
@@ -211,10 +261,12 @@ class AppTheme {
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: Colors.transparent,
+      splashFactory: InkSparkle.splashFactory,
       extensions: <ThemeExtension<dynamic>>[tokens],
     );
 
-    final textTheme = GoogleFonts.spaceGroteskTextTheme(base.textTheme).apply(
+    // Inter: is uygulamalarinda okunakli, notr ve yaygin bir aile.
+    final textTheme = GoogleFonts.interTextTheme(base.textTheme).apply(
       bodyColor: onSurface,
       displayColor: onSurface,
     );
@@ -223,25 +275,27 @@ class AppTheme {
       textTheme: textTheme.copyWith(
         headlineMedium: textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.w700,
-          letterSpacing: -1.2,
-          height: 1.08,
+          letterSpacing: -0.6,
+          height: 1.2,
         ),
         headlineSmall: textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w700,
-          letterSpacing: -0.8,
-          height: 1.15,
+          letterSpacing: -0.4,
+          height: 1.25,
         ),
-        bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.55),
-        bodySmall: textTheme.bodySmall?.copyWith(height: 1.5),
-        labelSmall: textTheme.labelSmall?.copyWith(letterSpacing: 0.4),
         titleLarge: textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
-        ),
-        titleMedium: textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
         ),
+        titleMedium: textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.1,
+        ),
+        titleSmall: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.5),
+        bodySmall: textTheme.bodySmall?.copyWith(height: 1.45),
+        labelLarge: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        labelSmall: textTheme.labelSmall?.copyWith(letterSpacing: 0.2),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -250,9 +304,9 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
           color: onSurface,
         ),
       ),
@@ -268,19 +322,26 @@ class AppTheme {
       ),
       chipTheme: base.chipTheme.copyWith(
         side: BorderSide(color: tokens.glassBorder),
-        shape: const StadiumBorder(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+        ),
         backgroundColor: tokens.glass,
-        selectedColor: scheme.primary,
+        selectedColor: AppPalette.accent,
         labelStyle: textTheme.labelLarge,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         showCheckmark: false,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: tokens.glass,
+        fillColor: isDark ? tokens.glass : AppPalette.surface,
         hintStyle: textTheme.bodyMedium?.copyWith(color: tokens.muted),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        labelStyle: textTheme.bodyMedium?.copyWith(color: tokens.muted),
+        floatingLabelStyle:
+            textTheme.labelLarge?.copyWith(color: AppPalette.accent),
+        prefixIconColor: tokens.muted,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSm),
           borderSide: BorderSide(color: tokens.glassBorder),
@@ -291,43 +352,67 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSm),
-          borderSide: BorderSide(color: scheme.primary, width: 1.6),
+          borderSide: const BorderSide(color: AppPalette.accent, width: 1.8),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 52),
-          shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          minimumSize: const Size(0, 50),
+          backgroundColor: AppPalette.accent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusSm),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 52),
+          minimumSize: const Size(0, 50),
+          foregroundColor: onSurface,
           side: BorderSide(color: tokens.glassBorder),
-          shape: const StadiumBorder(),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusSm),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppPalette.accent,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? AppPalette.darkCard : AppPalette.surface,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: tokens.glassStrong,
+        indicatorColor: AppPalette.accentSoft,
         elevation: 0,
-        height: 72,
+        height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         labelTextStyle: WidgetStatePropertyAll(
           textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
-      dividerTheme: DividerThemeData(color: tokens.glassBorder, thickness: 1),
-      snackBarTheme: const SnackBarThemeData(
+      dividerTheme: DividerThemeData(
+        color: tokens.glassBorder,
+        thickness: 1,
+        space: 1,
+      ),
+      snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: StadiumBorder(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusSm),
+        ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: tokens.isDark
-            ? const Color(0xFF1B2B28)
-            : Colors.white.withValues(alpha: 0.98),
+        backgroundColor: isDark ? AppPalette.darkCard : AppPalette.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),

@@ -1,332 +1,293 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/glass.dart';
-import '../widgets/soft_icon.dart';
-import '../widgets/voice_orb.dart';
 
-/// Acilis ekrani.
+/// Karsilama + oturum baslatma ekrani.
 ///
-/// Tek bir gorsel odak var: siyah zeminde duran kure. Metin blogu kurenin
-/// altinda hizalanir, eylem en altta tek basina durur. Robot karakteri yerine
-/// kure kullanilir; boylece acilis, gorusme ekraniyla ayni kimligi tasir.
-class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key, required this.onStart});
+/// Arastirilmis kalibi izler: tek bir deger ekrani (ozellik karuseli degil),
+/// once sosyal giris, sonra e-posta yolu. Hesap neden gerekiyor sorusu
+/// ekranda yanitlanir, cunku cagri kayitlari kisisel veridir.
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({
+    super.key,
+    required this.onStart,
+    required this.auth,
+  });
 
+  /// E-posta akisina gecis.
   final VoidCallback onStart;
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen>
-    with TickerProviderStateMixin {
-  late final AnimationController _enter = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 950),
-  )..forward();
-
-  late final AnimationController _exit = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 520),
-  );
-
-  bool _leaving = false;
-  bool _poked = false;
-
-  @override
-  void dispose() {
-    _enter.dispose();
-    _exit.dispose();
-    super.dispose();
-  }
-
-  Future<void> _tapOrb() async {
-    if (_leaving) return;
-    setState(() => _poked = true);
-    await Future<void>.delayed(const Duration(milliseconds: 1600));
-    if (mounted && !_leaving) setState(() => _poked = false);
-  }
-
-  Future<void> _takeOff() async {
-    if (_leaving) return;
-    setState(() => _leaving = true);
-    await _exit.forward();
-    if (mounted) widget.onStart();
-  }
+  final AuthService auth;
 
   @override
   Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
+    final t = AppStrings.of(context);
     final tokens = context.tokens;
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final text = context.text;
 
-    return GlassBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_enter, _exit]),
-            builder: (context, _) {
-              final lift = reduceMotion
-                  ? 0.0
-                  : Curves.easeInCubic.transform(_exit.value);
-
-              return Opacity(
-                opacity: 1 - lift * 0.95,
+    return Scaffold(
+      backgroundColor: tokens.isDark ? null : AppPalette.surface,
+      body: ListenableBuilder(
+        listenable: auth,
+        builder: (context, _) {
+          return Column(
+            children: [
+              const Expanded(flex: 5, child: _Hero()),
+              SafeArea(
+                top: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 14, 28, 26),
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _Rise(
-                        animation: _enter,
-                        delay: 0.0,
-                        reduceMotion: reduceMotion,
-                        child: const _BrandRow(),
+                      Text(
+                        t.t('welcomeTitle'),
+                        textAlign: TextAlign.center,
+                        style: text.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          height: 1.22,
+                        ),
                       ),
-
-                      const Spacer(flex: 3),
-
-                      // Kure: ekranin tek gorsel odagi.
-                      Center(
-                        child: _Rise(
-                          animation: _enter,
-                          delay: 0.10,
-                          reduceMotion: reduceMotion,
-                          child: Transform.translate(
-                            offset: Offset(0, -lift * 220),
-                            child: GestureDetector(
-                              onTap: _tapOrb,
-                              behavior: HitTestBehavior.opaque,
-                              child: VoiceOrb(
-                                size: 300,
-                                speaking: _poked,
-                              ),
+                      const SizedBox(height: 12),
+                      Text(
+                        t.t('welcomeSubtitle'),
+                        textAlign: TextAlign.center,
+                        style: text.bodyMedium?.copyWith(
+                          color: tokens.muted,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 26),
+                      SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed:
+                              auth.isBusy ? null : () => auth.signInWithGoogle(),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: tokens.isDark
+                                ? tokens.glass
+                                : AppPalette.surface,
+                            side: BorderSide(color: tokens.glassBorder),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
                             ),
                           ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (auth.isBusy)
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              else
+                                Icon(Icons.account_circle_outlined,
+                                    size: 21,
+                                    color: context.scheme.onSurface),
+                              const SizedBox(width: 10),
+                              Text(t.t('loginGoogle'),
+                                  style: text.labelLarge
+                                      ?.copyWith(fontSize: 15)),
+                            ],
+                          ),
                         ),
                       ),
-
-                      const Spacer(flex: 3),
-
-                      // Metin solda hizali: ortalanmis blok sunum slaydi
-                      // gibi duruyordu, sola hizalama daha urun gibi durur.
-                      _Rise(
-                        animation: _enter,
-                        delay: 0.28,
-                        reduceMotion: reduceMotion,
-                        child: Transform.translate(
-                          offset: Offset(0, lift * 110),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                strings.t('welcomeHeadline'),
-                                style: context.text.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -1.4,
-                                  height: 1.05,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                strings.t('welcomeSubtitle'),
-                                style: context.text.bodyMedium?.copyWith(
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: auth.isBusy ? null : onStart,
+                        child: Text(t.t('welcomeEmailCta')),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(t.t('welcomeHaveAccount'),
+                              style: text.bodySmall
+                                  ?.copyWith(color: tokens.muted)),
+                          TextButton(
+                            onPressed: auth.isBusy ? null : onStart,
+                            style: TextButton.styleFrom(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(t.t('welcomeSignIn')),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.lock_outline_rounded,
+                                size: 13, color: tokens.muted),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                t.t('loginWhyBody'),
+                                textAlign: TextAlign.center,
+                                style: text.labelSmall?.copyWith(
                                   color: tokens.muted,
+                                  height: 1.4,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      // Ozellikler: ikon kutucugu yerine tek satirlik etiketler.
-                      _Rise(
-                        animation: _enter,
-                        delay: 0.40,
-                        reduceMotion: reduceMotion,
-                        child: Transform.translate(
-                          offset: Offset(0, lift * 140),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _Tag(
-                                icon: AppIcon.phone,
-                                label: strings.t('featureAnswer'),
-                              ),
-                              _Tag(
-                                icon: AppIcon.inbox,
-                                label: strings.t('featureNote'),
-                              ),
-                              _Tag(
-                                icon: AppIcon.spark,
-                                label: strings.t('featureSummary'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 26),
-
-                      _Rise(
-                        animation: _enter,
-                        delay: 0.52,
-                        reduceMotion: reduceMotion,
-                        child: Transform.translate(
-                          offset: Offset(0, lift * 180),
-                          child: _StartButton(
-                            label: strings.t('welcomeCta'),
-                            onTap: _takeOff,
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Ust gorsel: yumusak yesil zemin, asistan rozeti ve ozellik baloncuklari.
+class _Hero extends StatelessWidget {
+  const _Hero();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppStrings.of(context);
+    final tokens = context.tokens;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: tokens.isDark
+              ? const [Color(0xFF1B2026), Color(0xFF15181C)]
+              : const [AppPalette.orangeSoft, Color(0xFFFFFFFF)],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _RipplePainter(
+                  color: AppPalette.orange
+                      .withValues(alpha: tokens.isDark ? 0.16 : 0.22),
+                ),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 92,
+                  height: 92,
+                  decoration: BoxDecoration(
+                    color: AppPalette.accent,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppPalette.orange.withValues(alpha: 0.26),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.support_agent_rounded,
+                      color: Colors.white, size: 48),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'CALLORA',
+                  style: context.text.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 3.0,
+                    color:
+                        tokens.isDark ? AppPalette.sageLight : AppPalette.lightText,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _Pill(icon: Icons.phone_in_talk_outlined, label: t.t('featureAnswer')),
+                    _Pill(icon: Icons.edit_note_outlined, label: t.t('featureNote')),
+                    _Pill(icon: Icons.summarize_outlined, label: t.t('featureSummary')),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Ust satir: kucuk bir isaret ve uygulama adi.
-class _BrandRow extends StatelessWidget {
-  const _BrandRow();
+class _Pill extends StatelessWidget {
+  const _Pill({required this.icon, required this.label});
 
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-    return Row(
-      children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [Color(0xFF3BE0FF), Color(0xFFFF4FD8)],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          strings.t('appTitle').toUpperCase(),
-          style: context.text.labelSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2.2,
-            color: context.tokens.muted,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Tek satirlik ozellik etiketi.
-class _Tag extends StatelessWidget {
-  const _Tag({required this.icon, required this.label});
-
-  final AppIcon icon;
+  final IconData icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 9, 15, 9),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: tokens.isDark ? tokens.glass : AppPalette.surface,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
+        border: Border.all(color: tokens.glassBorder),
+        boxShadow: tokens.cardShadow,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SoftIcon(icon, size: 15, color: const Color(0xFF3BE0FF)),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: context.text.labelSmall?.copyWith(color: tokens.muted),
-          ),
+          Icon(icon, size: 15, color: AppPalette.accent),
+          const SizedBox(width: 7),
+          Text(label,
+              style: context.text.labelSmall
+                  ?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
 
-/// Tam genislikte, net bir eylem dugmesi.
-class _StartButton extends StatelessWidget {
-  const _StartButton({required this.label, required this.onTap});
+class _RipplePainter extends CustomPainter {
+  const _RipplePainter({required this.color});
 
-  final String label;
-  final VoidCallback onTap;
+  final Color color;
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: SizedBox(
-            height: 58,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: context.text.titleMedium?.copyWith(
-                    color: const Color(0xFF05010A),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const SoftIcon(AppIcon.chevron,
-                    size: 18, color: Color(0xFF05010A)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2 - 40);
+    for (var i = 1; i <= 5; i++) {
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1
+        ..color = color.withValues(alpha: color.a * (1 - i * 0.17));
+      canvas.drawCircle(center, 62.0 + i * 34, paint);
+    }
   }
-}
-
-/// Icerigi sirayla asagidan yukari getirir.
-class _Rise extends StatelessWidget {
-  const _Rise({
-    required this.animation,
-    required this.delay,
-    required this.child,
-    required this.reduceMotion,
-  });
-
-  final Animation<double> animation;
-  final double delay;
-  final Widget child;
-  final bool reduceMotion;
 
   @override
-  Widget build(BuildContext context) {
-    if (reduceMotion) return child;
-    final v = Curves.easeOutCubic.transform(
-      ((animation.value - delay) / (1 - delay)).clamp(0.0, 1.0),
-    );
-    return Opacity(
-      opacity: v,
-      child: Transform.translate(offset: Offset(0, (1 - v) * 22), child: child),
-    );
-  }
+  bool shouldRepaint(_RipplePainter oldDelegate) => oldDelegate.color != color;
 }

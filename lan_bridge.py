@@ -53,7 +53,16 @@ def ensure_sip_and_livekit_ips(lan_ip: str, wsl_ip: str) -> None:
         changed = False
         for line in content.splitlines():
             if line.strip().startswith("node_ip:"):
-                expected = f"  node_ip: {wsl_ip}"
+                # node_ip, LiveKit'in arayana "beni bu adresten ara" diye
+                # bildirdigi adrestir. WSL ic adresi (172.x) yazilirsa yalnizca
+                # bu bilgisayardaki tarayici baglanabilir; telefon o adrese
+                # yonlendirilemez ve "No route to host" alir. LAN adresi
+                # yazariz: 7880/7881/TCP ve 7882/UDP zaten bu kopru tarafindan
+                # LAN adresinden WSL'e tasiniyor, yani iki istemci de calisir.
+                # USB modunda (adb reverse) telefon sunucuyu 127.0.0.1 olarak
+                # gorur; o zaman LIVEKIT_NODE_IP=127.0.0.1 verilir.
+                forced = os.getenv("LIVEKIT_NODE_IP", "").strip()
+                expected = f"  node_ip: {forced or lan_ip}"
                 if line != expected:
                     changed = True
                 lines.append(expected)

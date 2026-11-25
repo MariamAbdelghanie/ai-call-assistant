@@ -162,7 +162,7 @@ class _Bar extends StatelessWidget {
                 ? const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFFC084FC), Color(0xFFA855F7)],
+                    colors: [Color(0xFFFF9459), AppPalette.orange],
                   )
                 : null,
             color: highlight

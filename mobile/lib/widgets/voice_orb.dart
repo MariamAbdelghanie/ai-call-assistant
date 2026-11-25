@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Gorusme ekranindaki parlak kure.
+/// Gorusme ekranindaki sakin ses gostergesi.
 ///
-/// Robot yerine soyut bir kure kullanilir: sesli asistan arayuzlerinde
-/// beklenen gorsel budur ve konusma siddetine gore nabiz atmasi, karakter
-/// cizmekten daha az dikkat dagitir.
+/// Onceki surum neon bir kuroydu; acik temali bir is uygulamasinda bu yabanci
+/// duruyordu. Yerine yumusak bir disk kondu: dinlerken yavasca nefes alir,
+/// asistan konusurken biraz buyur ve halkalari belirginlesir. Disarida
+/// goruldugu kadariyla ayni arayuz (size / speaking / listening / dim)
+/// korundugu icin cagri ekraninda baska bir degisiklik gerekmez.
 class VoiceOrb extends StatefulWidget {
   const VoiceOrb({
     super.key,
-    required this.size,
+    this.size = 260,
     this.speaking = false,
     this.listening = false,
     this.dim = false,
@@ -20,13 +22,13 @@ class VoiceOrb extends StatefulWidget {
 
   final double size;
 
-  /// Asistan konusuyor: kure daha hizli ve genis nabiz atar.
+  /// Asistan konusuyor.
   final bool speaking;
 
-  /// Mikrofon acik ve arayan konusuyor.
+  /// Mikrofon acik ve arayani dinliyor.
   final bool listening;
 
-  /// Bagli degil: renkler soner.
+  /// Cagri aktif degil: her sey sakinlesir.
   final bool dim;
 
   @override
@@ -35,33 +37,49 @@ class VoiceOrb extends StatefulWidget {
 
 class _VoiceOrbState extends State<VoiceOrb>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _loop = AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 7),
+    duration: const Duration(seconds: 4),
   )..repeat();
 
   @override
   void dispose() {
-    _loop.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final tokens = context.tokens;
+    final active = widget.speaking || widget.listening;
 
-    return SizedBox(
-      width: widget.size,
-      height: widget.size,
-      child: AnimatedBuilder(
-        animation: _loop,
-        builder: (context, _) => CustomPaint(
-          painter: _OrbPainter(
-            t: reduceMotion ? 0.0 : _loop.value,
-            speaking: widget.speaking,
-            listening: widget.listening,
-            dim: widget.dim,
-          ),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            // Nefes: konusurken daha belirgin, beklerken cok hafif.
+            final wave = math.sin(_controller.value * 2 * math.pi);
+            final amplitude = widget.speaking
+                ? 0.045
+                : widget.listening
+                    ? 0.022
+                    : 0.008;
+            final scale = 1 + wave * amplitude;
+
+            return Transform.scale(
+              scale: widget.dim ? 1 : scale,
+              child: CustomPaint(
+                painter: _OrbPainter(
+                  isDark: tokens.isDark,
+                  intensity: widget.dim ? 0.35 : (active ? 1.0 : 0.65),
+                  phase: _controller.value,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -69,160 +87,107 @@ class _VoiceOrbState extends State<VoiceOrb>
 }
 
 class _OrbPainter extends CustomPainter {
-  _OrbPainter({
-    required this.t,
-    required this.speaking,
-    required this.listening,
-    required this.dim,
+  const _OrbPainter({
+    required this.isDark,
+    required this.intensity,
+    required this.phase,
   });
 
-  final double t;
-  final bool speaking;
-  final bool listening;
-  final bool dim;
+  final bool isDark;
+
+  /// 0..1 arasi canlilik; bekleme halinde dusuk tutulur.
+  final double intensity;
+  final double phase;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final base = size.width * 0.33;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final core = radius * 0.58;
 
-    final beat = speaking
-        ? math.sin(t * 2 * math.pi * 3) * 0.030
-        : listening
-            ? math.sin(t * 2 * math.pi * 1.6) * 0.018
-            : math.sin(t * 2 * math.pi) * 0.008;
-    final r = base * (1 + beat);
-    final k = dim ? 0.75 : 1.0;
-
-    const cyan = Color(0xFF3BE0FF);
-    const blue = Color(0xFF5B6BFF);
-    const magenta = Color(0xFFFF4FD8);
-    const orange = Color(0xFFFF8A5B);
-
-    final rect = Rect.fromCircle(center: c, radius: r);
-    // Renkler kurenin KENARINDA toplanir, merkez neredeyse siyah kalir:
-    // referanstaki sabun kabarcigi etkisi boyle olusuyor.
-    final spin = t * 2 * math.pi;
-
-    // 1) Disarida renkli bulut (bloom).
-    for (final (color, angle, dist, blur, alpha) in <(Color, double, double, double, double)>[
-      (cyan, spin + math.pi * 0.85, 0.72, 52.0, 0.42),
-      (magenta, spin + math.pi * 1.75, 0.70, 50.0, 0.38),
-      (blue, spin + math.pi * 0.25, 0.62, 44.0, 0.26),
-    ]) {
-      final pc = Offset(
-        c.dx + math.cos(angle) * r * dist,
-        c.dy + math.sin(angle) * r * dist,
-      );
+    // Disaridan iceri dogru genisleyen ince halkalar.
+    for (var i = 3; i >= 1; i--) {
+      final t = (phase + i / 3) % 1.0;
+      final ringRadius = core + (radius - core) * t;
+      final fade = (1 - t) * 0.45 * intensity;
       canvas.drawCircle(
-        pc,
-        r * 0.85,
+        center,
+        ringRadius,
         Paint()
-          ..color = color.withValues(alpha: alpha * k)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur),
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2
+          ..color = AppPalette.orange.withValues(alpha: fade),
       );
     }
 
-    // 2) Konusurken disa acilan halkalar.
-    if (speaking || listening) {
-      for (var i = 0; i < 3; i++) {
-        final p = ((t * (speaking ? 2.2 : 1.3)) + i / 3) % 1.0;
-        canvas.drawCircle(
-          c,
-          r * (1.08 + p * 0.5),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.3
-            ..color = (speaking ? magenta : cyan)
-                .withValues(alpha: (1 - p) * 0.35),
-        );
-      }
-    }
-
-    // 3) Koyu govde.
+    // Yumusak dis halka.
     canvas.drawCircle(
-      c,
-      r,
+      center,
+      core + 14,
       Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(-0.15, -0.20),
-          radius: 1.0,
-          colors: [
-            Color(0xFF17122B),
-            Color(0xFF0B0718),
-            Color(0xFF04020A),
-          ],
-          stops: [0.0, 0.62, 1.0],
-        ).createShader(rect),
+        ..style = PaintingStyle.fill
+        ..color = AppPalette.orange.withValues(alpha: 0.09 * intensity),
     );
 
-    // 4) Kenar kusaklari: kurenin icinde, kenara yapisik renk yaylari.
-    canvas.save();
-    canvas.clipPath(Path()..addOval(rect));
-    for (final (color, angle, thick, alpha) in <(Color, double, double, double)>[
-      (cyan, spin + math.pi * 0.88, 0.40, 0.95),
-      (blue, spin + math.pi * 1.10, 0.52, 0.55),
-      (magenta, spin + math.pi * 1.80, 0.42, 0.90),
-      (orange, spin + math.pi * 1.98, 0.30, 0.45),
-    ]) {
-      // Merkezi disari kaydirilmis bir daire, kenarda hilal birakir.
-      final oc = Offset(
-        c.dx + math.cos(angle) * r * 0.42,
-        c.dy + math.sin(angle) * r * 0.42,
-      );
-      canvas.drawCircle(
-        oc,
-        r * (0.78 + thick * 0.25),
-        Paint()
-          ..shader = RadialGradient(
-            colors: [
-              color.withValues(alpha: 0.0),
-              color.withValues(alpha: alpha * 0.55 * k),
-              color.withValues(alpha: alpha * k),
-            ],
-            stops: const [0.55, 0.85, 1.0],
-          ).createShader(
-            Rect.fromCircle(center: oc, radius: r * (0.78 + thick * 0.25)),
-          )
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
-      );
-    }
-    canvas.restore();
+    // Govde: lacivertten beje dogru cok yumusak bir gecis.
+    final body = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? [
+                AppPalette.orange.withValues(alpha: 0.92),
+                const Color(0xFFB4480F),
+              ]
+            : [
+                const Color(0xFFFF8A4B),
+                AppPalette.accentDeep,
+              ],
+      ).createShader(Rect.fromCircle(center: center, radius: core));
+    canvas.drawCircle(center, core, body);
 
-    // 5) Ince dis cember: kureye net bir sinir verir.
+    // Ust solda hafif bir isik: yuzeye hacim verir.
     canvas.drawCircle(
-      c,
-      r,
+      center.translate(-core * 0.28, -core * 0.3),
+      core * 0.52,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Colors.white.withValues(alpha: isDark ? 0.14 : 0.26),
+            Colors.white.withValues(alpha: 0),
+          ],
+        ).createShader(
+          Rect.fromCircle(
+            center: center.translate(-core * 0.28, -core * 0.3),
+            radius: core * 0.52,
+          ),
+        ),
+    );
+
+    // Ince kenar cizgisi.
+    canvas.drawCircle(
+      center,
+      core,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..shader = SweepGradient(
-          colors: [
-            cyan.withValues(alpha: 0.9 * k),
-            blue.withValues(alpha: 0.5 * k),
-            magenta.withValues(alpha: 0.9 * k),
-            orange.withValues(alpha: 0.4 * k),
-            cyan.withValues(alpha: 0.9 * k),
-          ],
-          transform: GradientRotation(spin),
-        ).createShader(rect),
+        ..strokeWidth = 1
+        ..color = Colors.white.withValues(alpha: isDark ? 0.10 : 0.22),
     );
   }
 
   @override
-  bool shouldRepaint(_OrbPainter old) =>
-      old.t != t ||
-      old.speaking != speaking ||
-      old.listening != listening ||
-      old.dim != dim;
+  bool shouldRepaint(_OrbPainter oldDelegate) =>
+      oldDelegate.phase != phase ||
+      oldDelegate.intensity != intensity ||
+      oldDelegate.isDark != isDark;
 }
 
-/// Kurenin altinda duran kucuk ses dalgasi.
+/// Kurenin altindaki ince ses cubuklari.
 class OrbWaveform extends StatefulWidget {
-  const OrbWaveform({super.key, required this.active, this.color});
+  const OrbWaveform({super.key, this.active = false, this.barCount = 13});
 
   final bool active;
-  final Color? color;
+  final int barCount;
 
   @override
   State<OrbWaveform> createState() => _OrbWaveformState();
@@ -230,49 +195,82 @@ class OrbWaveform extends StatefulWidget {
 
 class _OrbWaveformState extends State<OrbWaveform>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _loop = AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1400),
+    duration: const Duration(milliseconds: 1600),
   )..repeat();
 
   @override
   void dispose() {
-    _loop.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final color = widget.color ?? AppPalette.brandLight;
+    final tokens = context.tokens;
 
     return SizedBox(
-      width: 86,
-      height: 20,
+      height: 26,
       child: AnimatedBuilder(
-        animation: _loop,
+        animation: _controller,
         builder: (context, _) {
-          final t = reduceMotion || !widget.active ? 0.0 : _loop.value;
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              for (var i = 0; i < 11; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1.6),
-                  child: Container(
-                    width: 2.6,
-                    height: widget.active
-                        ? 4 + (math.sin(t * 2 * math.pi * 2 + i * 0.7) * 0.5 + 0.5) * 14
-                        : 4,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: widget.active ? 0.9 : 0.35),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+              for (var i = 0; i < widget.barCount; i++) ...[
+                _Bar(
+                  active: widget.active,
+                  phase: _controller.value,
+                  index: i,
+                  count: widget.barCount,
+                  color: widget.active
+                      ? AppPalette.orange
+                      : tokens.muted.withValues(alpha: 0.45),
                 ),
+                if (i != widget.barCount - 1) const SizedBox(width: 5),
+              ],
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _Bar extends StatelessWidget {
+  const _Bar({
+    required this.active,
+    required this.phase,
+    required this.index,
+    required this.count,
+    required this.color,
+  });
+
+  final bool active;
+  final double phase;
+  final int index;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    // Ortadaki cubuklar en uzun; dalga soldan saga akar.
+    final middle = (count - 1) / 2;
+    final distance = (index - middle).abs() / middle;
+    final envelope = 1 - distance * 0.7;
+    final wave =
+        math.sin((phase * 2 * math.pi) + index * 0.55).abs();
+    final height = active ? 5 + 20 * wave * envelope : 4 + 3 * envelope;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 90),
+      width: 3,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }

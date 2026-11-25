@@ -5,7 +5,7 @@ import '../l10n/strings.dart';
 import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import '../widgets/glass.dart';
+import '../widgets/app_header.dart';
 import '../utils/formatters.dart';
 import '../widgets/common.dart';
 import '../widgets/soft_icon.dart';
@@ -24,8 +24,13 @@ class CallDetailScreen extends StatelessWidget {
 
     final matches = state.calls.where((c) => c.callId == callId);
     if (matches.isEmpty) {
-      return GlassScaffold(
+      return AppHeaderScaffold(
         title: strings.t('detailTitle'),
+        leading: HeaderIconButton(
+          icon: Icons.arrow_back_rounded,
+          onTap: () => Navigator.of(context).maybePop(),
+          tooltip: strings.t('back'),
+        ),
         body: EmptyState(
           icon: AppIcon.inbox,
           title: strings.t('emptyCalls'),
@@ -35,17 +40,24 @@ class CallDetailScreen extends StatelessWidget {
     }
     final call = matches.first;
 
-    return GlassScaffold(
+    return AppHeaderScaffold(
       title: strings.t('detailTitle'),
+      subtitle: call.callerName,
+      leading: HeaderIconButton(
+        icon: Icons.arrow_back_rounded,
+        onTap: () => Navigator.of(context).maybePop(),
+        tooltip: strings.t('back'),
+      ),
       actions: [
-        IconButton(
+        HeaderIconButton(
+          icon: Icons.delete_outline_rounded,
+          onTap: () => _confirmDelete(context, state, call),
           tooltip: strings.t('delete'),
-          icon: SoftIcon(AppIcon.trash, color: tokens.urgent),
-          onPressed: () => _confirmDelete(context, state, call),
         ),
       ],
+      overlap: 18,
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 40),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +290,8 @@ class _Section extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
+              // Temada colorScheme.surface saydamdir; kart icin token.
+              color: context.tokens.glass,
               borderRadius: BorderRadius.circular(AppTheme.radius),
               border: Border.all(color: context.tokens.glassBorder),
             ),

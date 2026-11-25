@@ -20,6 +20,22 @@ os.environ["GRPC_DEFAULT_SSL_ROOTS_FILE_PATH"] = certifi.where()
 load_dotenv()
 
 CALL_LOGS_FILE = Path(__file__).parent / "call_logs.json"
+
+
+def _current_owner_uid() -> str:
+    """Asistani sahiplenen hesabin kimligi; yoksa bos dizge.
+
+    user_access yoksa (ornegin testlerde) kayit sahipsiz yazilir ve
+    sunucu bunu kurulumun sahibine sayar.
+    """
+    try:
+        from user_access import owner_uid
+
+        return owner_uid()
+    except Exception:
+        return ""
+
+
 CONFIG_FILE = Path(__file__).parent / "agent_config.json"
 
 TURKISH_DAYS = [
@@ -429,6 +445,10 @@ class CalendarAndNotesService:
             "callback_requested": bool(callback_requested),
             "called_back": False,
             "lang": lang,
+            # Kaydin sahibi: bu asistani sahiplenen hesap. Sunucu /logs
+            # ucunda bu alana gore filtreler, boylece baska bir hesapla
+            # giris yapan kisi bu kayitlari goremez.
+            "owner_uid": _current_owner_uid(),
         }
 
         logs = []

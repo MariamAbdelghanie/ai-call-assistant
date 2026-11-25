@@ -18,6 +18,7 @@ class AppState extends ChangeNotifier {
   static const _kServer = 'server_url';
   static const _kLocale = 'locale';
   static const _kTheme = 'theme_mode';
+  static const _kThemeMigrated = 'theme_migrated_v2';
   // Ornek (demo) kayitlarda silme islemi sunucuya gitmedigi icin, silinenlerin
   // kimlikleri cihazda saklanir; yoksa uygulama her acilista geri geliyordu.
   static const _kHidden = 'hidden_call_ids';
@@ -33,7 +34,8 @@ class AppState extends ChangeNotifier {
   String apiToken = '';
   Locale locale = const Locale('tr');
   // Tasarim koyu zemin icin kurgulandi; acik tema yine ayarlardan secilebilir.
-  ThemeMode themeMode = ThemeMode.dark;
+  /// Varsayilan gorunum aciktir; kullanici secimi kayitliysa o uygulanir.
+  ThemeMode themeMode = ThemeMode.light;
 
   LoadStatus status = LoadStatus.idle;
   String? errorMessage;
@@ -63,11 +65,19 @@ class AppState extends ChangeNotifier {
     if (code != null && code.isNotEmpty) locale = Locale(code);
     _hiddenIds = (_prefs?.getStringList(_kHidden) ?? const <String>[]).toSet();
     _restoreCache();
+    // Acik tema varsayilani yeni geldi. Daha once 'koyu' secmis cihazlarda
+    // eski kayit yeni varsayilani ezdigi icin uygulama siyah aciliyordu.
+    // Bu tek seferlik tasima secimi acik temaya cevirir; sonraki secimler
+    // normal sekilde korunur.
+    if (_prefs?.getBool(_kThemeMigrated) != true) {
+      await _prefs?.setString(_kTheme, 'light');
+      await _prefs?.setBool(_kThemeMigrated, true);
+    }
     final theme = _prefs?.getString(_kTheme);
     themeMode = switch (theme) {
-      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
       'system' => ThemeMode.system,
-      _ => ThemeMode.dark,
+      _ => ThemeMode.light,
     };
     notifyListeners();
     await refresh();

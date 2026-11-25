@@ -5,6 +5,7 @@ import '../models/call_summary.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../widgets/app_header.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
 import '../widgets/soft_icon.dart';
@@ -16,34 +17,59 @@ import 'call_detail_screen.dart';
 /// satirlari yerine solunda kalin kirmizi bir serit olan genis kartlar
 /// kullanilir; her kartta mesaj tam olarak okunur ve "arandi" dugmesi
 /// dogrudan karta yerlesir.
-class UrgentScreen extends StatelessWidget {
+class UrgentScreen extends StatefulWidget {
   const UrgentScreen({super.key, required this.onOpenSettings});
 
   final VoidCallback onOpenSettings;
 
   @override
+  State<UrgentScreen> createState() => _UrgentScreenState();
+}
+
+class _UrgentScreenState extends State<UrgentScreen> {
+  /// 0 = tumu, 1 = bekleyen, 2 = tamamlandi.
+  int _tab = 0;
+
+  @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final strings = AppStrings.of(context);
-    final items = state.urgentCalls;
-    final waiting = items.where((c) => !c.calledBack).length;
+    final all = state.urgentCalls;
+    final waiting = all.where((c) => !c.calledBack).length;
+    final items = switch (_tab) {
+      1 => all.where((c) => !c.calledBack).toList(),
+      2 => all.where((c) => c.calledBack).toList(),
+      _ => all,
+    };
 
-    return GlassScaffold(
+    return AppHeaderScaffold(
       title: strings.t('urgentTitle'),
+      subtitle: all.isEmpty
+          ? strings.t('urgentCalm')
+          : '$waiting ${strings.t('urgentWaiting')}',
+      headerChild: HeaderSegmented(
+        labels: [
+          strings.t('filterAll'),
+          strings.t('urgentTabWaiting'),
+          strings.t('urgentTabDone'),
+        ],
+        selected: _tab,
+        onChanged: (value) => setState(() => _tab = value),
+      ),
+      overlap: 22,
       body: RefreshIndicator(
         onRefresh: state.refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(18, 4, 18, 110),
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
           children: [
-            if (state.isDemo || state.isOffline)
+            if (state.isDemo || state.isOffline) ...[
               DemoBanner(
-                onOpenSettings: onOpenSettings,
+                onOpenSettings: widget.onOpenSettings,
                 offline: state.isOffline,
               ),
-
-            _UrgentHeader(total: items.length, waiting: waiting),
-            const SizedBox(height: 18),
+              const SizedBox(height: 14),
+            ],
 
             if (items.isEmpty)
               EmptyState(
@@ -72,88 +98,6 @@ class UrgentScreen extends StatelessWidget {
                 ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Kirmizi ust blok: kac acil cagri var, kaci hala bekliyor.
-class _UrgentHeader extends StatelessWidget {
-  const _UrgentHeader({required this.total, required this.waiting});
-
-  final int total;
-  final int waiting;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-    final calm = total == 0;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: calm
-              ? const [Color(0xFF4ECE9A), Color(0xFF2FA878)]
-              : const [Color(0xFFF4707A), Color(0xFFE03B48)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (calm ? AppPalette.success : AppPalette.urgent)
-                .withValues(alpha: 0.30),
-            blurRadius: 22,
-            offset: const Offset(0, 9),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.22),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-              child: SoftIcon(
-                calm ? AppIcon.check : AppIcon.urgent,
-                size: 24,
-                color: Colors.white,
-                solid: true,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  calm
-                      ? strings.t('urgentCalm')
-                      : '$waiting ${strings.t('urgentWaiting')}',
-                  style: context.text.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  calm
-                      ? strings.t('urgentCalmHint')
-                      : '${strings.t('statTotal')}: $total',
-                  style: context.text.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.88),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

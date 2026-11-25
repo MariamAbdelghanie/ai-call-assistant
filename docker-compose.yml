@@ -34,7 +34,7 @@ services:
         sip_port: 5060
         rtp_port: 10000-10020
         use_external_ip: false
-        nat_1_to_1_ip: 192.168.0.109
+        nat_1_to_1_ip: 192.168.0.104
         logging:
           level: debug
     ports:
