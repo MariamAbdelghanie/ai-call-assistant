@@ -45,21 +45,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return AppHeaderScaffold(
       title: strings.t('settingsTitle'),
       subtitle: strings.t('settingsSubtitle'),
-      overlap: 34,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
-        children: [
-          // Hesap karti: turuncu bandin uzerine binen beyaz kart. Bandin
-          // icinde durdugunda ad ve e-posta zeminle karisiyordu.
-          if (user != null) ...[
-            _ProfileCard(
+      // Hesap karti bandin uzerine biniyor ama kaydirma listesinin
+      // disinda duruyor; liste kaydiginda bandin altindan gecmiyor.
+      overlapChild: user == null
+          ? null
+          : _ProfileCard(
               name: auth.displayName,
               email: user.email ?? '',
               photoUrl: auth.photoUrl,
             ),
-            const SizedBox(height: 18),
-          ],
-
+      overlap: 34,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 110),
+        children: [
           SettingsGroup(
             title: strings.t('serverSection'),
             rows: [

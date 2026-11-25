@@ -57,7 +57,6 @@ class _UrgentScreenState extends State<UrgentScreen> {
         selected: _tab,
         onChanged: (value) => setState(() => _tab = value),
       ),
-      overlap: 22,
       body: RefreshIndicator(
         onRefresh: state.refresh,
         child: ListView(

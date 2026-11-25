@@ -121,16 +121,9 @@ class _CallsScreenState extends State<CallsScreen> {
         hours: '${state.config.workStart} - ${state.config.workEnd}',
         online: state.config.enabled,
       ),
-      overlap: 26,
-      body: RefreshIndicator(
-        onRefresh: state.refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(18, 0, 18, 112),
-          children: [
-            // Ozet halkalari turuncu bandin uzerine biniyor; sayfa bu
-            // sayede baslikla govde arasinda bir basamakla basliyor.
-            KpiRingRow(
+      // Ozet halkalari bandin uzerine biniyor; kaydirma listesinin
+      // disinda oldugu icin liste kayarken bandin altindan gecmiyor.
+      overlapChild: KpiRingRow(
               items: [
                 KpiRing(
                   value: total,
@@ -161,7 +154,13 @@ class _CallsScreenState extends State<CallsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+      overlap: 30,
+      body: RefreshIndicator(
+        onRefresh: state.refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 112),
+          children: [
 
             // Dort hizli eylem: yatay kaydirilan serit yerine izgara,
             // cunku kaydirmali seritte sagdaki iki eylem hic gorulmuyordu.

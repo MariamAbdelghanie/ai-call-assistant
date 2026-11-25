@@ -36,15 +36,23 @@ class VoiceOrb extends StatefulWidget {
 }
 
 class _VoiceOrbState extends State<VoiceOrb>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 4),
   )..repeat();
 
+  /// Renk donusu nefesten cok daha yavas: ikisi ayni hizda olunca
+  /// hareket titrek gorunuyordu.
+  late final AnimationController _hue = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 14),
+  )..repeat();
+
   @override
   void dispose() {
     _controller.dispose();
+    _hue.dispose();
     super.dispose();
   }
 
@@ -58,7 +66,7 @@ class _VoiceOrbState extends State<VoiceOrb>
         width: widget.size,
         height: widget.size,
         child: AnimatedBuilder(
-          animation: _controller,
+          animation: Listenable.merge([_controller, _hue]),
           builder: (context, _) {
             // Nefes: konusurken daha belirgin, beklerken cok hafif.
             final wave = math.sin(_controller.value * 2 * math.pi);
@@ -69,13 +77,25 @@ class _VoiceOrbState extends State<VoiceOrb>
                     : 0.008;
             final scale = 1 + wave * amplitude;
 
-            return Transform.scale(
-              scale: widget.dim ? 1 : scale,
-              child: CustomPaint(
-                painter: _OrbPainter(
-                  isDark: tokens.isDark,
-                  intensity: widget.dim ? 0.35 : (active ? 1.0 : 0.65),
-                  phase: _controller.value,
+            // Suzulme: kure yerinde durmak yerine cok yavas yukari
+            // asagi gidiyor. Hareket kucuk (birkac piksel) ama ekranin
+            // canli oldugu hissini veren sey bu.
+            final float = wave * (widget.dim ? 2.0 : 6.0);
+
+            return Transform.translate(
+              offset: Offset(0, float),
+              child: Transform.scale(
+                scale: widget.dim ? 1 : scale,
+                child: CustomPaint(
+                  painter: _OrbPainter(
+                    isDark: tokens.isDark,
+                    intensity: widget.dim ? 0.35 : (active ? 1.0 : 0.65),
+                    phase: _controller.value,
+                    // Cagri sirasinda renk yavasca donuyor: turuncudan
+                    // mercana, oradan menekseye ve lacivere. Beklerken
+                    // sabit turuncu kaliyor ki ekran huzursuz olmasin.
+                    hueShift: active ? _hue.value : 0,
+                  ),
                 ),
               ),
             );
@@ -91,6 +111,7 @@ class _OrbPainter extends CustomPainter {
     required this.isDark,
     required this.intensity,
     required this.phase,
+    required this.hueShift,
   });
 
   final bool isDark;
@@ -99,11 +120,52 @@ class _OrbPainter extends CustomPainter {
   final double intensity;
   final double phase;
 
+  /// 0..1 arasi renk donusu. Cagri sirasinda doner, beklerken 0 kalir.
+  final double hueShift;
+
+  /// Kurenin donguye girdigi renkler. Hepsi paletin icinden: turuncu,
+  /// mercan, menekse ve lacivert. Rastgele gokkusagi degil, cunku
+  /// uygulamanin geri kalaniyla ayni ailede kalmasi gerekiyor.
+  static const _cycle = <Color>[
+    Color(0xFFFF8A4B),
+    Color(0xFFF2542D),
+    Color(0xFFE0457B),
+    Color(0xFF7A4BD0),
+    Color(0xFF2E5BD4),
+    Color(0xFFFF8A4B),
+  ];
+
+  /// Donguyu 0..1 arasinda yumusak bir renge cevirir.
+  Color _tone(double t, {double offset = 0}) {
+    final p = ((t + offset) % 1.0) * (_cycle.length - 1);
+    final i = p.floor();
+    return Color.lerp(_cycle[i], _cycle[i + 1], p - i)!;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     final core = radius * 0.58;
+
+    final top = _tone(hueShift);
+    final bottom = _tone(hueShift, offset: 0.12);
+
+    // Hale: kurenin disina tasan yumusak isik. Koyu zeminde kure bunun
+    // sayesinde ekrana yapisik degil, havada duruyor gibi gorunuyor.
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            top.withValues(alpha: 0.38 * intensity),
+            top.withValues(alpha: 0.10 * intensity),
+            top.withValues(alpha: 0),
+          ],
+          stops: const [0.30, 0.62, 1.0],
+        ).createShader(Rect.fromCircle(center: center, radius: radius)),
+    );
 
     // Disaridan iceri dogru genisleyen ince halkalar.
     for (var i = 3; i >= 1; i--) {
@@ -116,7 +178,8 @@ class _OrbPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2
-          ..color = AppPalette.orange.withValues(alpha: fade),
+          ..color = _tone(hueShift, offset: i * 0.05)
+              .withValues(alpha: fade),
       );
     }
 
@@ -126,7 +189,7 @@ class _OrbPainter extends CustomPainter {
       core + 14,
       Paint()
         ..style = PaintingStyle.fill
-        ..color = AppPalette.orange.withValues(alpha: 0.09 * intensity),
+        ..color = top.withValues(alpha: 0.12 * intensity),
     );
 
     // Govde: lacivertten beje dogru cok yumusak bir gecis.
@@ -134,15 +197,10 @@ class _OrbPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: isDark
-            ? [
-                AppPalette.orange.withValues(alpha: 0.92),
-                const Color(0xFFB4480F),
-              ]
-            : [
-                const Color(0xFFFF8A4B),
-                AppPalette.accentDeep,
-              ],
+        colors: [
+          top,
+          Color.lerp(bottom, Colors.black, isDark ? 0.28 : 0.18)!,
+        ],
       ).createShader(Rect.fromCircle(center: center, radius: core));
     canvas.drawCircle(center, core, body);
 
@@ -179,6 +237,7 @@ class _OrbPainter extends CustomPainter {
   bool shouldRepaint(_OrbPainter oldDelegate) =>
       oldDelegate.phase != phase ||
       oldDelegate.intensity != intensity ||
+      oldDelegate.hueShift != hueShift ||
       oldDelegate.isDark != isDark;
 }
 

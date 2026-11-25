@@ -95,90 +95,44 @@ class WeeklyActivityCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
+          // Cubuk yerine alan grafigi: yedi gunun cizgisi egilimi tek
+          // bakista gosteriyor, cubuklar ise birbirinden kopuk yedi
+          // rakam gibi duruyordu.
           SizedBox(
-            height: 112,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (final (i, bucket) in data.indexed)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: _Bar(
-                        ratio: bucket.count / maxCount,
-                        count: bucket.count,
-                        label: labels[bucket.day.weekday - 1],
-                        highlight: i == data.length - 1,
-                      ),
+            height: 96,
+            child: CustomPaint(
+              size: Size.infinite,
+              painter: _TrendPainter(
+                values: [for (final b in data) b.count.toDouble()],
+                maxValue: maxCount.toDouble(),
+                line: AppPalette.orange,
+                grid: tokens.glassBorder,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (final (i, bucket) in data.indexed)
+                Expanded(
+                  child: Text(
+                    labels[bucket.day.weekday - 1],
+                    textAlign: TextAlign.center,
+                    style: context.text.labelSmall?.copyWith(
+                      color: i == data.length - 1
+                          ? AppPalette.orange
+                          : tokens.muted,
+                      fontWeight: i == data.length - 1
+                          ? FontWeight.w800
+                          : FontWeight.w500,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Bar extends StatelessWidget {
-  const _Bar({
-    required this.ratio,
-    required this.count,
-    required this.label,
-    required this.highlight,
-  });
-
-  final double ratio;
-  final int count;
-  final String label;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    // Sifir olan gunlerde de ince bir iz birakilir ki eksen okunabilsin.
-    final height = 6 + ratio * 56;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          count == 0 ? '' : '$count',
-          style: context.text.labelSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: highlight ? AppPalette.brand : tokens.muted,
-          ),
-        ),
-        const SizedBox(height: 4),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOutCubic,
-          height: height,
-          decoration: BoxDecoration(
-            gradient: highlight
-                ? const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFFF9459), AppPalette.orange],
-                  )
-                : null,
-            color: highlight
-                ? null
-                : AppPalette.brand.withValues(alpha: count == 0 ? 0.10 : 0.26),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        const SizedBox(height: 7),
-        Text(
-          label,
-          style: context.text.labelSmall?.copyWith(
-            color: highlight ? AppPalette.brand : tokens.muted,
-            fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -347,4 +301,105 @@ class PeakHourCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Haftalik egilim grafigi: yumusak bir cizgi, altinda sonen bir dolgu
+/// ve her gun icin bir nokta. Son gun turuncu halkayla isaretlenir.
+class _TrendPainter extends CustomPainter {
+  _TrendPainter({
+    required this.values,
+    required this.maxValue,
+    required this.line,
+    required this.grid,
+  });
+
+  final List<double> values;
+  final double maxValue;
+  final Color line;
+  final Color grid;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+
+    const topPad = 14.0;
+    final usable = size.height - topPad - 6;
+    final step = size.width / (values.length - 1);
+
+    Offset pointAt(int i) {
+      final ratio = maxValue <= 0 ? 0.0 : values[i] / maxValue;
+      return Offset(i * step, topPad + usable * (1 - ratio));
+    }
+
+    // Arkadaki yatay cizgiler: yukseklikleri okunabilir kilar.
+    for (var i = 0; i <= 2; i++) {
+      final y = topPad + usable * i / 2;
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        Paint()
+          ..strokeWidth = 1
+          ..color = grid,
+      );
+    }
+
+    // Yumusatilmis cizgi: iki nokta arasinda kubik egri.
+    final path = Path()..moveTo(pointAt(0).dx, pointAt(0).dy);
+    for (var i = 0; i < values.length - 1; i++) {
+      final p1 = pointAt(i);
+      final p2 = pointAt(i + 1);
+      final midX = (p1.dx + p2.dx) / 2;
+      path.cubicTo(midX, p1.dy, midX, p2.dy, p2.dx, p2.dy);
+    }
+
+    // Dolgu: cizginin altini kapatip tabana dogru soner.
+    final fill = Path.from(path)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            line.withValues(alpha: 0.26),
+            line.withValues(alpha: 0.0),
+          ],
+        ).createShader(Offset.zero & size),
+    );
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = line,
+    );
+
+    // Noktalar; sonuncusu daha buyuk ve halkali.
+    for (var i = 0; i < values.length; i++) {
+      final p = pointAt(i);
+      final last = i == values.length - 1;
+      canvas.drawCircle(p, last ? 6.5 : 3.5, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        p,
+        last ? 6.5 : 3.5,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = last ? 3 : 2
+          ..color = line,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TrendPainter oldDelegate) =>
+      oldDelegate.values.toString() != values.toString() ||
+      oldDelegate.maxValue != maxValue ||
+      oldDelegate.line != line ||
+      oldDelegate.grid != grid;
 }

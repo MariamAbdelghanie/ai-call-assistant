@@ -18,6 +18,7 @@ class AppHeaderScaffold extends StatelessWidget {
     this.actions,
     this.leading,
     this.headerChild,
+    this.overlapChild,
     this.overlap = 0,
   });
 
@@ -34,8 +35,14 @@ class AppHeaderScaffold extends StatelessWidget {
   /// (arama kutusu, durum seridi, filtre cipleri...).
   final Widget? headerChild;
 
-  /// Govdenin baslik uzerine ne kadar binecegi. Kart seridini banda
-  /// oturtmak icin kullanilir.
+  /// Bandin alt kenarina binen kart (ozet halkalari, hesap karti...).
+  ///
+  /// Govdeyi yukari kaydirmak yerine ayri bir oge: govde kaydirilan bir
+  /// liste oldugu icin yukari tasindiginda liste ogeleri bandin altindan
+  /// gecip kenarindan gorunuyordu.
+  final Widget? overlapChild;
+
+  /// overlapChild'in bandin uzerine ne kadar binecegi.
   final double overlap;
 
   final Widget body;
@@ -73,7 +80,7 @@ class AppHeaderScaffold extends StatelessWidget {
                 bottom: false,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                      18, 10, 18, overlap > 0 ? 18 + overlap : 18),
+                      18, 10, 18, overlapChild == null ? 18 : 18 + overlap),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -123,12 +130,18 @@ class AppHeaderScaffold extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(
-              child: Transform.translate(
-                offset: Offset(0, -overlap),
-                child: body,
+            if (overlapChild != null)
+            // Karti yukari tasiyoruz; layout'ta yerini korudugu icin
+            // altinda kalan bosluk govdeden onceki normal arasliga
+            // donusuyor.
+            Transform.translate(
+              offset: Offset(0, -overlap),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: overlapChild,
               ),
             ),
+            Expanded(child: body),
           ],
         ),
       ),

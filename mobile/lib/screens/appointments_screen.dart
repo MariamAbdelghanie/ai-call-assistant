@@ -150,7 +150,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         rangeLabel:
             '${Formatters.date(_weekStart)} - ${Formatters.date(weekEnd)}',
       ),
-      overlap: 22,
       body: RefreshIndicator(
         onRefresh: state.refresh,
         child: ListView(
