@@ -91,16 +91,9 @@ class _CallScreenState extends State<CallScreen> {
                   // Orb lacivert bir sahnenin uzerinde duruyor: turuncu
                   // kure beyaz zeminde soluk kaliyordu, koyu zeminde ise
                   // isik kaynagi gibi gorunuyor.
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 26),
+                  DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(28),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [AppPalette.indigo, AppPalette.indigoDeep],
-                      ),
                       boxShadow: [
                         BoxShadow(
                           color: AppPalette.indigoDeep.withValues(alpha: 0.28),
@@ -109,7 +102,15 @@ class _CallScreenState extends State<CallScreen> {
                         ),
                       ],
                     ),
-                    child: Column(
+                    child: AuroraStage(
+                      active: active,
+                      // Stack icindeki govde kendi genisligine sigiyordu;
+                      // sahnenin tam genislikte olmasi gerekiyor.
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 26),
+                        child: Column(
                       children: [
                         VoiceOrb(
                           size: 240,
@@ -146,7 +147,10 @@ class _CallScreenState extends State<CallScreen> {
                                 : null,
                           ),
                         ),
-                      ],
+                          ],
+                        ),
+                      ),
+                      ),
                     ),
                   ),
                   if (_call.phase == CallPhase.failed) ...[

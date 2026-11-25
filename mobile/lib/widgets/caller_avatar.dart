@@ -198,114 +198,90 @@ class _PortraitPainter extends CustomPainter {
     final male = gender == _Gender.male;
     final beard = male && (seed ~/ 29) % 3 == 0;
 
-    // Zemin: hafif dikey gecis, derinlik hissi icin.
+    // Zemin: vesikalik gibi, ustte acik altta koyu.
     canvas.drawRect(
       Offset.zero & size,
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [bg, Color.lerp(bg, Colors.black, 0.12)!],
+          colors: [
+            Color.lerp(bg, Colors.white, 0.35)!,
+            Color.lerp(bg, Colors.black, 0.14)!,
+          ],
         ).createShader(Offset.zero & size),
     );
 
+    // --- Olculer ---
+    // Portre bir vesikalik gibi kirpiliyor: bas cercevenin buyuk kismini
+    // kapliyor, omuzlar alt kenardan giriyor. Onceki surumde kafa cok
+    // kucuktu ve resim uzaktan cekilmis gibi duruyordu.
     final cx = w * 0.5;
-    final faceCy = h * 0.42;
-    // Kadin yuzu biraz daha dar, erkek yuzu biraz daha genis: silueti
-    // sactan bagimsiz olarak da ayiran sey bu.
-    final faceW = w * (female ? 0.38 : (male ? 0.43 : 0.405));
-    final faceH = h * 0.47;
+    final faceCy = h * 0.46;
+    final faceW = w * (female ? 0.50 : (male ? 0.55 : 0.52));
+    final faceH = h * 0.64;
     final faceRect =
         Rect.fromCenter(center: Offset(cx, faceCy), width: faceW, height: faceH);
 
     // --- Omuzlar ---
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(cx, h * 1.06),
-        width: w * (male ? 1.04 : 0.94),
-        height: h * 0.74,
+        center: Offset(cx, h * 1.22),
+        width: w * (male ? 1.5 : 1.34),
+        height: h * 0.78,
       ),
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color.lerp(cloth, Colors.white, 0.16)!, cloth],
-        ).createShader(Rect.fromLTWH(0, h * 0.66, w, h * 0.34)),
-    );
-
-    // Yaka
-    canvas.drawPath(
-      Path()
-        ..moveTo(cx, h * 0.95)
-        ..lineTo(cx - w * 0.14, h * 0.74)
-        ..lineTo(cx - w * 0.06, h * 0.71)
-        ..lineTo(cx, h * 0.81)
-        ..lineTo(cx + w * 0.06, h * 0.71)
-        ..lineTo(cx + w * 0.14, h * 0.74)
-        ..close(),
-      Paint()..color = Color.lerp(cloth, Colors.white, 0.24)!,
+          colors: [Color.lerp(cloth, Colors.white, 0.14)!, cloth],
+        ).createShader(Rect.fromLTWH(0, h * 0.82, w, h * 0.18)),
     );
 
     // --- Boyun ---
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(cx, h * 0.645),
-          width: faceW * 0.46,
-          height: h * 0.2,
-        ),
-        Radius.circular(w * 0.07),
-      ),
-      Paint()..color = shade,
+    final neck = Rect.fromCenter(
+      center: Offset(cx, h * 0.86),
+      width: faceW * 0.44,
+      height: h * 0.26,
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(cx, h * 0.625),
-          width: faceW * 0.42,
-          height: h * 0.18,
-        ),
-        Radius.circular(w * 0.07),
+    canvas.drawRect(neck, Paint()..color = skin);
+    // Cenenin altina dusen golge.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(cx, h * 0.80),
+        width: faceW * 0.56,
+        height: h * 0.12,
       ),
-      Paint()..color = skin,
+      Paint()..color = shade.withValues(alpha: 0.75),
     );
 
     // --- Sacin arka kutlesi ---
     if (female) {
-      // Uzun sac: omuzlara inen iki kutle.
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(cx, h * 0.52),
-          width: faceW * 1.46,
-          height: faceH * 1.42,
+          center: Offset(cx, faceCy + faceH * 0.06),
+          width: faceW * 1.34,
+          height: faceH * 1.3,
         ),
         Paint()..color = hair,
       );
+      // Omuzlara inen iki tutam.
       for (final side in [-1.0, 1.0]) {
         canvas.drawOval(
           Rect.fromCenter(
-            center: Offset(cx + side * faceW * 0.56, h * 0.64),
-            width: faceW * 0.42,
-            height: h * 0.42,
+            center: Offset(cx + side * faceW * 0.56, h * 0.82),
+            width: faceW * 0.36,
+            height: h * 0.46,
           ),
           Paint()..color = hair,
         );
       }
-    } else if (male) {
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(cx, faceCy - faceH * 0.06),
-          width: faceW * 1.14,
-          height: faceH * 0.92,
-        ),
-        Paint()..color = hair,
-      );
     } else {
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(cx, faceCy - faceH * 0.04),
-          width: faceW * 1.2,
-          height: faceH * 1.0,
+          center: Offset(cx, faceCy - faceH * 0.1),
+          width: faceW * (male ? 1.1 : 1.14),
+          height: faceH * 0.86,
         ),
         Paint()..color = hair,
       );
@@ -315,191 +291,270 @@ class _PortraitPainter extends CustomPainter {
     for (final side in [-1.0, 1.0]) {
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(cx + side * faceW * 0.5, faceCy + faceH * 0.06),
-          width: faceW * 0.15,
-          height: faceH * 0.2,
+          center: Offset(cx + side * faceW * 0.49, faceCy + faceH * 0.04),
+          width: faceW * 0.12,
+          height: faceH * 0.17,
         ),
-        Paint()..color = shade,
+        Paint()..color = Color.lerp(skin, shade, 0.5)!,
       );
     }
 
-    // --- Yuz ---
-    canvas.drawOval(
-      faceRect,
+    // --- Yuz: yumurta bicimi, altta daralan ---
+    final face = Path()
+      ..moveTo(cx, faceCy - faceH * 0.5)
+      ..cubicTo(
+        cx + faceW * 0.52, faceCy - faceH * 0.46,
+        cx + faceW * 0.52, faceCy + faceH * 0.16,
+        cx + faceW * 0.30, faceCy + faceH * 0.40,
+      )
+      ..cubicTo(
+        cx + faceW * 0.18, faceCy + faceH * 0.50,
+        cx - faceW * 0.18, faceCy + faceH * 0.50,
+        cx - faceW * 0.30, faceCy + faceH * 0.40,
+      )
+      ..cubicTo(
+        cx - faceW * 0.52, faceCy + faceH * 0.16,
+        cx - faceW * 0.52, faceCy - faceH * 0.46,
+        cx, faceCy - faceH * 0.5,
+      )
+      ..close();
+    canvas.drawPath(
+      face,
       Paint()
         ..shader = RadialGradient(
-          center: const Alignment(-0.35, -0.45),
-          colors: [Color.lerp(skin, Colors.white, 0.18)!, skin, shade],
-          stops: const [0.0, 0.58, 1.0],
+          center: const Alignment(-0.3, -0.4),
+          colors: [Color.lerp(skin, Colors.white, 0.20)!, skin, shade],
+          stops: const [0.0, 0.55, 1.0],
         ).createShader(faceRect),
     );
 
-    // Cene golgesi: yuzun alt kenarini yumusatir.
     canvas.save();
-    canvas.clipPath(Path()..addOval(faceRect));
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(cx, faceCy + faceH * 0.56),
-        width: faceW * 0.92,
-        height: faceH * 0.4,
-      ),
-      Paint()..color = shade.withValues(alpha: 0.35),
-    );
+    canvas.clipPath(face);
+
+    // Elmacik kemigi ve sakak golgeleri: yuzu duz bir yuzey olmaktan
+    // cikaran sey bunlar.
+    for (final side in [-1.0, 1.0]) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(cx + side * faceW * 0.40, faceCy + faceH * 0.05),
+          width: faceW * 0.3,
+          height: faceH * 0.44,
+        ),
+        Paint()..color = shade.withValues(alpha: 0.28),
+      );
+    }
+
     if (beard) {
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(cx, faceCy + faceH * 0.44),
-          width: faceW * 0.86,
-          height: faceH * 0.56,
+          center: Offset(cx, faceCy + faceH * 0.42),
+          width: faceW * 0.9,
+          height: faceH * 0.5,
         ),
-        Paint()..color = hair.withValues(alpha: 0.62),
+        Paint()..color = hair.withValues(alpha: 0.55),
       );
-    }
-    canvas.restore();
-
-    // --- On sac ---
-    final capRect = Rect.fromCenter(
-      center: Offset(cx, faceCy - faceH * 0.1),
-      width: faceW * (female ? 1.14 : 1.08),
-      height: faceH * (female ? 0.86 : 0.78),
-    );
-    canvas.drawArc(capRect, math.pi * 1.0, math.pi, true, Paint()..color = hair);
-    if (male && (seed ~/ 37).isEven) {
-      // Yandan ayrilmis sac: duz kavis herkeste ayni gorunuyordu.
+      // Bıyık.
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(cx + faceW * 0.16, faceCy - faceH * 0.3),
-          width: faceW * 0.7,
-          height: faceH * 0.3,
+          center: Offset(cx, faceCy + faceH * 0.21),
+          width: faceW * 0.4,
+          height: faceH * 0.07,
         ),
+        Paint()..color = hair.withValues(alpha: 0.7),
+      );
+    }
+
+    // --- Sac cizgisi: yarim daire degil, alinda hafif V yapan bir egri ---
+    final hairline = Path()
+      ..moveTo(cx - faceW * 0.5, faceCy - faceH * 0.22)
+      ..cubicTo(
+        cx - faceW * 0.46, faceCy - faceH * 0.46,
+        cx - faceW * 0.20, faceCy - faceH * 0.56,
+        cx, faceCy - faceH * (female ? 0.50 : 0.53),
+      )
+      ..cubicTo(
+        cx + faceW * 0.20, faceCy - faceH * 0.56,
+        cx + faceW * 0.46, faceCy - faceH * 0.46,
+        cx + faceW * 0.5, faceCy - faceH * 0.22,
+      )
+      ..lineTo(cx + faceW * 0.5, faceCy - faceH * 0.6)
+      ..lineTo(cx - faceW * 0.5, faceCy - faceH * 0.6)
+      ..close();
+    canvas.drawPath(hairline, Paint()..color = hair);
+
+    if (male && (seed ~/ 37).isEven) {
+      // Yandan ayrim: sacin bir tarafi alna dogru iner.
+      canvas.drawPath(
+        Path()
+          ..moveTo(cx - faceW * 0.5, faceCy - faceH * 0.3)
+          ..quadraticBezierTo(
+            cx - faceW * 0.1, faceCy - faceH * 0.42,
+            cx + faceW * 0.34, faceCy - faceH * 0.24,
+          )
+          ..lineTo(cx + faceW * 0.5, faceCy - faceH * 0.6)
+          ..lineTo(cx - faceW * 0.5, faceCy - faceH * 0.6)
+          ..close(),
         Paint()..color = hair,
       );
     }
+    if (female) {
+      // Yuzun iki yanina inen sac kenarlari.
+      for (final side in [-1.0, 1.0]) {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(cx + side * faceW * 0.52, faceCy - faceH * 0.05),
+            width: faceW * 0.3,
+            height: faceH * 0.8,
+          ),
+          Paint()..color = hair,
+        );
+      }
+    }
+
+    canvas.restore();
+
+    // Sactaki isik seridi.
     canvas.drawArc(
-      capRect.deflate(faceW * 0.07),
-      math.pi * 1.16,
-      math.pi * 0.36,
+      Rect.fromCenter(
+        center: Offset(cx, faceCy - faceH * 0.34),
+        width: faceW * 0.78,
+        height: faceH * 0.34,
+      ),
+      math.pi * 1.18,
+      math.pi * 0.42,
       false,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = faceW * 0.07
+        ..strokeWidth = faceW * 0.055
         ..strokeCap = StrokeCap.round
-        ..color = hairLight.withValues(alpha: 0.7),
+        ..color = hairLight.withValues(alpha: 0.6),
     );
 
     // --- Kaslar ---
-    final brow = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = faceW * (female ? 0.035 : 0.05)
-      ..strokeCap = StrokeCap.round
-      ..color = Color.lerp(hair, Colors.black, 0.12)!;
     for (final side in [-1.0, 1.0]) {
       canvas.drawArc(
         Rect.fromCenter(
-          center: Offset(cx + side * faceW * 0.19, faceCy - faceH * 0.12),
-          width: faceW * 0.28,
-          height: faceH * 0.14,
+          center: Offset(cx + side * faceW * 0.21, faceCy - faceH * 0.1),
+          width: faceW * 0.3,
+          height: faceH * 0.12,
         ),
-        math.pi * 1.08,
-        math.pi * 0.84,
-        false,
-        brow,
-      );
-    }
-
-    // --- Gozler ---
-    for (final side in [-1.0, 1.0]) {
-      final eye = Offset(cx + side * faceW * 0.19, faceCy + faceH * 0.02);
-      final eyeW = faceW * 0.22;
-      final eyeH = faceH * 0.085;
-      canvas.drawOval(
-        Rect.fromCenter(center: eye, width: eyeW, height: eyeH),
-        Paint()..color = const Color(0xFFFCFCFC),
-      );
-      canvas.drawCircle(eye, eyeH * 0.52, Paint()..color = iris);
-      canvas.drawCircle(eye, eyeH * 0.24, Paint()..color = const Color(0xFF16100C));
-      canvas.drawCircle(
-        eye.translate(-eyeH * 0.22, -eyeH * 0.22),
-        eyeH * 0.15,
-        Paint()..color = Colors.white,
-      );
-      canvas.drawArc(
-        Rect.fromCenter(center: eye, width: eyeW * 1.04, height: eyeH * 1.1),
-        math.pi * 1.04,
-        math.pi * 0.92,
+        math.pi * 1.06,
+        math.pi * 0.88,
         false,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = faceW * (female ? 0.035 : 0.028)
+          ..strokeWidth = faceW * (female ? 0.028 : 0.042)
           ..strokeCap = StrokeCap.round
-          ..color = const Color(0xFF32241A),
+          ..color = Color.lerp(hair, Colors.black, 0.1)!,
       );
     }
 
-    // --- Burun ---
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: Offset(cx, faceCy + faceH * 0.17),
-        width: faceW * 0.14,
-        height: faceH * 0.12,
-      ),
-      math.pi * 0.12,
-      math.pi * 0.76,
-      false,
+    // --- Gozler: badem bicimi ---
+    for (final side in [-1.0, 1.0]) {
+      final eye = Offset(cx + side * faceW * 0.21, faceCy - faceH * 0.01);
+      final eyeW = faceW * 0.21;
+      final eyeH = faceH * 0.062;
+
+      final socket = Path()
+        ..moveTo(eye.dx - eyeW / 2, eye.dy)
+        ..quadraticBezierTo(eye.dx, eye.dy - eyeH, eye.dx + eyeW / 2, eye.dy)
+        ..quadraticBezierTo(eye.dx, eye.dy + eyeH * 0.85, eye.dx - eyeW / 2, eye.dy)
+        ..close();
+      canvas.drawPath(socket, Paint()..color = const Color(0xFFFAFAFA));
+
+      canvas.save();
+      canvas.clipPath(socket);
+      canvas.drawCircle(eye, eyeH * 0.78, Paint()..color = iris);
+      canvas.drawCircle(
+          eye, eyeH * 0.34, Paint()..color = const Color(0xFF14100C));
+      canvas.drawCircle(
+        eye.translate(-eyeH * 0.3, -eyeH * 0.3),
+        eyeH * 0.2,
+        Paint()..color = Colors.white.withValues(alpha: 0.9),
+      );
+      canvas.restore();
+
+      // Ust kapak cizgisi ve kirpik hissi.
+      canvas.drawPath(
+        Path()
+          ..moveTo(eye.dx - eyeW / 2, eye.dy)
+          ..quadraticBezierTo(eye.dx, eye.dy - eyeH, eye.dx + eyeW / 2, eye.dy),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = faceW * (female ? 0.028 : 0.022)
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0xFF2A1D14),
+      );
+    }
+
+    // --- Burun: koprunun golgesi ve kanat ---
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - faceW * 0.015, faceCy + faceH * 0.02)
+        ..lineTo(cx - faceW * 0.045, faceCy + faceH * 0.13)
+        ..quadraticBezierTo(
+          cx, faceCy + faceH * 0.165,
+          cx + faceW * 0.045, faceCy + faceH * 0.13,
+        ),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = faceW * 0.03
+        ..strokeWidth = faceW * 0.022
         ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
         ..color = shade,
     );
 
     // --- Agiz ---
+    final mouthY = faceCy + faceH * 0.26;
     if (female) {
-      // Dudak: iki yay, ustte ince altta dolgun.
-      final mouth = Offset(cx, faceCy + faceH * 0.3);
       final lip = Paint()..color = const Color(0xFFB4565A);
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: mouth.translate(0, faceH * 0.012),
-          width: faceW * 0.26,
-          height: faceH * 0.062,
-        ),
+      canvas.drawPath(
+        Path()
+          ..moveTo(cx - faceW * 0.12, mouthY)
+          ..quadraticBezierTo(
+              cx - faceW * 0.06, mouthY - faceH * 0.028, cx, mouthY - faceH * 0.004)
+          ..quadraticBezierTo(
+              cx + faceW * 0.06, mouthY - faceH * 0.028, cx + faceW * 0.12, mouthY)
+          ..quadraticBezierTo(cx, mouthY + faceH * 0.05, cx - faceW * 0.12, mouthY)
+          ..close(),
         lip,
       );
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: mouth.translate(0, -faceH * 0.018),
-          width: faceW * 0.22,
-          height: faceH * 0.04,
-        ),
-        Paint()..color = const Color(0xFFC4676B),
-      );
     } else {
-      canvas.drawArc(
-        Rect.fromCenter(
-          center: Offset(cx, faceCy + faceH * 0.28),
-          width: faceW * 0.26,
-          height: faceH * 0.1,
-        ),
-        0.22,
-        math.pi - 0.44,
-        false,
+      canvas.drawPath(
+        Path()
+          ..moveTo(cx - faceW * 0.1, mouthY)
+          ..quadraticBezierTo(cx, mouthY + faceH * 0.035, cx + faceW * 0.1, mouthY),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = faceW * 0.035
+          ..strokeWidth = faceW * 0.028
           ..strokeCap = StrokeCap.round
-          ..color = const Color(0xFF8F4A42),
+          ..color = const Color(0xFF8A4840),
       );
     }
 
-    // --- Yanak kizarikligi: yuze canlilik veren son dokunus ---
+    // --- Yanak kizarikligi ---
     for (final side in [-1.0, 1.0]) {
       canvas.drawCircle(
-        Offset(cx + side * faceW * 0.3, faceCy + faceH * 0.2),
+        Offset(cx + side * faceW * 0.26, faceCy + faceH * 0.13),
         faceW * 0.1,
-        Paint()..color = blush.withValues(alpha: 0.3),
+        Paint()..color = blush.withValues(alpha: 0.26),
       );
     }
+
+    // Alt kenarda hafif bir karartma: fotograf vinyeti gibi, portreyi
+    // cerceve icine oturtuyor.
+    canvas.drawRect(
+      Rect.fromLTWH(0, h * 0.7, w, h * 0.3),
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withValues(alpha: 0.0),
+            Colors.black.withValues(alpha: 0.18),
+          ],
+        ).createShader(Rect.fromLTWH(0, h * 0.7, w, h * 0.3)),
+    );
   }
 
   @override

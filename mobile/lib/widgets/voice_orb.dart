@@ -151,6 +151,29 @@ class _OrbPainter extends CustomPainter {
     final top = _tone(hueShift);
     final bottom = _tone(hueShift, offset: 0.12);
 
+    // Altta yassi bir golge: kurenin havada durdugunu anlatan sey bu.
+    final shadowCenter = center.translate(0, core * 1.25);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: shadowCenter,
+        width: core * 1.5,
+        height: core * 0.34,
+      ),
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Colors.black.withValues(alpha: 0.30 * intensity),
+            Colors.black.withValues(alpha: 0.0),
+          ],
+        ).createShader(
+          Rect.fromCenter(
+            center: shadowCenter,
+            width: core * 1.5,
+            height: core * 0.34,
+          ),
+        ),
+    );
+
     // Hale: kurenin disina tasan yumusak isik. Koyu zeminde kure bunun
     // sayesinde ekrana yapisik degil, havada duruyor gibi gorunuyor.
     canvas.drawCircle(
@@ -332,4 +355,119 @@ class _Bar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Kurenin arkasindaki hareketli zemin.
+///
+/// Duz lacivert bir dikdortgen kureyi tasiyordu ama sahne olu duruyordu.
+/// Burada uc yumusak renk lekesi birbirinden farkli hizlarda dolaniyor;
+/// hicbiri kendi basina fark edilmiyor, birlikte zeminin yavasca renk
+/// degistirmesini sagliyorlar.
+class AuroraStage extends StatefulWidget {
+  const AuroraStage({
+    super.key,
+    required this.child,
+    this.active = false,
+    this.radius = 28,
+  });
+
+  final Widget child;
+
+  /// Cagri suruyorsa lekeler daha hizli ve daha parlak.
+  final bool active;
+
+  final double radius;
+
+  @override
+  State<AuroraStage> createState() => _AuroraStageState();
+}
+
+class _AuroraStageState extends State<AuroraStage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 22),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(widget.radius),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppPalette.indigo, AppPalette.indigoDeep],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) => CustomPaint(
+                    painter: _AuroraPainter(
+                      phase: _controller.value,
+                      strength: widget.active ? 1.0 : 0.6,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            widget.child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuroraPainter extends CustomPainter {
+  _AuroraPainter({required this.phase, required this.strength});
+
+  final double phase;
+  final double strength;
+
+  /// Her leke: renk, yorunge yaricapi, hiz carpani ve baslangic acisi.
+  static const _blobs = <(Color, double, double, double)>[
+    (Color(0xFFFF7A2F), 0.34, 1.0, 0.0),
+    (Color(0xFF7A4BD0), 0.30, -0.7, 2.1),
+    (Color(0xFF2BB3A3), 0.26, 0.45, 4.2),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final base = math.min(size.width, size.height);
+
+    for (final (color, orbit, speed, offset) in _blobs) {
+      final angle = offset + phase * 2 * math.pi * speed;
+      final pos = center +
+          Offset(math.cos(angle), math.sin(angle * 0.8)) * (base * orbit);
+      final radius = base * 0.52;
+      canvas.drawCircle(
+        pos,
+        radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.30 * strength),
+              color.withValues(alpha: 0.0),
+            ],
+          ).createShader(Rect.fromCircle(center: pos, radius: radius)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AuroraPainter oldDelegate) =>
+      oldDelegate.phase != phase || oldDelegate.strength != strength;
 }
