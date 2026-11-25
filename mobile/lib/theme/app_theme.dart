@@ -17,6 +17,14 @@ class AppPalette {
   static const Color ink = Color(0xFF16202E);
   static const Color inkSoft = Color(0xFFEDF1F6);
 
+  /// Lacivert: turuncu ve beyazi kiran ucuncu renk. Turuncu dikkat cekmek
+  /// icin, lacivert ise agirlik ve guven vermek icin kullanilir; ikisi ayni
+  /// yuzeyde yarismasin diye lacivert hep genis bloklarda, turuncu hep
+  /// kucuk vurgularda durur.
+  static const Color indigo = Color(0xFF1B2A4A);
+  static const Color indigoDeep = Color(0xFF111C33);
+  static const Color indigoSoft = Color(0xFFE8ECF5);
+
   static const Color accent = orange;
   static const Color accentDeep = Color(0xFFD4551A);
   static const Color accentSoft = orangeSoft;

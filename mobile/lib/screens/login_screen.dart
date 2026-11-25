@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/strings.dart';
 import '../services/auth_service.dart';
@@ -81,8 +84,16 @@ class _LoginScreenState extends State<LoginScreen> {
     final text = context.text;
     final auth = widget.auth;
 
-    return Scaffold(
-      backgroundColor: tokens.isDark ? null : AppPalette.surfaceAlt,
+    // Turuncu zeminde koyu saat/pil simgeleri okunmuyor.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+      backgroundColor:
+          tokens.isDark ? AppPalette.darkSurface : AppPalette.accentDeep,
       body: Stack(
         children: [
           const Positioned.fill(child: _Backdrop()),
@@ -100,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           // --- Form karti ---
                           Container(
-                            padding: const EdgeInsets.fromLTRB(24, 30, 24, 26),
+                            clipBehavior: Clip.antiAlias,
                             decoration: BoxDecoration(
                               color: tokens.isDark
                                   ? tokens.glass
@@ -131,13 +142,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ],
                             ),
-                            child: Form(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Kartin ustunde yapay zekayi anlatan
+                                // lacivert gorsel band: referanstaki
+                                // "form + gorsel" ikilisinin telefon
+                                // genisligine sigan hali.
+                                const _AiShowcase(),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(24, 26, 24, 26),
+                                  child: Form(
                               key: _formKey,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  const Center(child: _BrandMark()),
-                                  const SizedBox(height: 18),
                                   Text(
                                     _register
                                         ? t.t('tabSignUp')
@@ -319,6 +339,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                               ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -326,15 +349,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.shield_outlined,
-                                  size: 14, color: tokens.muted),
+                              // Zemin turuncu oldugu icin bu satir beyaz;
+                              // gri ton okunmuyordu.
+                              Icon(
+                                Icons.shield_outlined,
+                                size: 14,
+                                color: tokens.isDark
+                                    ? tokens.muted
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
                               const SizedBox(width: 7),
                               Flexible(
                                 child: Text(
                                   t.t('dataSecure'),
                                   textAlign: TextAlign.center,
-                                  style: text.labelSmall
-                                      ?.copyWith(color: tokens.muted),
+                                  style: text.labelSmall?.copyWith(
+                                    color: tokens.isDark
+                                        ? tokens.muted
+                                        : Colors.white.withValues(alpha: 0.9),
+                                  ),
                                 ),
                               ),
                             ],
@@ -349,12 +382,199 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 }
 
+/// Kartin ust bandi: lacivert zemin uzerinde sesin yapay zekaya
+/// donusmesini anlatan bir cizim.
+///
+/// Fotograf yerine cizim kullaniyorum: fotograf hem telifli oluyor hem de
+/// her ekran boyutunda bozuluyor; cizim vektorel oldugu icin her cozunurlukte
+/// net kaliyor ve uygulamanin renkleriyle birebir uyuyor.
+class _AiShowcase extends StatefulWidget {
+  const _AiShowcase();
+
+  @override
+  State<_AiShowcase> createState() => _AiShowcaseState();
+}
+
+class _AiShowcaseState extends State<_AiShowcase>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 12),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppStrings.of(context);
+
+    return SizedBox(
+      height: 172,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppPalette.indigoDeep, AppPalette.indigo],
+              ),
+            ),
+          ),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) => CustomPaint(
+              painter: _AiScenePainter(progress: _controller.value),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    _BrandMark(size: 38, radius: 12),
+                    const SizedBox(width: 11),
+                    Text(
+                      'CALLORA',
+                      style: context.text.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2.2,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  t.t('welcomeTagline'),
+                  style: context.text.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.82),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lacivert bandin uzerindeki cizim: sagda bir ses dalgasindan cikip
+/// dugumlere yayilan bir ag. Yavasca nefes alir, dikkat dagitmaz.
+class _AiScenePainter extends CustomPainter {
+  _AiScenePainter({required this.progress});
+
+  /// 0..1 arasi donen sayac.
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.78, size.height * 0.52);
+    final pulse = 0.5 + 0.5 * math.sin(progress * 2 * math.pi);
+
+    // Es merkezli halkalar: sesin yayilmasi.
+    for (var i = 0; i < 4; i++) {
+      final radius = 26.0 + i * 20 + pulse * 5;
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = Colors.white.withValues(alpha: 0.07 + 0.05 * (3 - i) / 3),
+      );
+    }
+
+    // Turuncu cekirdek.
+    canvas.drawCircle(
+      center,
+      20 + pulse * 2,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [AppPalette.orange, AppPalette.accentDeep],
+        ).createShader(Rect.fromCircle(center: center, radius: 24)),
+    );
+    canvas.drawCircle(
+      center,
+      34 + pulse * 3,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = AppPalette.orange.withValues(alpha: 0.35),
+    );
+
+    // Cekirdegin icindeki ses cubuklari.
+    const bars = [0.42, 0.74, 1.0, 0.66, 0.38];
+    for (var i = 0; i < bars.length; i++) {
+      final wobble =
+          0.75 + 0.25 * math.sin(progress * 2 * math.pi * 2 + i * 0.9);
+      final height = 16 * bars[i] * wobble;
+      final x = center.dx - 12 + i * 6.0;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(x, center.dy), width: 2.6, height: height),
+          const Radius.circular(2),
+        ),
+        Paint()..color = Colors.white.withValues(alpha: 0.92),
+      );
+    }
+
+    // Soldaki dugum agi: sesin veriye donusmesi.
+    final nodes = <Offset>[
+      Offset(size.width * 0.10, size.height * 0.30),
+      Offset(size.width * 0.20, size.height * 0.62),
+      Offset(size.width * 0.33, size.height * 0.24),
+      Offset(size.width * 0.38, size.height * 0.72),
+      Offset(size.width * 0.50, size.height * 0.44),
+    ];
+    final link = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = Colors.white.withValues(alpha: 0.16);
+    for (var i = 0; i < nodes.length; i++) {
+      for (var j = i + 1; j < nodes.length; j++) {
+        if ((nodes[i] - nodes[j]).distance > size.width * 0.26) continue;
+        canvas.drawLine(nodes[i], nodes[j], link);
+      }
+      canvas.drawLine(nodes[i], center, link);
+    }
+    for (var i = 0; i < nodes.length; i++) {
+      final glow = 0.5 + 0.5 * math.sin(progress * 2 * math.pi + i * 1.3);
+      canvas.drawCircle(
+        nodes[i],
+        3 + glow * 1.4,
+        Paint()
+          ..color = (i.isEven ? AppPalette.orange : Colors.white)
+              .withValues(alpha: 0.55 + 0.35 * glow),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AiScenePainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
 /// Zemin: cok yumusak iki leke, turuncu ve lacivert. Dikkat dagitmaz,
 /// yuzeyin duz gri gorunmesini engeller.
+/// Zemin: sicak turuncu bir gradyan uzerinde cok yumusak lekeler.
+///
+/// Kart beyaz oldugu icin zeminin de beyaz olmasi sayfayi bos gosteriyordu;
+/// renkli zemin kartin havada durmasini saglar.
 class _Backdrop extends StatelessWidget {
   const _Backdrop();
 
@@ -362,120 +582,65 @@ class _Backdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     if (tokens.isDark) return const SizedBox.shrink();
-    return CustomPaint(painter: _BackdropPainter());
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFF57A33),
+            AppPalette.orange,
+            AppPalette.accentDeep,
+          ],
+          stops: [0.0, 0.45, 1.0],
+        ),
+      ),
+      child: CustomPaint(painter: _BackdropPainter()),
+    );
   }
 }
 
 class _BackdropPainter extends CustomPainter {
+  const _BackdropPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
-    _blobs(canvas, size);
-    _network(canvas, size);
-    _arcs(canvas, size);
-  }
+    // Iki genis isik lekesi: duz gradyanin plastik gorunmesini engeller.
+    canvas.drawCircle(
+      Offset(size.width * 0.18, size.height * 0.12),
+      size.width * 0.55,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.18),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+        ).createShader(
+          Rect.fromCircle(
+            center: Offset(size.width * 0.18, size.height * 0.12),
+            radius: size.width * 0.55,
+          ),
+        ),
+    );
 
-  /// Yumusak renk lekeleri: yuzeyin duz gri gorunmesini engeller.
-  void _blobs(Canvas canvas, Size size) {
-    void blob(Offset center, double radius, Color color) {
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..shader = RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ).createShader(Rect.fromCircle(center: center, radius: radius)),
-      );
-    }
-
-    blob(Offset(size.width * 0.10, size.height * 0.04), size.width * 0.75,
-        AppPalette.orange.withValues(alpha: 0.16));
-    blob(Offset(size.width * 0.98, size.height * 0.26), size.width * 0.60,
-        AppPalette.ink.withValues(alpha: 0.09));
-    blob(Offset(size.width * 0.02, size.height * 0.98), size.width * 0.65,
-        AppPalette.ink.withValues(alpha: 0.06));
-  }
-
-  /// Soluk bir dugum agi: yapay zekayi cagristirir, okumayi zorlastirmaz.
-  /// Dugumler sabit oranlarla yerlestirilir; her karede ayni gorunur.
-  void _network(Canvas canvas, Size size) {
-    const points = <Offset>[
-      Offset(0.08, 0.13),
-      Offset(0.26, 0.07),
-      Offset(0.42, 0.17),
-      Offset(0.18, 0.26),
-      Offset(0.34, 0.31),
-      Offset(0.06, 0.37),
-      Offset(0.88, 0.62),
-      Offset(0.72, 0.70),
-      Offset(0.94, 0.78),
-      Offset(0.78, 0.86),
-      Offset(0.60, 0.80),
-      Offset(0.92, 0.92),
-    ];
-    const links = <List<int>>[
-      [0, 1],
-      [1, 2],
-      [0, 3],
-      [3, 4],
-      [2, 4],
-      [3, 5],
-      [4, 5],
-      [6, 7],
-      [7, 8],
-      [8, 9],
-      [9, 10],
-      [7, 10],
-      [8, 11],
-      [9, 11],
-    ];
-
-    Offset at(int i) =>
-        Offset(points[i].dx * size.width, points[i].dy * size.height);
-
-    final line = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = AppPalette.ink.withValues(alpha: 0.10);
-    for (final link in links) {
-      canvas.drawLine(at(link[0]), at(link[1]), line);
-    }
-
-    for (var i = 0; i < points.length; i++) {
-      final center = at(i);
-      final isAccent = i % 4 == 0;
-      canvas.drawCircle(
-        center,
-        isAccent ? 4.5 : 3,
-        Paint()
-          ..color = (isAccent ? AppPalette.orange : AppPalette.ink)
-              .withValues(alpha: isAccent ? 0.26 : 0.16),
-      );
-      if (isAccent) {
-        canvas.drawCircle(
-          center,
-          10,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1
-            ..color = AppPalette.orange.withValues(alpha: 0.16),
-        );
-      }
-    }
-  }
-
-  /// Ses dalgasini animsatan genis, cok soluk yaylar.
-  void _arcs(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.5);
-    for (var i = 1; i <= 3; i++) {
-      canvas.drawCircle(
-        center,
-        size.width * (0.55 + i * 0.22),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = AppPalette.ink.withValues(alpha: 0.05),
-      );
-    }
+    // Alt kosede lacivert bir golge: ucuncu renk burada da var, boylece
+    // sayfa yalniz turuncu-beyazdan ibaret kalmiyor.
+    canvas.drawCircle(
+      Offset(size.width * 0.9, size.height * 0.96),
+      size.width * 0.7,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            AppPalette.indigoDeep.withValues(alpha: 0.38),
+            AppPalette.indigoDeep.withValues(alpha: 0.0),
+          ],
+        ).createShader(
+          Rect.fromCircle(
+            center: Offset(size.width * 0.9, size.height * 0.96),
+            radius: size.width * 0.7,
+          ),
+        ),
+    );
   }
 
   @override
@@ -484,16 +649,20 @@ class _BackdropPainter extends CustomPainter {
 
 /// Marka isareti: lacivert kare icinde turuncu ses dalgasi.
 class _BrandMark extends StatelessWidget {
-  const _BrandMark();
+  const _BrandMark({this.size = 70, this.radius = 21});
+
+  final double size;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 70,
-      height: 70,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: AppPalette.ink,
-        borderRadius: BorderRadius.circular(21),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         boxShadow: [
           BoxShadow(
             color: AppPalette.ink.withValues(alpha: 0.26),
@@ -502,11 +671,11 @@ class _BrandMark extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(
+      child: Center(
         child: SizedBox(
-          width: 34,
-          height: 26,
-          child: CustomPaint(painter: _WaveMarkPainter()),
+          width: size * 0.49,
+          height: size * 0.37,
+          child: const CustomPaint(painter: _WaveMarkPainter()),
         ),
       ),
     );
